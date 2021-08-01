@@ -65,14 +65,12 @@ export class RoomPlanner {
     if (rcl < 2) return;
 
     // Only plan if no plans (usually global reset/code push)
-    if (Object.values(this.plans).flat().length) {
-      return;
-    }
-
-    if (this.baseCenter) {
-      this.planExtensions(this.baseCenter);
-      this.planBaseCenter(this.baseCenter);
-      this.planRoadsAndContainers(this.baseCenter);
+    if (!Object.values(this.plans).flat().length) {
+      if (this.baseCenter) {
+        this.planExtensions(this.baseCenter);
+        this.planBaseCenter(this.baseCenter);
+        this.planRoadsAndContainers(this.baseCenter);
+      }
     }
 
     this.placeConstructionSites(rcl);
