@@ -37,6 +37,7 @@ export class UpgraderCreep extends CreepBase {
       container.pos.roomName,
       container.id,
       'upgrade',
+      -1,
       { controller: controller.id }
     );
   }

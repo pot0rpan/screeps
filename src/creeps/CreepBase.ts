@@ -15,10 +15,19 @@ declare global {
     id: string;
     room: string;
     target: string;
-    type: 'transfer' | 'harvest' | 'withdraw' | 'upgrade' | 'build' | 'repair';
+    type: TaskType;
     complete: boolean;
+    limit: number;
     data?: any;
   }
+
+  type TaskType =
+    | 'transfer'
+    | 'harvest'
+    | 'withdraw'
+    | 'upgrade'
+    | 'build'
+    | 'repair';
 
   type CreepRole = 'pioneer' | 'builder' | 'harvester' | 'mover' | 'upgrader';
 }

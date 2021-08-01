@@ -34,8 +34,6 @@ export class RoomPlanner {
     [PlanType.road]: []
   };
 
-  DRY_RUN = false;
-
   constructor(room: Room) {
     console.log('RoomPlanner constructor()', room);
 
@@ -55,29 +53,29 @@ export class RoomPlanner {
     }
   }
 
+  // Plan everything, no matter the RCL (unless rcl < 2)
+  // Push all plans to this.plans[type]
+  // Place construction sites in order of type priority and RCL limits (extensions,storage)
   run() {
+    console.log(this.room, 'RoomPlanner run()');
+
     const rcl = this.room.controller?.level ?? 0;
 
     // Nothing to build at level 1
     if (rcl < 2) return;
 
-    // Only plan if no plans
+    // Only plan if no plans (usually global reset/code push)
     if (Object.values(this.plans).flat().length) {
       return;
     }
 
     if (this.baseCenter) {
-      this.planBaseRoom(this.baseCenter, rcl);
+      this.planExtensions(this.baseCenter);
+      this.planBaseCenter(this.baseCenter);
+      this.planRoadsAndContainers(this.baseCenter);
     }
 
-    this.placeConstructionSites(this.DRY_RUN, rcl);
-  }
-
-  planBaseRoom(baseCenter: RoomPosition, rcl: number) {
-    this.planExtensions(baseCenter, rcl);
-    this.planBaseLayout(baseCenter, rcl);
-
-    this.planRoadsAndContainers(baseCenter);
+    this.placeConstructionSites(rcl);
   }
 
   planRoadsAndContainers(baseCenter: RoomPosition) {
@@ -85,8 +83,8 @@ export class RoomPlanner {
     const controller = this.room.controller;
 
     // Make path to each container from spawn, add coords to plans
-    // If controller in room, make path to that as well
     // Sort to plan shortest path first, then reuse in other cost matrices
+    // If controller in room, make path to that first
     let sources: (Source | StructureController)[] = this.room.findSources();
     sources.sort(
       (a, b) => a.pos.getRangeTo(baseCenter) - b.pos.getRangeTo(baseCenter)
@@ -140,44 +138,30 @@ export class RoomPlanner {
       });
 
       if (ret.incomplete || !ret.path.length) {
-        console.log('no path found to', source);
+        console.log('no path found for road to', source);
         continue;
       }
 
       // Add container construction site at last pos
-      const containerPos = ret.path[ret.path.length - 1];
-      if (
-        !this.room.lookForAt(LOOK_CONSTRUCTION_SITES, containerPos).length &&
-        !this.room.lookForAt(LOOK_STRUCTURES, containerPos).length
-      ) {
-        this.plans[PlanType.container].push({
-          pos: containerPos,
-          structureType: STRUCTURE_CONTAINER
-        });
-      }
+      this.plans[PlanType.container].push({
+        pos: ret.path[ret.path.length - 1],
+        structureType: STRUCTURE_CONTAINER
+      });
 
       // Add road construction sites to plans,
-      // ignoring last road pos to leave room for container
+      // ignoring last pos to leave room for container
       for (const pos of ret.path.slice(0, ret.path.length - 1)) {
         let skip = false;
 
+        // Don't place road on baseCenter
         if (pos.x === baseCenter.x && pos.y === baseCenter.y) continue;
 
         for (const plan of this.plans[PlanType.road]) {
-          // Avoid duplicate plans
+          // Avoid duplicate road plans
           if (
             plan.pos.x === pos.x &&
             plan.pos.y === pos.y &&
             plan.structureType === STRUCTURE_ROAD
-          ) {
-            skip = true;
-            break;
-          }
-
-          // Make sure position is free
-          if (
-            this.room.lookForAt(LOOK_CONSTRUCTION_SITES, pos).length ||
-            this.room.lookForAt(LOOK_STRUCTURES, pos).length
           ) {
             skip = true;
             break;
@@ -194,7 +178,7 @@ export class RoomPlanner {
     }
   }
 
-  planBaseLayout(baseCenter: RoomPosition, rcl: number) {
+  planBaseCenter(baseCenter: RoomPosition) {
     console.log('planning main base layout');
 
     this.room.visual.rect(baseCenter.x - 3.5, baseCenter.y - 3.5, 7, 7, {
@@ -202,19 +186,20 @@ export class RoomPlanner {
       fill: 'transparent'
     });
 
-    // Plan roads around spawn
+    // Plan roads around spawn, both X and + shape 3 long
+    // Sort to plan farthest first (closest to sources)
     const roadPlans = baseCenter
       .getDiagonalPositions(3)
       .concat(baseCenter.getAdjacentOrthogonalPositions(3))
-      .sort((a, b) => a.getRangeTo(baseCenter) - b.getRangeTo(baseCenter));
+      .sort((a, b) => b.getRangeTo(baseCenter) - a.getRangeTo(baseCenter));
 
     for (const pos of roadPlans) {
-      // Leave room for storage/container below spawn
+      // Leave room for storage/container below baseCenter
       if (pos.x === baseCenter.x && pos.y === baseCenter.y + 1) {
         continue;
       }
 
-      // Leave room for 1 tower on each side of spawn
+      // Leave room for 1 tower on each side of baseCenter
       if (
         pos.y === baseCenter.y &&
         (pos.x === baseCenter.x - 1 || pos.x === baseCenter.x + 1)
@@ -225,49 +210,23 @@ export class RoomPlanner {
       this.plans[PlanType.road].push({ pos, structureType: STRUCTURE_ROAD });
     }
 
-    // Plan tower sites on each side of spawn
-    if (rcl >= 3) {
-      this.planTowers(baseCenter, rcl);
+    // Plan tower sites on each side of center
+    this.planTowers(baseCenter);
 
-      this.planCenterStorage(baseCenter, rcl);
-    }
+    // Plan container/storage below center
+    this.planCenterStorage(baseCenter);
   }
 
-  planTowers(baseCenter: RoomPosition, rcl: number) {
+  planTowers(baseCenter: RoomPosition) {
     console.log('planning towers');
 
-    const maxPerRCL = [0, 0, 0, 1, 1, 2, 2, 3, 6];
-
+    // TODO: Add more tower sites for higher levels
     const towerSites = [
       new RoomPosition(baseCenter.x - 1, baseCenter.y, this.room.name),
       new RoomPosition(baseCenter.x + 1, baseCenter.y, this.room.name)
     ];
 
-    let i = 0;
-
     for (const pos of towerSites) {
-      if (i++ >= maxPerRCL[rcl]) break;
-
-      const existingSite = this.room.lookForAt(
-        LOOK_CONSTRUCTION_SITES,
-        pos.x,
-        pos.y
-      )[0];
-
-      if (existingSite?.structureType === STRUCTURE_TOWER) {
-        continue;
-      }
-
-      const existingTower = this.room.lookForAt(
-        LOOK_STRUCTURES,
-        pos.x,
-        pos.y
-      )[0];
-
-      if (existingTower?.structureType === STRUCTURE_TOWER) {
-        continue;
-      }
-
       this.plans[PlanType.tower].push({
         pos,
         structureType: STRUCTURE_TOWER
@@ -275,9 +234,12 @@ export class RoomPlanner {
     }
   }
 
-  // Plan container < 4 or storage
-  planCenterStorage(baseCenter: RoomPosition, rcl: number) {
-    console.log('planning storage');
+  // Plan container if rcl < 4 or storage
+  planCenterStorage(baseCenter: RoomPosition) {
+    console.log('planning center storage');
+    const rcl = this.room.controller?.level ?? 0;
+
+    if (this.room.storage) return; // No need to plan
 
     const planType = rcl < 4 ? PlanType.container : PlanType.storage;
     const structureType =
@@ -286,41 +248,14 @@ export class RoomPlanner {
     const x = baseCenter.x;
     const y = baseCenter.y + 1;
 
-    if (!this.plans[planType].length) {
-      // Handle removing container if we can build storage now
-
-      const existingSite = this.room.lookForAt(
-        LOOK_CONSTRUCTION_SITES,
-        x,
-        y
-      )[0];
-
-      if (existingSite && existingSite.structureType !== structureType) {
-        console.log(existingSite);
-
-        existingSite.remove();
-      }
-
-      const existingStructure = this.room.lookForAt(LOOK_STRUCTURES, x, y)[0];
-
-      if (
-        existingStructure &&
-        existingStructure.structureType !== structureType
-      ) {
-        existingStructure.destroy();
-      }
-
-      this.plans[planType].push({
-        pos: new RoomPosition(x, y, this.room.name),
-        structureType
-      });
-    }
+    this.plans[planType].push({
+      pos: new RoomPosition(x, y, this.room.name),
+      structureType
+    });
   }
 
-  planExtensions(baseCenter: RoomPosition, rcl: number) {
+  planExtensions(baseCenter: RoomPosition) {
     console.log('planning extensions');
-
-    const maxPerRCL = [0, 0, 5, 10, 20, 30, 40, 50, 60];
 
     const pattern = [
       { x: -3, y: -2 },
@@ -333,40 +268,22 @@ export class RoomPlanner {
 
     const plans: BuildingPlan[] = [];
 
-    let numExtensions =
-      this.room.findConstructionSites(STRUCTURE_EXTENSION).length +
-      this.room.find(FIND_STRUCTURES, {
-        filter: struct => struct.structureType === STRUCTURE_EXTENSION
-      }).length;
-
+    // Repeat pattern 4 times rotated around center
     for (let xF = -1; xF <= 1; xF += 2) {
       for (let yF = -1; yF <= 1; yF += 2) {
         for (const pos of pattern) {
-          if (numExtensions >= maxPerRCL[rcl]) break;
-
           const x = baseCenter.x + pos.x * xF;
           const y = baseCenter.y + pos.y * yF;
-
-          const existingSite = this.room.lookForAt(
-            LOOK_CONSTRUCTION_SITES,
-            x,
-            y
-          )[0];
-
-          if (existingSite?.structureType === STRUCTURE_EXTENSION) {
-            continue;
-          }
 
           plans.push({
             pos: new RoomPosition(x, y, this.room.name),
             structureType: STRUCTURE_EXTENSION
           });
-
-          numExtensions++;
         }
       }
     }
 
+    // Build closest to spawn first
     this.plans[PlanType.extension].push(
       ...plans.sort(
         (a, b) => a.pos.getRangeTo(baseCenter) - b.pos.getRangeTo(baseCenter)
@@ -374,66 +291,99 @@ export class RoomPlanner {
     );
   }
 
-  // If dryRun = true, just draw site locations instead of creating them
-  placeConstructionSites(dryRun = false, rcl: number) {
+  // Place construction sites for all plans
+  // If wrong construction site or structure is in place, it gets destroyed
+  // Placed in order of this.plans PlanType keys,
+  // but some limits apply like the amount of each type at a given RCL
+  placeConstructionSites(rcl: number) {
     // Counter to stay under config.MAX_CONSTRUCTION_SITES
     let numConstructionSites = this.room.findConstructionSites().length;
 
     for (const planType of Object.keys(this.plans)) {
-      if (planType === PlanType.road && rcl < 3) continue;
-
       const plans = this.plans[planType as unknown as PlanType];
-      console.log(plans.length, planType, 'plans to construct');
+      console.log(plans.length, planType, 'plans created');
 
-      if (dryRun || global.isFirstTick) {
-        for (const i in plans) {
-          const plan = plans[i];
-          if (this.room.visual.getSize() < 512000) {
-            this.room.visual.circle(plan.pos.x, plan.pos.y, {
-              radius: 0.25,
-              fill:
-                plan.structureType === STRUCTURE_ROAD
-                  ? 'grey'
-                  : plan.structureType === STRUCTURE_CONTAINER ||
-                    plan.structureType === STRUCTURE_STORAGE
-                  ? 'orange'
-                  : plan.structureType === STRUCTURE_TOWER
-                  ? 'red'
-                  : plan.structureType === STRUCTURE_EXTENSION
-                  ? 'yellow'
-                  : 'white'
-            });
-            this.room.visual.text(i, plan.pos.x, plan.pos.y, {
-              font: 0.3
-            });
-          }
-        }
+      // Visualize all plans on global reset/code push for sanity check
+      if (global.isFirstTick) {
+        this.visualizePlans(plans);
       }
 
-      if (dryRun) continue;
+      if (planType === PlanType.road && rcl < 3) continue;
+      if (planType === PlanType.storage && rcl < 4) continue;
 
-      let i = 0;
-      while (
-        i < plans.length &&
-        numConstructionSites <= config.MAX_CONSTRUCTION_SITES
-      ) {
-        const plan = plans[i];
+      for (const plan of plans) {
+        if (numConstructionSites >= config.MAX_CONSTRUCTION_SITES) break;
+        let alreadyBuilt = false;
+
+        // Check existing structures at location, destroy if wrong type
+        // If right type, plan is already constructed
+        const existingStructures = this.room.lookForAt(
+          LOOK_STRUCTURES,
+          plan.pos
+        );
+
+        for (const struct of existingStructures) {
+          if (struct.structureType === plan.structureType) {
+            alreadyBuilt = true;
+            break;
+          } else {
+            struct.destroy();
+          }
+        }
+
+        if (alreadyBuilt) continue;
+
+        // Check existing const sites, destroy if wrong type
+        const existingSites = this.room.lookForAt(
+          LOOK_CONSTRUCTION_SITES,
+          plan.pos
+        );
+
+        for (const site of existingSites) {
+          if (site.structureType === plan.structureType) {
+            alreadyBuilt = true;
+            break;
+          } else {
+            site.remove();
+          }
+        }
+
+        if (alreadyBuilt) continue;
 
         const res = this.room.createConstructionSite(
           plan.pos,
           plan.structureType
         );
 
-        if (res === ERR_FULL) break;
-        if (res === ERR_RCL_NOT_ENOUGH) {
-          i++;
-          continue;
-        }
-
-        // Remove plan from plans, it's now done or can't be done
-        plans.splice(i, 1);
-        numConstructionSites++;
+        if (res === ERR_FULL) return;
+        if (res === ERR_RCL_NOT_ENOUGH) continue;
+        if (res === OK) numConstructionSites++;
       }
+    }
+  }
+
+  visualizePlans(plans: BuildingPlan[]) {
+    for (const i in plans) {
+      const plan = plans[i];
+      if (this.room.visual.getSize() >= 512000) break;
+
+      this.room.visual.circle(plan.pos.x, plan.pos.y, {
+        radius: 0.25,
+        fill:
+          plan.structureType === STRUCTURE_ROAD
+            ? 'grey'
+            : plan.structureType === STRUCTURE_CONTAINER ||
+              plan.structureType === STRUCTURE_STORAGE
+            ? 'orange'
+            : plan.structureType === STRUCTURE_TOWER
+            ? 'red'
+            : plan.structureType === STRUCTURE_EXTENSION
+            ? 'yellow'
+            : 'white'
+      });
+      this.room.visual.text(i, plan.pos.x, plan.pos.y, {
+        font: 0.3
+      });
     }
   }
 }

@@ -1,7 +1,12 @@
 import { TaskManager } from 'TaskManager';
 import { CreepBase } from './CreepBase';
 
-interface HarvesterTask extends CreepTask {
+// Type is harvest just like when other creeps go to sources
+// So the container is stored as the target instead of the source
+// This helps avoid task id conflicts with different roles
+// Should only really matter at early rcl when Pioneers still exist
+interface MinerTask extends CreepTask {
+  type: 'harvest';
   data: {
     source: string;
   };
@@ -34,15 +39,12 @@ export class HarvesterCreep extends CreepBase {
     return numContainers;
   }
 
-  findTask(creep: Creep, taskManager: TaskManager): HarvesterTask | null {
+  findTask(creep: Creep, taskManager: TaskManager): MinerTask | null {
     const container = creep.room
       .findSourceContainers()
       .filter(
         container =>
-          !taskManager.tasks[
-            taskManager.createTask(creep.pos.roomName, container.id, 'harvest')
-              .id
-          ]
+          !taskManager.isTaskTaken(creep.pos.roomName, container.id, 'harvest')
       )[0];
 
     if (container) {
@@ -53,11 +55,12 @@ export class HarvesterCreep extends CreepBase {
             source.pos.getRangeTo(container.pos.x, container.pos.y) === 1
         )[0];
 
-      if (source) {
-        return taskManager.createTask<HarvesterTask>(
+      if (container) {
+        return taskManager.createTask<MinerTask>(
           container.pos.roomName,
           container.id,
           'harvest',
+          1,
           { source: source.id }
         );
       }
@@ -66,7 +69,7 @@ export class HarvesterCreep extends CreepBase {
     return null;
   }
 
-  isValidTask(creep: Creep, task: HarvesterTask): boolean {
+  isValidTask(creep: Creep, task: MinerTask): boolean {
     return (
       !!Game.getObjectById(task.target as Id<StructureContainer>) &&
       !!Game.getObjectById(task.data.source as Id<Source>)
@@ -76,7 +79,7 @@ export class HarvesterCreep extends CreepBase {
   run(creep: Creep): void {
     if (!creep.memory.task || creep.memory.task.complete) return;
 
-    const task = creep.memory.task as HarvesterTask;
+    const task = creep.memory.task as MinerTask;
     const container = Game.getObjectById(task.target as Id<StructureContainer>);
     const source = Game.getObjectById(task.data.source as Id<Source>);
 
@@ -86,7 +89,7 @@ export class HarvesterCreep extends CreepBase {
     }
 
     // If creep is on container, harvest data.source
-    if (creep.pos.getRangeTo(container.pos.x, container.pos.y) === 0) {
+    if (creep.pos.x === container.pos.x && creep.pos.y === container.pos.y) {
       creep.harvest(source);
     } else {
       creep.moveTo(container);

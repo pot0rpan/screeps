@@ -48,11 +48,11 @@ export default (() => {
         .filter((source): source is Source => !!source);
     }
 
-    //! BROKEN
-    console.log('sources', this._sources.length);
-
-    // return the locally stored value
-    return this._sources;
+    // Return the locally stored value,
+    // but filter out dangerous sources
+    return this._sources.filter(
+      source => !source.pos.findInRange(FIND_HOSTILE_CREEPS, 1).length
+    );
   };
 
   // Cached for tick
@@ -79,9 +79,6 @@ export default (() => {
 
       this._sourceContainers = sourceContainers;
     }
-
-    //! BROKEN
-    console.log('source containers', this._sourceContainers.length);
 
     return this._sourceContainers;
   };

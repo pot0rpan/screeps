@@ -41,12 +41,8 @@ export class BuilderCreep extends CreepBase {
       let target: ConstructionSite | Structure | null;
       let type: BuilderTask['type'] = 'build';
 
-      target = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES, {
-        filter: site =>
-          !taskManager.tasks[
-            taskManager.createTask(site.pos.roomName, site.id, type).id
-          ]
-      });
+      // Allow multiple builders to target same construction site
+      target = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
 
       if (!target) {
         // Repair structures if no towers
@@ -66,9 +62,7 @@ export class BuilderCreep extends CreepBase {
             isDamaged(struct) &&
             struct.structureType !== STRUCTURE_WALL &&
             struct.structureType !== STRUCTURE_RAMPART &&
-            !taskManager.tasks[
-              taskManager.createTask(struct.pos.roomName, struct.id, type).id
-            ]
+            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type)
         });
       }
 
@@ -135,6 +129,8 @@ export class BuilderCreep extends CreepBase {
 
     if (task.type === 'harvest') {
       if ((target as Source).energy < 0) return false;
+      if (creep.pos.isNearTo(target.pos.x, target.pos.y)) return true;
+      if (target.pos.getAdjacentPositions(1, false).length === 0) return false;
     }
 
     if (task.type === 'withdraw') {

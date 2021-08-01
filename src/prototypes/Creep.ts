@@ -6,6 +6,8 @@ declare global {
     _isDying: boolean;
     isFull(): boolean;
     isEmpty(): boolean;
+    moveTo(): CreepMoveReturnCode;
+    _moveTo(): CreepMoveReturnCode;
   }
 }
 
