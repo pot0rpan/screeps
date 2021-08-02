@@ -97,41 +97,32 @@ export default (() => {
     return this._upgradeContainers;
   };
 
-  // No caching
-  // TODO: Override createConstructionSite so caching stays updated
+  // Cache for tick
   Room.prototype.findConstructionSites = function (type = 'all') {
-    let sites = this.find(FIND_CONSTRUCTION_SITES);
-    if (type !== 'all') {
-      sites = sites.filter(site => site.structureType === type);
+    if (!this._constructionSites) {
+      this._constructionSites = {};
     }
-    return sites;
 
-    // if (!this._constructionSites) {
-    //   this._constructionSites = {};
-    // }
+    if (!this._constructionSites[type]) {
+      // Just filter from all if all is cached
+      if (this._constructionSites.all) {
+        this._constructionSites[type] = this._constructionSites.all.filter(
+          site => site.structureType === type
+        );
+      } else {
+        // Fetch all and save both all and filtered
+        this._constructionSites.all = this.find(FIND_CONSTRUCTION_SITES);
+        if (type !== 'all') {
+          this._constructionSites[type] = this._constructionSites.all.filter(
+            site => site.structureType === type
+          );
+        }
+      }
+    }
 
-    // if (!this._constructionSites[type]) {
-    //   // Just filter from all if all is cached
-    //   if (this._constructionSites.all) {
-    //     this._constructionSites[type] = this._constructionSites.all.filter(
-    //       site => site.structureType === type
-    //     );
-    //   } else {
-    //     // Fetch all and save both all and filtered
-    //     this._constructionSites.all = this.find(FIND_CONSTRUCTION_SITES);
-    //     if (type !== 'all') {
-    //       this._constructionSites[type] = this._constructionSites.all.filter(
-    //         site => site.structureType === type
-    //       );
-    //     }
-    //   }
-    // } else {
-    //   console.log('reading constructionSites from cache');
-    // }
-
-    // // Cast since typescript doesn't know it's now defined
-    // return this._constructionSites[
-    //   type
-    // ] as ConstructionSite<BuildableStructureConstant>[];
+    // Cast since typescript doesn't know it's now defined
+    return this._constructionSites[
+      type
+    ] as ConstructionSite<BuildableStructureConstant>[];
   };
 })();

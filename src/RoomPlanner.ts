@@ -113,8 +113,7 @@ export class RoomPlanner {
             costs.set(plan.pos.x, plan.pos.y, 1);
           }
 
-          // Add road construction sites to cost matrix,
-          // these will not appear in this.plans as they're removed after placing
+          // Add road construction sites to cost matrix
           for (const site of room.findConstructionSites(STRUCTURE_ROAD)) {
             costs.set(site.pos.x, site.pos.y, 1);
           }
