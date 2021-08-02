@@ -16,7 +16,7 @@ enum PlanType {
   road = 'road',
   tower = 'tower',
   container = 'container',
-  storage = 'storage'
+  storage = 'storage',
 }
 
 export class RoomPlanner {
@@ -31,7 +31,7 @@ export class RoomPlanner {
     [PlanType.container]: [],
     [PlanType.storage]: [],
     [PlanType.tower]: [],
-    [PlanType.road]: []
+    [PlanType.road]: [],
   };
 
   constructor(room: Room) {
@@ -131,7 +131,7 @@ export class RoomPlanner {
             }
           }
           return costs;
-        }
+        },
       });
 
       if (ret.incomplete || !ret.path.length) {
@@ -142,7 +142,7 @@ export class RoomPlanner {
       // Add container construction site at last pos
       this.plans[PlanType.container].push({
         pos: ret.path[ret.path.length - 1],
-        structureType: STRUCTURE_CONTAINER
+        structureType: STRUCTURE_CONTAINER,
       });
 
       // Add road construction sites to plans,
@@ -168,7 +168,7 @@ export class RoomPlanner {
         if (!skip) {
           this.plans[PlanType.road].push({
             pos,
-            structureType: STRUCTURE_ROAD
+            structureType: STRUCTURE_ROAD,
           });
         }
       }
@@ -180,7 +180,7 @@ export class RoomPlanner {
 
     this.room.visual.rect(baseCenter.x - 3.5, baseCenter.y - 3.5, 7, 7, {
       stroke: 'grey',
-      fill: 'transparent'
+      fill: 'transparent',
     });
 
     // Plan roads around spawn, both X and + shape 3 long
@@ -220,13 +220,13 @@ export class RoomPlanner {
     // TODO: Add more tower sites for higher levels
     const towerSites = [
       new RoomPosition(baseCenter.x - 1, baseCenter.y, this.room.name),
-      new RoomPosition(baseCenter.x + 1, baseCenter.y, this.room.name)
+      new RoomPosition(baseCenter.x + 1, baseCenter.y, this.room.name),
     ];
 
     for (const pos of towerSites) {
       this.plans[PlanType.tower].push({
         pos,
-        structureType: STRUCTURE_TOWER
+        structureType: STRUCTURE_TOWER,
       });
     }
   }
@@ -247,7 +247,7 @@ export class RoomPlanner {
 
     this.plans[planType].push({
       pos: new RoomPosition(x, y, this.room.name),
-      structureType
+      structureType,
     });
   }
 
@@ -260,7 +260,7 @@ export class RoomPlanner {
       { x: -2, y: -1 },
       { x: -2, y: -3 },
       { x: -1, y: -3 },
-      { x: -1, y: -2 }
+      { x: -1, y: -2 },
     ];
 
     const plans: BuildingPlan[] = [];
@@ -274,7 +274,7 @@ export class RoomPlanner {
 
           plans.push({
             pos: new RoomPosition(x, y, this.room.name),
-            structureType: STRUCTURE_EXTENSION
+            structureType: STRUCTURE_EXTENSION,
           });
         }
       }
@@ -297,7 +297,7 @@ export class RoomPlanner {
     let numConstructionSites = this.room.findConstructionSites().length;
 
     for (const planType of Object.keys(this.plans)) {
-      const plans = this.plans[planType as unknown as PlanType];
+      const plans = this.plans[(planType as unknown) as PlanType];
       console.log(plans.length, planType, 'plans created');
 
       // Visualize all plans on global reset/code push for sanity check
@@ -376,10 +376,10 @@ export class RoomPlanner {
             ? 'red'
             : plan.structureType === STRUCTURE_EXTENSION
             ? 'yellow'
-            : 'white'
+            : 'white',
       });
       this.room.visual.text(i, plan.pos.x, plan.pos.y, {
-        font: 0.3
+        font: 0.3,
       });
     }
   }

@@ -45,7 +45,7 @@ export class MoverCreep extends CreepBase {
           filter: struct =>
             struct.structureType === STRUCTURE_EXTENSION &&
             struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type)
+            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
         }
       );
 
@@ -67,7 +67,7 @@ export class MoverCreep extends CreepBase {
             struct.structureType === STRUCTURE_TOWER &&
             struct.store.getUsedCapacity(RESOURCE_ENERGY) <
               config.MAX_TOWER_REFILL &&
-            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type)
+            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
         })[0];
       }
 
@@ -105,7 +105,7 @@ export class MoverCreep extends CreepBase {
             filter: struct =>
               struct.structureType === STRUCTURE_CONTAINER &&
               struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-              !taskManager.isTaskTaken(creep.room.name, struct.id, type)
+              !taskManager.isTaskTaken(creep.room.name, struct.id, type),
           })[0];
         }
       }

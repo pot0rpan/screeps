@@ -39,24 +39,24 @@ export class HumanResources {
     const creepNums: CreepNums = {
       pioneer: {
         target: global.Creeps.pioneer.targetNum(this.room),
-        actual: 0
+        actual: 0,
       },
       builder: {
         target: global.Creeps.builder.targetNum(this.room),
-        actual: 0
+        actual: 0,
       },
       harvester: {
         target: global.Creeps.harvester.targetNum(this.room),
-        actual: 0
+        actual: 0,
       },
       mover: {
         target: global.Creeps.mover.targetNum(this.room),
-        actual: 0
+        actual: 0,
       },
       upgrader: {
         target: global.Creeps.upgrader.targetNum(this.room),
-        actual: 0
-      }
+        actual: 0,
+      },
     };
 
     for (const creep of colonyCreeps) {
@@ -84,8 +84,8 @@ export class HumanResources {
               memory: {
                 role: role as CreepRole,
                 working: false,
-                homeRoom: spawn.room.name
-              }
+                homeRoom: spawn.room.name,
+              },
             });
 
             return;

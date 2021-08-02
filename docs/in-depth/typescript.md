@@ -14,12 +14,12 @@ The `--strict` compiler flag was introduced in TypeScript 2.3 which activates Ty
 
 As of TypeScript 2.7, the affected options are:
 
-* `--noImplicitAny`
-* `--noImplicitThis`
-* `--alwaysStrict`
-* `--strictNullChecks`
-* `--strictFunctionTypes`
-* `--strictPropertyInitialization`
+- `--noImplicitAny`
+- `--noImplicitThis`
+- `--alwaysStrict`
+- `--strictNullChecks`
+- `--strictFunctionTypes`
+- `--strictPropertyInitialization`
 
 Starting from version 2.0 of the starter kit, we've enabled the `--strict` flag in `tsconfig.json`. If this gives you compile time errors, you can try setting `"strict"` to `false`, or by overriding one or more of the options listed above.
 
@@ -33,10 +33,10 @@ This project provides TSLint rules through a `tslint.json` file, which extends t
 
 We've made some changes to these rules, which we considered necessary and/or relevant to a proper Screeps project:
 
-* set the [forin](http://palantir.github.io/tslint/rules/forin/) rule to `false`, it was forcing `for ( ... in ...)` loops to check if object members were not coming from the class prototype.
-* set the [interface-name](http://palantir.github.io/tslint/rules/interface-name/) rule to `false`, in order to allow interfaces that are not prefixed with `I`.
-* set the [no-console](http://palantir.github.io/tslint/rules/no-console/) rule to `false`, in order to allow using `console`.
-* in the [variable-name](http://palantir.github.io/tslint/rules/variable-name/) rule, added `allow-leading-underscore`.
+- set the [forin](http://palantir.github.io/tslint/rules/forin/) rule to `false`, it was forcing `for ( ... in ...)` loops to check if object members were not coming from the class prototype.
+- set the [interface-name](http://palantir.github.io/tslint/rules/interface-name/) rule to `false`, in order to allow interfaces that are not prefixed with `I`.
+- set the [no-console](http://palantir.github.io/tslint/rules/no-console/) rule to `false`, in order to allow using `console`.
+- in the [variable-name](http://palantir.github.io/tslint/rules/variable-name/) rule, added `allow-leading-underscore`.
 
 ### Customising TSLint
 
@@ -45,4 +45,3 @@ You can also customise your `tslint.json` file to match the preferences of your 
 If you believe that some rules should not apply to a part of your code \(e.g. for one-off cases like having to use `require()` to include a module\), you can use flags to let TSLint know about it: [https://palantir.github.io/tslint/usage/rule-flags/](https://palantir.github.io/tslint/usage/rule-flags/)
 
 **More info about TSLint:** [https://palantir.github.io/tslint/](https://palantir.github.io/tslint/)
-

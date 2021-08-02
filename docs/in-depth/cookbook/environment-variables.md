@@ -9,7 +9,7 @@ Let's say that we want to set `NODE_ENV` to `production` for uploading to our ma
 ```javascript
 // rollup.config.js
 
-const isProduction = process.env.NODE_ENV === 'production'
+const isProduction = process.env.NODE_ENV === 'production';
 
 // use the `main` target from `screeps.json` in production mode
 const cfg = isProduction ? 'main' : 'sim';
@@ -19,12 +19,12 @@ export default {
   plugins: [
     // ...
     screeps({
-      config: require("./screeps")[cfg],
+      config: require('./screeps')[cfg],
       // if `NODE_ENV` is local, perform a dry run
-      dryRun: process.env.NODE_ENV === 'local'
-    })
-  ]
-}
+      dryRun: process.env.NODE_ENV === 'local',
+    }),
+  ],
+};
 ```
 
 ## Running a deploy
@@ -88,8 +88,8 @@ export default {
       // date + time of build, as well as latest commit ID from git
       __BUILD_TIME__: JSON.stringify(Date.now()),
       __REVISION__: JSON.stringify(require('git-rev-sync').short()),
-    })
-  ]
+    }),
+  ],
 };
 ```
 
@@ -108,13 +108,13 @@ Once it's set up, you use it in your code.
 ```typescript
 // log the latest commit ID from git
 if (__REVISION__) {
-  console.log(`Revision ID: ${__REVISION__}`)
+  console.log(`Revision ID: ${__REVISION__}`);
 }
 
 export function loop() {
   if (!PRODUCTION) {
     // will only be included in development mode
-    devLogger.log('loop started')
+    devLogger.log('loop started');
   }
 }
 ```
@@ -131,4 +131,3 @@ declare const __BUILD_TIME__: string;
 ```
 
 Also, be careful not to use too common of a name, because it will replace it throughout your code without warning. A good standard is to make the variables all caps, and surrounded by double underscores, so they stand out \(e.g. `__REVISION__`\).
-

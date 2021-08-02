@@ -62,7 +62,7 @@ export class BuilderCreep extends CreepBase {
             isDamaged(struct) &&
             struct.structureType !== STRUCTURE_WALL &&
             struct.structureType !== STRUCTURE_RAMPART &&
-            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type)
+            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
         });
       }
 
@@ -89,7 +89,7 @@ export class BuilderCreep extends CreepBase {
         filter: struct =>
           struct.structureType === STRUCTURE_CONTAINER &&
           struct.store[RESOURCE_ENERGY] >=
-            creep.store.getFreeCapacity(RESOURCE_ENERGY)
+            creep.store.getFreeCapacity(RESOURCE_ENERGY),
       });
 
       if (nearestContainer) {
@@ -185,7 +185,7 @@ export class BuilderCreep extends CreepBase {
         res = creep.harvest(target as Source);
         break;
       case 'build':
-        res = creep.build(target as unknown as ConstructionSite);
+        res = creep.build((target as unknown) as ConstructionSite);
         break;
       case 'withdraw':
         res = creep.withdraw(

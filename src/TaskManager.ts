@@ -54,7 +54,7 @@ export class TaskManager {
       type,
       complete: false,
       limit,
-      data
+      data,
     } as Task;
     return task;
   }
@@ -88,7 +88,7 @@ export class TaskManager {
         } else {
           this.tasks[creep.memory.task.id] = {
             task: creep.memory.task,
-            creeps: [creep.name]
+            creeps: [creep.name],
           };
         }
       }

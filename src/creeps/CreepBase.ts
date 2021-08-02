@@ -62,7 +62,7 @@ export abstract class CreepBase {
     return {
       name: `${this.role}-${Game.time}`,
       body,
-      cost: bodyCost(body)
+      cost: bodyCost(body),
     };
   }
 }

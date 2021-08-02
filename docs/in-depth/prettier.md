@@ -45,10 +45,14 @@ Then in your `.eslintrc` file, add the following:
 ```javascript
 module.exports = {
   // other configuration omitted for brevity
-  extends: ["prettier", "prettier/@typescript-eslint", "plugin:prettier/recommended"],
-  plugins: ["prettier"],
+  extends: [
+    'prettier',
+    'prettier/@typescript-eslint',
+    'plugin:prettier/recommended',
+  ],
+  plugins: ['prettier'],
   rules: {
-    "prettier/prettier": "error"
-  }
+    'prettier/prettier': 'error',
+  },
 };
 ```

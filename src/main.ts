@@ -40,7 +40,7 @@ global.Creeps = {
   builder: new BuilderCreep(),
   harvester: new HarvesterCreep(),
   upgrader: new UpgraderCreep(),
-  mover: new MoverCreep()
+  mover: new MoverCreep(),
 };
 
 global.empire = new Empire();

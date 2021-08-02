@@ -12,9 +12,9 @@ declare global {
       type?: BuildableStructureConstant | 'all'
     ): ConstructionSite<BuildableStructureConstant>[];
     _constructionSites: {
-      [key in
-        | BuildableStructureConstant
-        | 'all']?: ConstructionSite<BuildableStructureConstant>[];
+      [key in BuildableStructureConstant | 'all']?: ConstructionSite<
+        BuildableStructureConstant
+      >[];
     };
   }
 
@@ -66,7 +66,7 @@ export default (() => {
           FIND_STRUCTURES,
           1,
           {
-            filter: struct => struct.structureType === STRUCTURE_CONTAINER
+            filter: struct => struct.structureType === STRUCTURE_CONTAINER,
           }
         );
 
@@ -88,10 +88,11 @@ export default (() => {
       this._upgradeContainers = [];
       const controller = this.controller;
       if (controller) {
-        this._upgradeContainers =
-          controller.pos.findInRange<StructureContainer>(FIND_STRUCTURES, 1, {
-            filter: struct => struct.structureType === STRUCTURE_CONTAINER
-          });
+        this._upgradeContainers = controller.pos.findInRange<
+          StructureContainer
+        >(FIND_STRUCTURES, 1, {
+          filter: struct => struct.structureType === STRUCTURE_CONTAINER,
+        });
       }
     }
     return this._upgradeContainers;
@@ -121,8 +122,8 @@ export default (() => {
     }
 
     // Cast since typescript doesn't know it's now defined
-    return this._constructionSites[
-      type
-    ] as ConstructionSite<BuildableStructureConstant>[];
+    return this._constructionSites[type] as ConstructionSite<
+      BuildableStructureConstant
+    >[];
   };
 })();

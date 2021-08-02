@@ -98,7 +98,7 @@ export default (() => {
     return this.findClosestByRange(FIND_SOURCES, {
       filter: source =>
         source.energy > 0 &&
-        source.pos.getAdjacentPositions(1, false).length > 0
+        source.pos.getAdjacentPositions(1, false).length > 0,
     });
   };
 })();

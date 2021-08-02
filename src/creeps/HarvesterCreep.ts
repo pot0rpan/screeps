@@ -33,7 +33,7 @@ export class HarvesterCreep extends CreepBase {
           struct.pos.y + 1,
           struct.pos.x + 1,
           true
-        ).length
+        ).length,
     }).length;
 
     return numContainers;

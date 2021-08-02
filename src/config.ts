@@ -7,6 +7,6 @@ export default {
     RECHECK_TASK_VALIDITY: 5,
     CLEAN_TASK_CACHE: 99,
     DELETE_DEAD_CREEP_MEMORY: 3,
-    PLAN_ROOMS: 69
-  }
+    PLAN_ROOMS: 69,
+  },
 };

@@ -22,7 +22,7 @@ export class PioneerCreep extends CreepBase {
     if (
       !room.find(FIND_MY_CREEPS, {
         filter: creep =>
-          creep.memory.role === 'upgrader' || creep.memory.role === 'mover'
+          creep.memory.role === 'upgrader' || creep.memory.role === 'mover',
       }).length
     ) {
       return 2;
@@ -47,7 +47,7 @@ export class PioneerCreep extends CreepBase {
           filter: struct =>
             struct.structureType === STRUCTURE_EXTENSION &&
             struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type)
+            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
         }
       );
 
@@ -91,7 +91,7 @@ export class PioneerCreep extends CreepBase {
         filter: struct =>
           struct.structureType === STRUCTURE_CONTAINER &&
           struct.store[RESOURCE_ENERGY] >=
-            creep.store.getFreeCapacity(RESOURCE_ENERGY)
+            creep.store.getFreeCapacity(RESOURCE_ENERGY),
       });
 
       if (nearestContainer) {

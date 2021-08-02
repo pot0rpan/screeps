@@ -31,9 +31,15 @@ class IntegrationTestHelper {
 
     // add a player with the built dist/main.js file
     const modules = {
-        main: readFileSync(DIST_MAIN_JS).toString(),
+      main: readFileSync(DIST_MAIN_JS).toString(),
     };
-    this._player = await this._server.world.addBot({ username: 'player', room: 'W0N1', x: 15, y: 15, modules });
+    this._player = await this._server.world.addBot({
+      username: 'player',
+      room: 'W0N1',
+      x: 15,
+      y: 15,
+      modules,
+    });
 
     // Start server
     await this._server.start();
