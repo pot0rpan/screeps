@@ -73,7 +73,7 @@ export class UpgraderCreep extends CreepBase {
       // Otherwise withdraw from container
       const res = creep.withdraw(container, RESOURCE_ENERGY);
       if (res === ERR_NOT_IN_RANGE) {
-        creep.moveTo(container);
+        creep.travelTo(container);
       } else {
         creep.say('...');
       }

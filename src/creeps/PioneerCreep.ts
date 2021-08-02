@@ -206,7 +206,7 @@ export class PioneerCreep extends CreepBase {
     }
 
     if (res === ERR_NOT_IN_RANGE) {
-      creep.moveTo(target);
+      creep.travelTo(target);
     }
 
     // Toggle `working` boolean if working and out of energy

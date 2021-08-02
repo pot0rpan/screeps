@@ -92,7 +92,7 @@ export class HarvesterCreep extends CreepBase {
     if (creep.pos.x === container.pos.x && creep.pos.y === container.pos.y) {
       creep.harvest(source);
     } else {
-      creep.moveTo(container);
+      creep.travelTo(container);
     }
   }
 }

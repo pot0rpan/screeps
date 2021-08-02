@@ -2,6 +2,8 @@ import 'prototypes/Creep';
 import 'prototypes/Room';
 import 'prototypes/RoomPosition';
 
+import 'utils/Traveler';
+
 import { ErrorMapper } from 'utils/ErrorMapper';
 import { Empire } from 'Empire';
 import { isNthTick } from 'utils';

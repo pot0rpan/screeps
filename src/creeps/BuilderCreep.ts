@@ -185,7 +185,7 @@ export class BuilderCreep extends CreepBase {
         res = creep.harvest(target as Source);
         break;
       case 'build':
-        res = creep.build((target as unknown) as ConstructionSite);
+        res = creep.build(target as unknown as ConstructionSite);
         break;
       case 'withdraw':
         res = creep.withdraw(
@@ -201,7 +201,7 @@ export class BuilderCreep extends CreepBase {
     }
 
     if (res === ERR_NOT_IN_RANGE) {
-      creep.moveTo(target);
+      creep.travelTo(target);
     }
 
     // Toggle `working` boolean if working and out of energy
