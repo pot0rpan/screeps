@@ -10,20 +10,10 @@ export class MoverCreep extends CreepBase {
   role: CreepRole = 'mover';
   bodyPattern = [CARRY, MOVE];
 
-  // Same number of source/controller containers
+  // Same number of source containers
   // Max of 3
   targetNum(room: Room): number {
-    let num = 0;
-    const numSourceContainers = room.findSourceContainers().length;
-    const numControllerContainers = room.findUpgradeContainers().length;
-    const storage = room.storage;
-
-    if (storage) {
-      num++;
-    }
-
-    num += numSourceContainers + numControllerContainers;
-    return Math.min(num, 3);
+    return Math.min(room.findSourceContainers().length, 3);
   }
 
   findTask(creep: Creep, taskManager: TaskManager): MoverTask | null {
@@ -124,10 +114,6 @@ export class MoverCreep extends CreepBase {
       // Gather from fullest source container
       target = creep.room
         .findSourceContainers()
-        // .filter(
-        //   container =>
-        //     !taskManager.isTaskTaken(container.room.name, container.id, type)
-        // )
         .sort(
           (a, b) =>
             a.store.getFreeCapacity(RESOURCE_ENERGY) -
@@ -232,6 +218,10 @@ export class MoverCreep extends CreepBase {
     }
 
     if (res === ERR_NOT_IN_RANGE) {
+      // Find dropped resources in range
+      const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1)[0];
+      if (dropped) creep.pickup(dropped);
+
       creep.travelTo(target);
     }
 

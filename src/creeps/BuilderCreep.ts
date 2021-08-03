@@ -72,7 +72,6 @@ export class BuilderCreep extends CreepBase {
     } else {
       // Find room storage
       if (
-        (creep.room.controller?.level ?? 0) > 3 &&
         creep.room.storage &&
         creep.room.storage.store[RESOURCE_ENERGY] >=
           creep.store.getFreeCapacity(RESOURCE_ENERGY)

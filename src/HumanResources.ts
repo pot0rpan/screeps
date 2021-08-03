@@ -78,7 +78,12 @@ export class HumanResources {
         if (buildData.body.length) {
           if (buildData.cost <= this.room.energyAvailable) {
             // Current energy is enough for biggest creep we can spawn with current energy capacity
-            console.log(spawn.name, 'spawning', role);
+            console.log(
+              spawn.name,
+              'spawning',
+              role,
+              JSON.stringify(buildData.body)
+            );
 
             spawn.spawnCreep(buildData.body, buildData.name, {
               memory: {
