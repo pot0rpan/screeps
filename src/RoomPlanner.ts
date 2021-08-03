@@ -78,6 +78,15 @@ export class RoomPlanner {
 
   planRoadsAndContainers(baseCenter: RoomPosition) {
     console.log('planning roads/containers');
+
+    const containers: {
+      controller: BuildingPlan;
+      sources: BuildingPlan[];
+    } = {
+      controller: null!,
+      sources: [],
+    };
+
     const controller = this.room.controller;
 
     // Make path to each container from spawn, add coords to plans
@@ -95,7 +104,7 @@ export class RoomPlanner {
       const goal = { pos: source.pos, range: 1 };
 
       const ret = PathFinder.search(baseCenter, goal, {
-        plainCost: 1,
+        plainCost: 2,
         swampCost: 10,
         maxRooms: 1,
 
@@ -108,14 +117,16 @@ export class RoomPlanner {
             costs.set(pos.x, pos.y, 1);
           }
 
-          // Add previously planned road positions to cost matrix
+          // Add road plans
           for (const plan of this.plans[PlanType.road]) {
             costs.set(plan.pos.x, plan.pos.y, 1);
           }
 
-          // Add road construction sites to cost matrix
-          for (const site of room.findConstructionSites(STRUCTURE_ROAD)) {
-            costs.set(site.pos.x, site.pos.y, 1);
+          // Add other plans as blocking
+          for (const plan of this.plans[PlanType.extension]
+            .concat(this.plans[PlanType.tower])
+            .concat(this.plans[PlanType.storage])) {
+            costs.set(plan.pos.x, plan.pos.y, 0xff);
           }
 
           for (const struct of room.find(FIND_STRUCTURES)) {
@@ -130,6 +141,7 @@ export class RoomPlanner {
               costs.set(struct.pos.x, struct.pos.y, 0xff);
             }
           }
+
           return costs;
         },
       });
@@ -140,10 +152,17 @@ export class RoomPlanner {
       }
 
       // Add container construction site at last pos
-      this.plans[PlanType.container].push({
-        pos: ret.path[ret.path.length - 1],
-        structureType: STRUCTURE_CONTAINER,
-      });
+      if (source instanceof StructureController) {
+        containers.controller = {
+          pos: ret.path[ret.path.length - 1],
+          structureType: STRUCTURE_CONTAINER,
+        };
+      } else {
+        containers.sources.push({
+          pos: ret.path[ret.path.length - 1],
+          structureType: STRUCTURE_CONTAINER,
+        });
+      }
 
       // Add road construction sites to plans,
       // ignoring last pos to leave room for container
@@ -173,12 +192,26 @@ export class RoomPlanner {
         }
       }
     }
+
+    if (containers.controller) {
+      // Add container plans in order of priority
+      // At this point the center storage should be planned, but it should be last
+      // Add closest source container first, then controller, then other sources,
+      // leaving the center storage last
+      this.plans[PlanType.container].unshift(
+        containers.sources[0],
+        containers.controller,
+        ...containers.sources.slice(1)
+      );
+    } else {
+      this.plans[PlanType.container].unshift(...containers.sources);
+    }
   }
 
   planBaseCenter(baseCenter: RoomPosition) {
     console.log('planning main base layout');
 
-    this.room.visual.rect(baseCenter.x - 3.5, baseCenter.y - 3.5, 7, 7, {
+    this.room.visual.rect(baseCenter.x - 4.5, baseCenter.y - 4.5, 9, 9, {
       stroke: 'grey',
       fill: 'transparent',
     });
@@ -186,8 +219,8 @@ export class RoomPlanner {
     // Plan roads around spawn, both X and + shape 3 long
     // Sort to plan farthest first (closest to sources)
     const roadPlans = baseCenter
-      .getDiagonalPositions(3)
-      .concat(baseCenter.getAdjacentOrthogonalPositions(3))
+      .getDiagonalPositions(4)
+      .concat(baseCenter.getAdjacentOrthogonalPositions(4))
       .sort((a, b) => b.getRangeTo(baseCenter) - a.getRangeTo(baseCenter));
 
     for (const pos of roadPlans) {
@@ -231,23 +264,28 @@ export class RoomPlanner {
     }
   }
 
-  // Plan container if rcl < 4 or storage
+  // // Plan container if rcl < 4 or storage
   planCenterStorage(baseCenter: RoomPosition) {
     console.log('planning center storage');
-    const rcl = this.room.controller?.level ?? 0;
+    // const rcl = this.room.controller?.level ?? 0;
 
     if (this.room.storage) return; // No need to plan
 
-    const planType = rcl < 4 ? PlanType.container : PlanType.storage;
-    const structureType =
-      planType === PlanType.container ? STRUCTURE_CONTAINER : STRUCTURE_STORAGE;
+    // const planType = rcl < 4 ? PlanType.container : PlanType.storage;
+    // const structureType =
+    //   planType === PlanType.container ? STRUCTURE_CONTAINER : STRUCTURE_STORAGE;
 
     const x = baseCenter.x;
     const y = baseCenter.y + 1;
 
-    this.plans[planType].push({
+    // this.plans[planType].push({
+    //   pos: new RoomPosition(x, y, this.room.name),
+    //   structureType,
+    // });
+
+    this.plans[PlanType.storage].push({
       pos: new RoomPosition(x, y, this.room.name),
-      structureType,
+      structureType: STRUCTURE_STORAGE,
     });
   }
 
@@ -255,6 +293,12 @@ export class RoomPlanner {
     console.log('planning extensions');
 
     const pattern = [
+      { x: -1, y: -4 },
+      { x: -2, y: -4 },
+      { x: -3, y: -4 },
+      { x: -4, y: -3 },
+      { x: -4, y: -2 },
+      { x: -4, y: -1 },
       { x: -3, y: -2 },
       { x: -3, y: -1 },
       { x: -2, y: -1 },
@@ -297,7 +341,7 @@ export class RoomPlanner {
     let numConstructionSites = this.room.findConstructionSites().length;
 
     for (const planType of Object.keys(this.plans)) {
-      const plans = this.plans[(planType as unknown) as PlanType];
+      const plans = this.plans[planType as unknown as PlanType];
       console.log(plans.length, planType, 'plans created');
 
       // Visualize all plans on global reset/code push for sanity check
@@ -378,7 +422,7 @@ export class RoomPlanner {
             ? 'yellow'
             : 'white',
       });
-      this.room.visual.text(i, plan.pos.x, plan.pos.y, {
+      this.room.visual.text(i, plan.pos.x, plan.pos.y + 0.1, {
         font: 0.3,
       });
     }
