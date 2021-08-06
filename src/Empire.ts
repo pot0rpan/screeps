@@ -10,7 +10,7 @@ export class Empire {
 
     // Read colony room names from Memory
     if (Memory.colonies?.length) {
-      for (const roomName of Memory.colonies) {
+      for (const { roomName } of Memory.colonies) {
         this.colonies[roomName] = new Colony(roomName);
       }
     } else {
@@ -21,7 +21,7 @@ export class Empire {
         const room = Game.rooms[roomName];
         if (room.controller?.my && room.controller?.level > 0) {
           this.colonies[roomName] = new Colony(roomName);
-          Memory.colonies.push(roomName);
+          Memory.colonies.push({ roomName });
         }
       }
     }

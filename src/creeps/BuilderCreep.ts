@@ -42,7 +42,11 @@ export class BuilderCreep extends CreepBase {
       let type: BuilderTask['type'] = 'build';
 
       // Allow multiple builders to target same construction site
-      target = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
+      // Work on these 1 at a time (most completed one first)
+      // If all are equal progress, should automatically go in placement order
+      target = creep.room
+        .findConstructionSites()
+        .sort((a, b) => b.progress - a.progress)[0];
 
       if (!target) {
         // Repair structures if no towers
@@ -57,18 +61,19 @@ export class BuilderCreep extends CreepBase {
           return null;
         }
 
-        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-          filter: struct =>
-            isDamaged(struct) &&
-            struct.structureType !== STRUCTURE_WALL &&
-            struct.structureType !== STRUCTURE_RAMPART &&
-            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
-        });
+        // Find most damaged structure
+        target = creep.room
+          .find(FIND_STRUCTURES, {
+            filter: struct =>
+              isDamaged(struct) &&
+              !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
+          })
+          .sort((a, b) => a.hits - b.hits)[0];
       }
 
       if (!target) return null;
 
-      return taskManager.createTask(target.pos.roomName, target.id, type);
+      return taskManager.createTask(target.pos.roomName, target.id, type, 1);
     } else {
       // Find room storage
       if (
@@ -169,6 +174,7 @@ export class BuilderCreep extends CreepBase {
         | Source
         | StructureContainer
         | StructureStorage
+        | ConstructionSite
       >
     );
 
@@ -184,7 +190,7 @@ export class BuilderCreep extends CreepBase {
         res = creep.harvest(target as Source);
         break;
       case 'build':
-        res = creep.build(target as unknown as ConstructionSite);
+        res = creep.build(target as ConstructionSite);
         break;
       case 'withdraw':
         res = creep.withdraw(
@@ -200,7 +206,9 @@ export class BuilderCreep extends CreepBase {
     }
 
     if (res === ERR_NOT_IN_RANGE) {
-      creep.travelTo(target);
+      creep.travelTo(target, {
+        range: task.type === 'build' || task.type === 'repair' ? 3 : undefined,
+      });
     }
 
     // Toggle `working` boolean if working and out of energy

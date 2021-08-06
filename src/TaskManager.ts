@@ -56,6 +56,14 @@ export class TaskManager {
       limit,
       data,
     } as Task;
+
+    if (limit < 0 && type === 'harvest') {
+      // Limit based on available spaces
+      task.limit =
+        Game.getObjectById(target as Id<Source>)?.pos.getAdjacentPositions(1)
+          .length ?? -1;
+    }
+
     return task;
   }
 

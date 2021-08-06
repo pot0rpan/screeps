@@ -23,7 +23,7 @@ declare global {
   */
 
   interface Memory {
-    colonies?: string[];
+    colonies?: { roomName: string }[];
     _showStats?: boolean;
   }
 

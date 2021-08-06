@@ -60,7 +60,7 @@ export abstract class CreepBase {
     const body = this.generateBody(energyAvailable);
 
     return {
-      name: `${this.role}-${Game.time}`,
+      name: `${this.role}-${Game.time.toString().slice(-4)}`,
       body,
       cost: bodyCost(body),
     };

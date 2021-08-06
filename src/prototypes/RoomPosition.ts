@@ -4,7 +4,7 @@ declare global {
       length?: number,
       ignoreCreeps?: boolean
     ): RoomPosition[];
-    _adjacentPositions: { [length: number]: RoomPosition[] };
+    _adjacentPositions: { [key: string]: RoomPosition[] };
     getAdjacentOrthogonalPositions(length?: number): RoomPosition[];
     _adjacentOrthogonalPositions: { [length: number]: RoomPosition[] };
     getDiagonalPositions(length?: number): RoomPosition[];
@@ -19,11 +19,13 @@ export default (() => {
     ignoreCreeps = true
   ) {
     if (!this._adjacentPositions) {
-      this._adjacentPositions = [];
+      this._adjacentPositions = {};
     }
 
-    if (!this._adjacentPositions[length]) {
-      this._adjacentPositions[length] = [];
+    const key = length + String(ignoreCreeps);
+
+    if (!this._adjacentPositions[key]) {
+      this._adjacentPositions[key] = [];
 
       const startX = Math.max(this.x - length, 1);
       const startY = Math.max(this.y - length, 1);
@@ -39,13 +41,13 @@ export default (() => {
               continue;
             }
 
-            this._adjacentPositions[length].push(pos);
+            this._adjacentPositions[key].push(pos);
           }
         }
       }
     }
 
-    return this._adjacentPositions[length];
+    return this._adjacentPositions[key];
   };
 
   RoomPosition.prototype.getAdjacentOrthogonalPositions = function (

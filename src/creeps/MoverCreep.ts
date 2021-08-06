@@ -67,7 +67,8 @@ export class MoverCreep extends CreepBase {
           .findUpgradeContainers()
           .filter(
             container =>
-              container.store.getFreeCapacity(RESOURCE_ENERGY) > 200 &&
+              container.store.getFreeCapacity(RESOURCE_ENERGY) >
+                creep.store.getUsedCapacity(RESOURCE_ENERGY) &&
               !taskManager.isTaskTaken(creep.room.name, container.id, type)
           )[0];
       }
@@ -105,7 +106,12 @@ export class MoverCreep extends CreepBase {
       return taskManager.createTask<MoverTask>(
         target.pos.roomName,
         target.id,
-        type
+        type,
+        target.structureType === STRUCTURE_EXTENSION ||
+          target.structureType === STRUCTURE_SPAWN ||
+          target.structureType === STRUCTURE_TOWER
+          ? 1
+          : -1
       );
     } else {
       let target: StructureContainer | StructureStorage | null = null;
