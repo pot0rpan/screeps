@@ -4,17 +4,17 @@ import 'prototypes/RoomPosition';
 
 import 'utils/Traveler';
 
-import { ErrorMapper } from 'utils/ErrorMapper';
-import { Empire } from 'Empire';
-import { isNthTick } from 'utils';
 import config from 'config';
+import { Empire } from 'Empire';
+import { Stats } from 'Stats';
 import { CreepBase } from 'creeps/CreepBase';
 import { PioneerCreep } from 'creeps/PioneerCreep';
 import { BuilderCreep } from 'creeps/BuilderCreep';
 import { HarvesterCreep } from 'creeps/HarvesterCreep';
 import { UpgraderCreep } from 'creeps/UpgraderCreep';
 import { MoverCreep } from 'creeps/MoverCreep';
-import { Stats } from 'Stats';
+import { ErrorMapper } from 'utils/ErrorMapper';
+import { isNthTick } from 'utils';
 
 declare global {
   /*

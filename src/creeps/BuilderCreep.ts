@@ -1,6 +1,6 @@
 import { TaskManager } from 'TaskManager';
-import { isDamaged } from 'utils/structure';
 import { CreepBase } from './CreepBase';
+import { isDamaged } from 'utils/structure';
 
 interface BuilderTask extends CreepTask {
   type: 'build' | 'repair' | 'withdraw' | 'harvest';
