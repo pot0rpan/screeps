@@ -72,7 +72,12 @@ export class PioneerCreep extends CreepBase {
 
       if (!target) return null;
 
-      return taskManager.createTask(target.pos.roomName, target.id, type);
+      return taskManager.createTask(
+        target.pos.roomName,
+        target.id,
+        type,
+        target.structureType === STRUCTURE_EXTENSION ? 1 : -1
+      );
     } else {
       // Find room storage
       if (
