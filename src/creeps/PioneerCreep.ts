@@ -215,7 +215,9 @@ export class PioneerCreep extends CreepBase {
         return;
     }
 
-    if (res === ERR_NOT_IN_RANGE) {
+    if ((task.type === 'withdraw' || task.type === 'transfer') && res === OK) {
+      creep.memory.task.complete = true;
+    } else if (res === ERR_NOT_IN_RANGE) {
       creep.travelTo(target);
     }
 

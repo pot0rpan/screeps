@@ -226,6 +226,9 @@ export class BuilderCreep extends CreepBase {
         creep.memory.task.complete = true;
     }
 
+    if (task.type === 'withdraw' && res === OK) {
+      creep.memory.task.complete = true;
+    }
     if (res === ERR_NOT_IN_RANGE) {
       creep.travelTo(target, {
         range: task.type === 'build' || task.type === 'repair' ? 3 : undefined,
