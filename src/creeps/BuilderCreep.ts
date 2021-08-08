@@ -75,7 +75,12 @@ export class BuilderCreep extends CreepBase {
 
       if (!target) return null;
 
-      return taskManager.createTask(target.pos.roomName, target.id, type, 1);
+      return taskManager.createTask(
+        target.pos.roomName,
+        target.id,
+        type,
+        type === 'build' ? -1 : 1
+      );
     } else {
       // Find room storage
       if (
