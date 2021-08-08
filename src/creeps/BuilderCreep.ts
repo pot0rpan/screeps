@@ -17,7 +17,7 @@ export class BuilderCreep extends CreepBase {
   targetNum(room: Room): number {
     const numSites = room.findConstructionSites().length;
     if (numSites) {
-      return Math.min(numSites, 4);
+      return Math.min(numSites * 2, 4);
     }
 
     const structures = room.find(FIND_STRUCTURES);
