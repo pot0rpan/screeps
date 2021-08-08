@@ -82,7 +82,11 @@ export class HumanResources {
 
       if (nums.actual < nums.target) {
         const creepClass = global.Creeps[role];
-        const buildData = creepClass.build(room.energyCapacityAvailable);
+        const emergency =
+          creepNums.mover.actual === 0 && creepNums.pioneer.actual === 0;
+        let buildData = creepClass.build(
+          emergency ? room.energyAvailable : room.energyCapacityAvailable
+        );
 
         if (buildData.body.length) {
           if (buildData.cost <= room.energyAvailable) {
@@ -91,7 +95,8 @@ export class HumanResources {
               spawn.name,
               'spawning',
               role,
-              JSON.stringify(buildData.body)
+              JSON.stringify(buildData.body),
+              `${buildData.cost}/${room.energyAvailable}`
             );
 
             spawn.spawnCreep(buildData.body, buildData.name, {
