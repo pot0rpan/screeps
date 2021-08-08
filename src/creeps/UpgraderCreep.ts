@@ -15,6 +15,7 @@ export class UpgraderCreep extends CreepBase {
 
   // 2 if full container by controller
   targetNum(room: Room): number {
+    const rcl = room.controller?.level ?? 0;
     if (
       room.controller &&
       room.controller.pos.findInRange(FIND_STRUCTURES, 1, {
@@ -23,7 +24,7 @@ export class UpgraderCreep extends CreepBase {
           struct.store[RESOURCE_ENERGY] !== 0,
       }).length
     ) {
-      return 2;
+      return rcl < 4 ? 3 : 2;
     }
 
     return 0;
