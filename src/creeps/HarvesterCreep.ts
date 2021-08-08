@@ -90,6 +90,13 @@ export class HarvesterCreep extends CreepBase {
       return;
     }
 
+    // Stop mining if container full
+    // TODO: Implement movers/pioneers picking up dropped resources on container
+    if (container.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+      creep.say('...');
+      return;
+    }
+
     // If creep is on container, harvest data.source
     if (creep.pos.x === container.pos.x && creep.pos.y === container.pos.y) {
       creep.harvest(source);
