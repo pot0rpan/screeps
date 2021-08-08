@@ -116,10 +116,17 @@ export class ColonyDefense {
   }
 
   private runTowers() {
-    const towers = this.mainRoom.findTowers();
+    // Only attack if hostiles are <20 away from center
+    const towers = this.mainRoom
+      .findTowers()
+      .filter(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) > 0);
+    const baseCenter =
+      this.colony.roomPlanner.baseCenter ||
+      new RoomPosition(25, 25, this.roomName);
 
     const mostInjuredHostile = this.mainRoom
       .findHostiles()
+      .filter(creep => creep.pos.getRangeTo(baseCenter) < 20)
       .sort((a, b) => a.hits - b.hits)[0];
 
     for (const tower of towers) {
