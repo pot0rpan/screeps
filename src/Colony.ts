@@ -19,7 +19,9 @@ export class Colony {
   constructor(roomName: string) {
     console.log('Colony constructor()', roomName);
     this.roomName = roomName;
-    this.adjacentRoomNames = []; // TODO
+    this.adjacentRoomNames = Object.values(
+      Game.map.describeExits(roomName)
+    ) as string[]; // Build error if not casted
     this.hr = new HumanResources(roomName, this.adjacentRoomNames);
     this.roomPlanner = new RoomPlanner(this.roomName);
     this.taskManager = new TaskManager(this);
