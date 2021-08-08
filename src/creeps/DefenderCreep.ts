@@ -26,7 +26,7 @@ export class DefenderCreep extends CreepBase {
   };
 
   targetNum(room: Room): number {
-    return room.memory.defcon && (room.controller?.level ?? 0) >= 3 ? 2 : 0;
+    return (room.controller?.level ?? 0) >= 3 && room.memory.defcon ? 5 : 0;
   }
 
   findTask(creep: Creep, taskManager: TaskManager) {
