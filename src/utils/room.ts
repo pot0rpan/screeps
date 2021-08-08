@@ -1,17 +1,49 @@
-// export function getAdjacentRooms(roomName:string):string[] {
-//   const parts = new RegExp(/(\w)(\d+)(\w)(\d+)/).exec(roomName);
-//   if (!parts || parts.length !== 5) return [];
+export function getAdjacentRoomNames(roomName: string): string[] {
+  const [centerX, centerY] = roomNameToXY(roomName);
+  const adjacentRooms: string[] = [];
 
-//   const ns = parts[1];
-//   const nsVal = parseInt(parts[2])
-//   const we = parts[3];
-//   const weVal = parseInt(parts[4]);
+  for (let x = centerX - 1; x <= centerX + 1; x++) {
+    for (let y = centerY - 1; y <= centerY + 1; y++) {
+      if (x === centerX && y === centerY) continue;
+      adjacentRooms.push(getRoomNameFromXY(x, y));
+    }
+  }
 
-//   let leftVal = weVal - 1
-//   let rightVal = weVal + 1
-//   let topVal = nsVal -1
+  return adjacentRooms;
+}
 
-//   for (let x = weVal - 1; x <= weVal+1; x++) {
+function getRoomNameFromXY(x: number, y: number): string {
+  let _x, _y: string;
 
-//   }
-// }
+  if (x < 0) {
+    _x = 'W' + (-x - 1);
+  } else {
+    _x = 'E' + x;
+  }
+  if (y < 0) {
+    _y = 'N' + (-y - 1);
+  } else {
+    _y = 'S' + y;
+  }
+  return _x + _y;
+}
+
+function roomNameToXY(name: string): [number, number] {
+  let xx = parseInt(name.substr(1), 10);
+  let verticalPos = 2;
+  if (xx >= 100) {
+    verticalPos = 4;
+  } else if (xx >= 10) {
+    verticalPos = 3;
+  }
+  let yy = parseInt(name.substr(verticalPos + 1), 10);
+  let horizontalDir = name.charAt(0);
+  let verticalDir = name.charAt(verticalPos);
+  if (horizontalDir === 'W' || horizontalDir === 'w') {
+    xx = -xx - 1;
+  }
+  if (verticalDir === 'N' || verticalDir === 'n') {
+    yy = -yy - 1;
+  }
+  return [xx, yy];
+}
