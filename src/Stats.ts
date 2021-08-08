@@ -70,8 +70,6 @@ export class Stats {
   run(empire: Empire): void {
     if (!this.show) return;
 
-    // TODO: Check CPU available
-
     for (const roomName in empire.colonies) {
       const room = Game.rooms[roomName];
       if (!room) continue;

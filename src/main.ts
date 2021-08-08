@@ -88,9 +88,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
   global.isFirstTick = false;
 
   if (Game.cpu.bucket === 10000) {
-    console.log('Generating pixel');
     Game.cpu.generatePixel();
-  } else {
-    console.log('Bucket:', Game.cpu.bucket);
   }
 });
