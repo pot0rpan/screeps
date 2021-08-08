@@ -18,8 +18,6 @@ export class HumanResources {
   spawnCreeps(colonyCreeps: Creep[]) {
     const room = Game.rooms[this.roomName];
 
-    // Only run once every 5 ticks
-
     // Can't spawn if not controlling
     if (!room.controller) return;
 
@@ -106,7 +104,12 @@ export class HumanResources {
 
             return;
           } else {
-            console.log(spawn.name, 'waiting for more energy to spawn', role);
+            console.log(
+              spawn.name,
+              'waiting for more energy to spawn',
+              role,
+              `${buildData.cost}/${room.energyAvailable}`
+            );
             return;
           }
         } else {
