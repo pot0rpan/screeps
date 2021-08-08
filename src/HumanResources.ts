@@ -38,7 +38,7 @@ export class HumanResources {
     }
 
     if (room.energyAvailable < 300) {
-      console.log('waiting until spawn full', room.energyAvailable);
+      console.log('skip spawning, total energy only', room.energyAvailable);
       return;
     }
 
@@ -46,6 +46,10 @@ export class HumanResources {
     const creepNums: CreepNums = {
       pioneer: {
         target: global.Creeps.pioneer.targetNum(room),
+        actual: 0,
+      },
+      defender: {
+        target: global.Creeps.defender.targetNum(room),
         actual: 0,
       },
       builder: {

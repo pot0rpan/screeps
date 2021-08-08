@@ -26,6 +26,7 @@ export class DefenderCreep extends CreepBase {
   };
 
   targetNum(room: Room): number {
+    // Base body pattern needs RCL3 extensions to spawn
     return (room.controller?.level ?? 0) >= 3 && room.memory.defcon ? 5 : 0;
   }
 
