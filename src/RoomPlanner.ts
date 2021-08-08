@@ -112,6 +112,14 @@ export class RoomPlanner {
     // Always do controller route first
     if (controller) sources.unshift(controller);
 
+    // Fix bug: Don't double place containers at sources
+    sources = sources.filter(
+      source =>
+        !source.pos.findInRange(FIND_STRUCTURES, 1, {
+          filter: struct => struct.structureType === STRUCTURE_CONTAINER,
+        }).length
+    );
+
     for (const source of sources) {
       const goal = { pos: source.pos, range: 1 };
 
