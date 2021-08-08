@@ -14,8 +14,22 @@ export class HumanResources {
     this.adjacentRoomNames = adjacentRoomNames;
   }
 
+  public recycleCreeps() {
+    const spawn = Game.rooms[this.roomName]
+      .findSpawns()
+      .filter(spawn => !spawn.spawning)[0];
+    if (!spawn) return;
+    const creepToRecycle = spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
+      filter: creep => creep.memory.recycle === 0,
+    })[0];
+    if (creepToRecycle) {
+      console.log('Recycling creep', creepToRecycle);
+      spawn.recycleCreep(creepToRecycle);
+    }
+  }
+
   // Will spawn 1 creep max per run from first available spawn in the room
-  spawnCreeps(colonyCreeps: Creep[]) {
+  public spawnCreeps(colonyCreeps: Creep[]) {
     const room = Game.rooms[this.roomName];
 
     // Can't spawn if not controlling
@@ -126,9 +140,9 @@ export class HumanResources {
     console.log(spawn.name, 'nothing to spawn');
   }
 
-  runCreeps(colonyCreeps: Creep[]) {
+  public runCreeps(colonyCreeps: Creep[]) {
     for (const creep of colonyCreeps) {
-      if (creep.spawning || !creep.memory.task) continue;
+      if (creep.spawning) continue;
       global.Creeps[creep.memory.role].run(creep);
     }
   }

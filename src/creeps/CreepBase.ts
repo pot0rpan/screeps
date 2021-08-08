@@ -9,6 +9,7 @@ declare global {
     working: boolean;
     homeRoom: string;
     task?: CreepTask;
+    recycle?: number;
   }
 
   interface CreepTask {

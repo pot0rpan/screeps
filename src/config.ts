@@ -9,5 +9,6 @@ export default {
     DELETE_DEAD_CREEP_MEMORY: 3,
     PLAN_ROOMS: 69,
     SAFE_MODE_DELAY: 40,
+    RECYCLE_CREEP_DELAY: 5,
   },
 };

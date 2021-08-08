@@ -1,3 +1,4 @@
+import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 import { isDamaged } from 'utils/structure';
@@ -169,8 +170,21 @@ export class BuilderCreep extends CreepBase {
 
   run(creep: Creep): void {
     if (!creep.memory.task) {
-      creep.say('...');
+      if (creep.memory.recycle === undefined) {
+        creep.memory.recycle = config.ticks.RECYCLE_CREEP_DELAY;
+      } else if (creep.memory.recycle > 0) {
+        creep.memory.recycle--;
+      }
+
+      if (creep.memory.recycle <= 0) {
+        creep.travelTo(creep.room.findSpawns()[0], { range: 1 });
+        creep.say('recycle');
+      } else {
+        creep.say('...');
+      }
       return;
+    } else {
+      delete creep.memory.recycle;
     }
 
     const task = creep.memory.task;
