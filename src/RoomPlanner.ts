@@ -380,7 +380,8 @@ export class RoomPlanner {
             alreadyBuilt = true;
             break;
           } else {
-            struct.destroy();
+            //? This is destroying roads to put containers even when there's already a container?
+            // struct.destroy();
           }
         }
 
