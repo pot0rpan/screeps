@@ -74,7 +74,7 @@ export class Colony {
     if (!towers.length) return;
 
     const damagedStructure = room
-      .find(FIND_MY_STRUCTURES, {
+      .find(FIND_STRUCTURES, {
         filter: isDamaged,
       })
       .sort((a, b) => a.hits - b.hits)[0];
