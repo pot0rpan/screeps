@@ -87,23 +87,6 @@ export class MoverCreep extends CreepBase {
         }
       }
 
-      // Center container
-      if (!target) {
-        const center = creep.room.memory.baseCenter;
-        if (center) {
-          target = new RoomPosition(
-            center.x,
-            center.y,
-            creep.room.name
-          ).findInRange<StructureContainer>(FIND_STRUCTURES, 2, {
-            filter: struct =>
-              struct.structureType === STRUCTURE_CONTAINER &&
-              struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-              !taskManager.isTaskTaken(creep.room.name, struct.id, type),
-          })[0];
-        }
-      }
-
       if (!target) return null;
 
       return taskManager.createTask<MoverTask>(
