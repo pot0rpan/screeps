@@ -50,16 +50,16 @@ export class HumanResources {
         target: global.Creeps.defender.targetNum(room),
         actual: 0,
       },
-      builder: {
-        target: global.Creeps.builder.targetNum(room),
-        actual: 0,
-      },
       harvester: {
         target: global.Creeps.harvester.targetNum(room),
         actual: 0,
       },
       mover: {
         target: global.Creeps.mover.targetNum(room),
+        actual: 0,
+      },
+      builder: {
+        target: global.Creeps.builder.targetNum(room),
         actual: 0,
       },
       upgrader: {
