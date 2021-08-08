@@ -70,7 +70,9 @@ export class Colony {
     const room = Game.rooms[this.roomName];
     if (room.memory.defcon) return; // Attacking handled by ColonyDefense
 
-    const towers = room.findTowers();
+    const towers = room
+      .findTowers()
+      .filter(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) >= 10);
     if (!towers.length) return;
 
     const damagedStructure = room

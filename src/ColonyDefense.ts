@@ -119,7 +119,7 @@ export class ColonyDefense {
     // Only attack if hostiles are <20 away from center
     const towers = this.mainRoom
       .findTowers()
-      .filter(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) > 0);
+      .filter(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) >= 10);
     const baseCenter =
       this.colony.roomPlanner.baseCenter ||
       new RoomPosition(25, 25, this.roomName);
