@@ -89,8 +89,6 @@ export class HumanResources {
       }
     }
 
-    console.log(JSON.stringify(creepNums, null, 2));
-
     for (const role in creepNums) {
       const nums = creepNums[role];
 
