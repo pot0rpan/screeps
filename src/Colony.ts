@@ -4,6 +4,7 @@ import { HumanResources } from 'HumanResources';
 import { RoomPlanner } from 'RoomPlanner';
 import { TaskManager } from 'TaskManager';
 import { isNthTick } from 'utils';
+import { isDamaged } from 'utils/structure';
 
 // A Colony is a block of 9 rooms, with `room` in the center
 // All functionality of a colony stems from here
@@ -53,10 +54,33 @@ export class Colony {
     // Run creeps
     this.hr.runCreeps(colonyCreeps);
 
+    // Run towers
+    this.runTowers();
+
     // Handle construction
     // TODO: Check if enough cpu left
     if (global.isFirstTick || isNthTick(config.ticks.PLAN_ROOMS)) {
       this.roomPlanner.run();
+    }
+  }
+
+  private runTowers() {
+    const room = Game.rooms[this.roomName];
+    if (room.memory.defcon) return; // Attacking handled by ColonyDefense
+
+    const towers = room.findTowers();
+    if (!towers.length) return;
+
+    const damagedStructure = room
+      .find(FIND_MY_STRUCTURES, {
+        filter: isDamaged,
+      })
+      .sort((a, b) => a.hits - b.hits)[0];
+
+    if (!damagedStructure) return;
+
+    for (const tower of towers) {
+      tower.repair(damagedStructure);
     }
   }
 }

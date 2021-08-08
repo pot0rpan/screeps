@@ -41,6 +41,11 @@ export class ColonyDefense {
       roomName => Game.rooms[roomName]
     );
 
+    if (this.mainRoom.controller?.level ?? 0 < 3) {
+      // No towers, not enough energy to spawn defenders ¯\_(ツ)_/¯
+      return;
+    }
+
     // Rescan rooms for hostiles
     this.defconRoomNames = [];
     const allRooms = [this.mainRoom, ...this.adjacentRooms];
@@ -85,10 +90,14 @@ export class ColonyDefense {
     }
 
     // Activate safe mode if creeps made it to base center
-    // Set timer to not activate too eagerly
+    // and no defenders to help
+    // Set timer to not activate too eagerly, towers may finish them off
     if (
       this.colony.roomPlanner.baseCenter?.findInRange(FIND_HOSTILE_CREEPS, 5)
-        .length
+        .length &&
+      !this.mainRoom.find(FIND_MY_CREEPS, {
+        filter: creep => creep.memory.role === 'defender',
+      }).length
     ) {
       if (this.safeModeTimer === null) {
         this.safeModeTimer = config.ticks.SAFE_MODE_DELAY;
