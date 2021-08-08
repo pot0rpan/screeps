@@ -1,6 +1,6 @@
 import config from 'config';
 import { TaskManager } from 'TaskManager';
-import { CreepBase } from './CreepBase';
+import { BodySettings, CreepBase } from './CreepBase';
 
 interface MoverTask extends CreepTask {
   type: 'withdraw' | 'transfer';
@@ -8,7 +8,9 @@ interface MoverTask extends CreepTask {
 
 export class MoverCreep extends CreepBase {
   role: CreepRole = 'mover';
-  bodyPattern = [CARRY, MOVE];
+  bodyOpts: BodySettings = {
+    pattern: [CARRY, MOVE],
+  };
 
   // Same number of source containers
   // Max of 3

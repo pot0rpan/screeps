@@ -1,5 +1,5 @@
 import { TaskManager } from 'TaskManager';
-import { CreepBase } from './CreepBase';
+import { BodySettings, CreepBase } from './CreepBase';
 import { isDamaged } from 'utils/structure';
 
 interface BuilderTask extends CreepTask {
@@ -8,14 +8,16 @@ interface BuilderTask extends CreepTask {
 
 export class BuilderCreep extends CreepBase {
   role: CreepRole = 'builder';
-  bodyPattern = [WORK, CARRY, MOVE, MOVE];
+  bodyOpts: BodySettings = {
+    pattern: [WORK, CARRY, MOVE, MOVE],
+  };
 
   // Only if construction sites exist
   // Or no towers and repairs needed
   targetNum(room: Room): number {
     const numSites = room.findConstructionSites().length;
     if (numSites) {
-      return Math.min(numSites, 3);
+      return Math.min(numSites, 4);
     }
 
     const structures = room.find(FIND_STRUCTURES);

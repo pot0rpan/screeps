@@ -1,5 +1,5 @@
 import { TaskManager } from 'TaskManager';
-import { CreepBase } from './CreepBase';
+import { BodySettings, CreepBase } from './CreepBase';
 
 // Type is harvest just like when other creeps go to sources
 // So the container is stored as the target instead of the source
@@ -16,8 +16,10 @@ interface MinerTask extends CreepTask {
 // They mine from source and transfer to spawn or upgrade controller
 export class HarvesterCreep extends CreepBase {
   role: CreepRole = 'harvester';
-  bodyPattern = [WORK, MOVE];
-  maxBodyLength = 6;
+  bodyOpts: BodySettings = {
+    pattern: [WORK, MOVE],
+    sizeLimit: 3,
+  };
 
   // Same number as source containers built
   targetNum(room: Room): number {

@@ -1,3 +1,5 @@
+import { isNthTick } from 'utils';
+
 declare global {
   interface Room {
     findSpawns(): StructureSpawn[];
@@ -12,14 +14,20 @@ declare global {
       type?: BuildableStructureConstant | 'all'
     ): ConstructionSite<BuildableStructureConstant>[];
     _constructionSites: {
-      [key in BuildableStructureConstant | 'all']?: ConstructionSite<
-        BuildableStructureConstant
-      >[];
+      [key in
+        | BuildableStructureConstant
+        | 'all']?: ConstructionSite<BuildableStructureConstant>[];
     };
+    findTowers(): StructureTower[];
+    _towers: StructureTower[];
+    findHostiles(): Creep[];
+    _hostiles: Creep[];
   }
 
   interface RoomMemory {
     _sourceIds?: Id<Source>[];
+    _towerIds?: Id<StructureTower>[];
+    _hostileIds?: Id<Creep>[];
   }
 }
 
@@ -88,11 +96,10 @@ export default (() => {
       this._upgradeContainers = [];
       const controller = this.controller;
       if (controller) {
-        this._upgradeContainers = controller.pos.findInRange<
-          StructureContainer
-        >(FIND_STRUCTURES, 1, {
-          filter: struct => struct.structureType === STRUCTURE_CONTAINER,
-        });
+        this._upgradeContainers =
+          controller.pos.findInRange<StructureContainer>(FIND_STRUCTURES, 1, {
+            filter: struct => struct.structureType === STRUCTURE_CONTAINER,
+          });
       }
     }
     return this._upgradeContainers;
@@ -122,8 +129,55 @@ export default (() => {
     }
 
     // Cast since typescript doesn't know it's now defined
-    return this._constructionSites[type] as ConstructionSite<
-      BuildableStructureConstant
-    >[];
+    return this._constructionSites[
+      type
+    ] as ConstructionSite<BuildableStructureConstant>[];
+  };
+
+  // Cached in Memory, occasionally rescanned
+  Room.prototype.findTowers = function () {
+    if (!this._towers) {
+      // If we dont have the value stored in memory,
+      // or enough time passed to rescan
+      if (!this.memory._towerIds || isNthTick(40)) {
+        // Find the towers and store their id's in memory
+        this.memory._towerIds = this.find<StructureTower>(FIND_STRUCTURES, {
+          filter: struct => struct.structureType === STRUCTURE_TOWER,
+        }).map(tower => tower.id);
+      }
+
+      // Get the tower objects from the id's in memory and store them locally
+      this._towers = this.memory._towerIds
+        .map(id => Game.getObjectById<StructureTower>(id))
+        .filter((tower): tower is StructureTower => !!tower);
+    }
+
+    // Return the locally stored value
+    return this._towers;
+  };
+
+  // Cached in Memory, frequently rescanned
+  Room.prototype.findHostiles = function () {
+    if (!this._hostiles) {
+      // If we dont have the value stored in memory,
+      // or enough time passed to rescan
+      if (!this.memory._hostileIds || isNthTick(3)) {
+        // Find the creeps and store their id's in memory
+        this.memory._hostileIds = this.find(FIND_HOSTILE_CREEPS, {
+          filter: creep =>
+            creep.getActiveBodyparts(ATTACK) ||
+            creep.getActiveBodyparts(RANGED_ATTACK) ||
+            creep.getActiveBodyparts(HEAL),
+        }).map(creep => creep.id);
+      }
+
+      // Get the tower objects from the id's in memory and store them locally
+      this._hostiles = this.memory._hostileIds
+        .map(id => Game.getObjectById<Creep>(id))
+        .filter((creep): creep is Creep => !!creep);
+    }
+
+    // Return the locally stored value
+    return this._hostiles;
   };
 })();

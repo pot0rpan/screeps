@@ -7,11 +7,11 @@ export interface TaskCache {
 }
 
 export class TaskManager {
-  room: Room;
+  roomName: string;
   tasks: TaskCache = {};
 
   constructor(colony: Colony) {
-    this.room = colony.room;
+    this.roomName = colony.roomName;
   }
 
   generateTaskId(room: string, target: string, type: TaskType): string {

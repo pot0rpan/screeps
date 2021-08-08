@@ -20,8 +20,9 @@ enum PlanType {
 }
 
 export class RoomPlanner {
-  room: Room;
+  roomName: string;
   baseCenter: RoomPosition | null = null;
+  rcl: number;
 
   // Plans are built into construction sites in this order
   plans: {
@@ -34,21 +35,23 @@ export class RoomPlanner {
     [PlanType.road]: [],
   };
 
-  constructor(room: Room) {
-    console.log('RoomPlanner constructor()', room);
+  constructor(roomName: string) {
+    console.log('RoomPlanner constructor()', roomName);
 
-    this.room = room;
+    const room = Game.rooms[roomName];
+    this.roomName = roomName;
+    this.rcl = room.controller?.level ?? -1;
 
     if (room.memory.baseCenter) {
       this.baseCenter = new RoomPosition(
         room.memory.baseCenter.x,
         room.memory.baseCenter.y,
-        room.name
+        roomName
       );
     } else {
       const spawn = room.findSpawns()[0];
       if (spawn) {
-        this.baseCenter = new RoomPosition(spawn.pos.x, spawn.pos.y, room.name);
+        this.baseCenter = new RoomPosition(spawn.pos.x, spawn.pos.y, roomName);
       }
     }
   }
@@ -57,15 +60,23 @@ export class RoomPlanner {
   // Push all plans to this.plans[type]
   // Place construction sites in order of type priority and RCL limits (extensions,storage)
   run() {
-    console.log(this.room, 'RoomPlanner run()');
+    console.log(this.roomName, 'RoomPlanner run()');
+    const room = Game.rooms[this.roomName];
 
-    const rcl = this.room.controller?.level ?? 0;
+    const rcl = room.controller?.level ?? 0;
 
     // Nothing to build at level 1
     if (rcl < 2) return;
 
     // Only plan if no plans (usually global reset/code push)
-    if (!Object.values(this.plans).flat().length) {
+    // TODO: Polyfill Array.prototype.flat()
+    if (
+      !this.plans.container.length &&
+      !this.plans.extension.length &&
+      !this.plans.road.length &&
+      !this.plans.storage.length &&
+      !this.plans.tower.length
+    ) {
       if (this.baseCenter) {
         this.planExtensions(this.baseCenter);
         this.planBaseCenter(this.baseCenter);
@@ -87,12 +98,13 @@ export class RoomPlanner {
       sources: [],
     };
 
-    const controller = this.room.controller;
+    const room = Game.rooms[this.roomName];
+    const controller = room.controller;
 
     // Make path to each container from spawn, add coords to plans
     // Sort to plan shortest path first, then reuse in other cost matrices
     // If controller in room, make path to that first
-    let sources: (Source | StructureController)[] = this.room.findSources();
+    let sources: (Source | StructureController)[] = room.findSources();
     sources.sort(
       (a, b) => a.pos.getRangeTo(baseCenter) - b.pos.getRangeTo(baseCenter)
     );
@@ -210,8 +222,9 @@ export class RoomPlanner {
 
   planBaseCenter(baseCenter: RoomPosition) {
     console.log('planning main base layout');
+    const room = Game.rooms[this.roomName];
 
-    this.room.visual.rect(baseCenter.x - 4.5, baseCenter.y - 4.5, 9, 9, {
+    room.visual.rect(baseCenter.x - 4.5, baseCenter.y - 4.5, 9, 9, {
       stroke: 'grey',
       fill: 'transparent',
     });
@@ -252,8 +265,8 @@ export class RoomPlanner {
 
     // TODO: Add more tower sites for higher levels
     const towerSites = [
-      new RoomPosition(baseCenter.x - 1, baseCenter.y, this.room.name),
-      new RoomPosition(baseCenter.x + 1, baseCenter.y, this.room.name),
+      new RoomPosition(baseCenter.x - 1, baseCenter.y, this.roomName),
+      new RoomPosition(baseCenter.x + 1, baseCenter.y, this.roomName),
     ];
 
     for (const pos of towerSites) {
@@ -267,9 +280,10 @@ export class RoomPlanner {
   // // Plan container if rcl < 4 or storage
   planCenterStorage(baseCenter: RoomPosition) {
     console.log('planning center storage');
+    const room = Game.rooms[this.roomName];
     // const rcl = this.room.controller?.level ?? 0;
 
-    if (this.room.storage) return; // No need to plan
+    if (room.storage) return; // No need to plan
 
     // const planType = rcl < 4 ? PlanType.container : PlanType.storage;
     // const structureType =
@@ -284,7 +298,7 @@ export class RoomPlanner {
     // });
 
     this.plans[PlanType.storage].push({
-      pos: new RoomPosition(x, y, this.room.name),
+      pos: new RoomPosition(x, y, this.roomName),
       structureType: STRUCTURE_STORAGE,
     });
   }
@@ -317,7 +331,7 @@ export class RoomPlanner {
           const y = baseCenter.y + pos.y * yF;
 
           plans.push({
-            pos: new RoomPosition(x, y, this.room.name),
+            pos: new RoomPosition(x, y, this.roomName),
             structureType: STRUCTURE_EXTENSION,
           });
         }
@@ -337,8 +351,9 @@ export class RoomPlanner {
   // Placed in order of this.plans PlanType keys,
   // but some limits apply like the amount of each type at a given RCL
   placeConstructionSites(rcl: number) {
+    const room = Game.rooms[this.roomName];
     // Counter to stay under config.MAX_CONSTRUCTION_SITES
-    let numConstructionSites = this.room.findConstructionSites().length;
+    let numConstructionSites = room.findConstructionSites().length;
 
     for (const planType of Object.keys(this.plans)) {
       const plans = this.plans[planType as unknown as PlanType];
@@ -358,10 +373,7 @@ export class RoomPlanner {
 
         // Check existing structures at location, destroy if wrong type
         // If right type, plan is already constructed
-        const existingStructures = this.room.lookForAt(
-          LOOK_STRUCTURES,
-          plan.pos
-        );
+        const existingStructures = room.lookForAt(LOOK_STRUCTURES, plan.pos);
 
         for (const struct of existingStructures) {
           if (struct.structureType === plan.structureType) {
@@ -375,10 +387,7 @@ export class RoomPlanner {
         if (alreadyBuilt) continue;
 
         // Check existing const sites, destroy if wrong type
-        const existingSites = this.room.lookForAt(
-          LOOK_CONSTRUCTION_SITES,
-          plan.pos
-        );
+        const existingSites = room.lookForAt(LOOK_CONSTRUCTION_SITES, plan.pos);
 
         for (const site of existingSites) {
           if (site.structureType === plan.structureType) {
@@ -391,10 +400,7 @@ export class RoomPlanner {
 
         if (alreadyBuilt) continue;
 
-        const res = this.room.createConstructionSite(
-          plan.pos,
-          plan.structureType
-        );
+        const res = room.createConstructionSite(plan.pos, plan.structureType);
 
         if (res === ERR_FULL) return;
         if (res === ERR_RCL_NOT_ENOUGH) continue;
@@ -404,11 +410,13 @@ export class RoomPlanner {
   }
 
   visualizePlans(plans: BuildingPlan[]) {
+    const room = Game.rooms[this.roomName];
+
     for (const i in plans) {
       const plan = plans[i];
-      if (this.room.visual.getSize() >= 512000) break;
+      if (room.visual.getSize() >= 512000) break;
 
-      this.room.visual.circle(plan.pos.x, plan.pos.y, {
+      room.visual.circle(plan.pos.x, plan.pos.y, {
         radius: 0.25,
         fill:
           plan.structureType === STRUCTURE_ROAD
@@ -422,7 +430,7 @@ export class RoomPlanner {
             ? 'yellow'
             : 'white',
       });
-      this.room.visual.text(i, plan.pos.x, plan.pos.y + 0.1, {
+      room.visual.text(i, plan.pos.x, plan.pos.y + 0.1, {
         font: 0.3,
       });
     }

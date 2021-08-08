@@ -1,5 +1,5 @@
 import { TaskManager } from 'TaskManager';
-import { CreepBase } from './CreepBase';
+import { BodySettings, CreepBase } from './CreepBase';
 
 interface PioneerTask extends CreepTask {
   type: 'harvest' | 'withdraw' | 'transfer' | 'upgrade';
@@ -9,7 +9,9 @@ interface PioneerTask extends CreepTask {
 // They mine from source and transfer to spawn or upgrade controller
 export class PioneerCreep extends CreepBase {
   role: CreepRole = 'pioneer';
-  bodyPattern = [WORK, CARRY, MOVE, MOVE];
+  bodyOpts: BodySettings = {
+    pattern: [WORK, CARRY, MOVE, MOVE],
+  };
 
   // If controller is level 1, spawn 4
   // If there aren't enough other roles, spawn 2
@@ -87,12 +89,15 @@ export class PioneerCreep extends CreepBase {
       }
 
       // Find closest container that can fully fill creep
-      const nearestContainer = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-        filter: struct =>
-          struct.structureType === STRUCTURE_CONTAINER &&
-          struct.store[RESOURCE_ENERGY] >=
-            creep.store.getFreeCapacity(RESOURCE_ENERGY),
-      });
+      const nearestContainer =
+        creep.room.controller?.level ?? 0 > 1
+          ? creep.pos.findClosestByRange(FIND_STRUCTURES, {
+              filter: struct =>
+                struct.structureType === STRUCTURE_CONTAINER &&
+                struct.store[RESOURCE_ENERGY] >=
+                  creep.store.getFreeCapacity(RESOURCE_ENERGY),
+            })
+          : null;
 
       if (nearestContainer) {
         return taskManager.createTask(

@@ -6,23 +6,25 @@ interface CreepNums {
 }
 
 export class HumanResources {
-  room: Room;
+  roomName: string;
   adjacentRoomNames: string[];
 
-  constructor(room: Room, adjacentRoomNames: string[]) {
-    this.room = room;
+  constructor(room: string, adjacentRoomNames: string[]) {
+    this.roomName = room;
     this.adjacentRoomNames = adjacentRoomNames;
   }
 
   // Will spawn 1 creep max per run from first available spawn in the room
   spawnCreeps(colonyCreeps: Creep[]) {
+    const room = Game.rooms[this.roomName];
+
     // Only run once every 5 ticks
 
     // Can't spawn if not controlling
-    if (!this.room.controller) return;
+    if (!room.controller) return;
 
     // Make sure there's a free spawn, grab fullest one
-    const spawn = this.room
+    const spawn = room
       .findSpawns()
       .filter(spawn => !spawn.spawning)
       .sort(
@@ -35,26 +37,31 @@ export class HumanResources {
       return;
     }
 
+    if (room.energyAvailable < 300) {
+      console.log('waiting until spawn full', room.energyAvailable);
+      return;
+    }
+
     // Listed in order of priority
     const creepNums: CreepNums = {
       pioneer: {
-        target: global.Creeps.pioneer.targetNum(this.room),
+        target: global.Creeps.pioneer.targetNum(room),
         actual: 0,
       },
       builder: {
-        target: global.Creeps.builder.targetNum(this.room),
+        target: global.Creeps.builder.targetNum(room),
         actual: 0,
       },
       harvester: {
-        target: global.Creeps.harvester.targetNum(this.room),
+        target: global.Creeps.harvester.targetNum(room),
         actual: 0,
       },
       mover: {
-        target: global.Creeps.mover.targetNum(this.room),
+        target: global.Creeps.mover.targetNum(room),
         actual: 0,
       },
       upgrader: {
-        target: global.Creeps.upgrader.targetNum(this.room),
+        target: global.Creeps.upgrader.targetNum(room),
         actual: 0,
       },
     };
@@ -73,10 +80,10 @@ export class HumanResources {
 
       if (nums.actual < nums.target) {
         const creepClass = global.Creeps[role];
-        const buildData = creepClass.build(this.room.energyCapacityAvailable);
+        const buildData = creepClass.build(room.energyCapacityAvailable);
 
         if (buildData.body.length) {
-          if (buildData.cost <= this.room.energyAvailable) {
+          if (buildData.cost <= room.energyAvailable) {
             // Current energy is enough for biggest creep we can spawn with current energy capacity
             console.log(
               spawn.name,

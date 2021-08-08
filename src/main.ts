@@ -15,6 +15,7 @@ import { UpgraderCreep } from 'creeps/UpgraderCreep';
 import { MoverCreep } from 'creeps/MoverCreep';
 import { ErrorMapper } from 'utils/ErrorMapper';
 import { isNthTick } from 'utils';
+import { DefenderCreep } from 'creeps/DefenderCreep';
 
 declare global {
   /*
@@ -43,6 +44,7 @@ global.Creeps = {
   harvester: new HarvesterCreep(),
   upgrader: new UpgraderCreep(),
   mover: new MoverCreep(),
+  defender: new DefenderCreep(),
 };
 
 global.empire = new Empire();
@@ -53,6 +55,7 @@ global.isFirstTick = true;
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`Current game tick is ${Game.time}`);
+  const start = Game.cpu.getUsed();
 
   // Delete memory of missing creeps
   if (isNthTick(config.ticks.DELETE_DEAD_CREEP_MEMORY)) {
@@ -70,4 +73,12 @@ export const loop = ErrorMapper.wrapLoop(() => {
   global.stats.run(global.empire);
 
   global.isFirstTick = false;
+
+  console.log('CPU:', (Game.cpu.getUsed() - start).toFixed(2));
+  if (Game.cpu.bucket === 10000) {
+    console.log('Generating pixel');
+    Game.cpu.generatePixel();
+  } else {
+    console.log('Bucket:', Game.cpu.bucket);
+  }
 });

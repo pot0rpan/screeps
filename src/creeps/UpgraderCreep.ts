@@ -1,5 +1,5 @@
 import { TaskManager } from 'TaskManager';
-import { CreepBase } from './CreepBase';
+import { BodySettings, CreepBase } from './CreepBase';
 
 interface UpgraderTask extends CreepTask {
   type: 'upgrade' | 'withdraw';
@@ -9,7 +9,9 @@ interface UpgraderTask extends CreepTask {
 // Upgraders grab energy from controller container and upgrade controller
 export class UpgraderCreep extends CreepBase {
   role: CreepRole = 'upgrader';
-  bodyPattern = [WORK, WORK, CARRY, MOVE];
+  bodyOpts: BodySettings = {
+    pattern: [WORK, WORK, CARRY, MOVE],
+  };
 
   // 2 if full container by controller
   targetNum(room: Room): number {

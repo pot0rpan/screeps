@@ -27,32 +27,59 @@ declare global {
     | 'withdraw'
     | 'upgrade'
     | 'build'
-    | 'repair';
+    | 'repair'
+    | 'attack'
+    | 'patrol';
 
-  type CreepRole = 'pioneer' | 'builder' | 'harvester' | 'mover' | 'upgrader';
+  type CreepRole =
+    | 'pioneer'
+    | 'builder'
+    | 'harvester'
+    | 'mover'
+    | 'upgrader'
+    | 'defender';
+}
+
+export interface BodySettings {
+  pattern: BodyPartConstant[];
+  sizeLimit?: number;
+  ordered?: boolean;
 }
 
 export abstract class CreepBase {
   abstract role: CreepRole;
-  abstract bodyPattern: BodyPartConstant[];
-  maxBodyLength = Infinity;
+  abstract bodyOpts: BodySettings;
   abstract targetNum(room: Room): number;
   abstract isValidTask(creep: Creep, task: CreepTask): boolean;
   abstract findTask(creep: Creep, taskManager: TaskManager): CreepTask | null;
   abstract run(creep: Creep): void;
 
   generateBody(energyAvailable: number) {
-    const patternCost = bodyCost(this.bodyPattern);
+    const defaults: Partial<BodySettings> = {
+      sizeLimit: Infinity,
+      ordered: false,
+    };
+    const opts = Object.assign(defaults, this.bodyOpts) as BodySettings;
+
+    const body: BodyPartConstant[] = [];
+    const patternCost = bodyCost(opts.pattern);
     const numRepeats = Math.min(
-      Math.floor(this.maxBodyLength / this.bodyPattern.length),
+      opts.sizeLimit as number,
       Math.floor(energyAvailable / patternCost)
     );
 
-    // Repeat this.bodyPattern as many times as possible
-    const body: BodyPartConstant[] = [];
-    for (let i = 0; i < numRepeats; i++) {
-      body.push(...this.bodyPattern);
+    if (opts.ordered) {
+      for (const part of opts.pattern) {
+        for (let i = 0; i < numRepeats; i++) {
+          body.push(part);
+        }
+      }
+    } else {
+      for (let i = 0; i < numRepeats; i++) {
+        body.push(...opts.pattern);
+      }
     }
+
     return body;
   }
 
