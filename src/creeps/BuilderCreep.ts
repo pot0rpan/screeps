@@ -112,7 +112,7 @@ export class BuilderCreep extends CreepBase {
       }
 
       // Default to harvesting from source
-      const nearestSource = creep.pos.findClosestSource();
+      const nearestSource = creep.pos.findClosestSource(creep);
 
       if (nearestSource) {
         return taskManager.createTask(

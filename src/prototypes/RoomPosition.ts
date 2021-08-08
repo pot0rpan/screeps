@@ -9,7 +9,7 @@ declare global {
     _adjacentOrthogonalPositions: { [length: number]: RoomPosition[] };
     getDiagonalPositions(length?: number): RoomPosition[];
     _diagonalPositions: { [length: number]: RoomPosition[] };
-    findClosestSource(): Source | null;
+    findClosestSource(creep: Creep): Source | null;
   }
 }
 
@@ -96,11 +96,12 @@ export default (() => {
     return this._diagonalPositions[length];
   };
 
-  RoomPosition.prototype.findClosestSource = function () {
+  RoomPosition.prototype.findClosestSource = function (creep) {
     return this.findClosestByRange(FIND_SOURCES, {
       filter: source =>
         source.energy > 0 &&
-        source.pos.getAdjacentPositions(1, false).length > 0,
+        (creep.pos.getRangeTo(source) === 1 ||
+          source.pos.getAdjacentPositions(1, false).length > 0),
     });
   };
 })();

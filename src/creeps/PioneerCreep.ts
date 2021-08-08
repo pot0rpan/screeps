@@ -108,7 +108,7 @@ export class PioneerCreep extends CreepBase {
       }
 
       // Find nearest source
-      const nearestSource = creep.pos.findClosestSource();
+      const nearestSource = creep.pos.findClosestSource(creep);
       if (!nearestSource) return null;
       return taskManager.createTask(
         nearestSource.pos.roomName,
