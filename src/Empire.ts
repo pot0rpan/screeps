@@ -9,7 +9,7 @@ export class Empire {
     console.log('Empire constructor()');
 
     // Read colony room names from Memory
-    if (Memory.colonies?.length) {
+    if (Memory.colonies && Object.keys(Memory.colonies).length) {
       for (const { roomName } of Memory.colonies) {
         this.colonies[roomName] = new Colony(roomName);
       }
@@ -21,7 +21,7 @@ export class Empire {
         const room = Game.rooms[roomName];
         if (room.controller?.my && room.controller?.level > 0) {
           this.colonies[roomName] = new Colony(roomName);
-          Memory.colonies.push({ roomName });
+          Memory.colonies.push({ roomName, adjacentRooms: [] });
         }
       }
     }

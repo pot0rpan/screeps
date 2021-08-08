@@ -24,7 +24,21 @@ declare global {
   */
 
   interface Memory {
-    colonies?: { roomName: string }[];
+    colonies?: {
+      roomName: string;
+      adjacentRooms: {
+        name: string;
+        owner?: string | null;
+        controller?: {
+          id: string;
+          pos: [number, number];
+        };
+        sources?: {
+          id: string;
+          pos: [number, number];
+        }[];
+      }[];
+    }[];
     _showStats?: boolean;
   }
 
