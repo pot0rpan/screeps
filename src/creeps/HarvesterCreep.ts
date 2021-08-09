@@ -18,7 +18,7 @@ export class HarvesterCreep extends CreepBase {
   role: CreepRole = 'harvester';
   bodyOpts: BodySettings = {
     pattern: [WORK, MOVE],
-    sizeLimit: 6,
+    sizeLimit: 5,
   };
 
   // Same number as source containers built
