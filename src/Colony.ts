@@ -51,7 +51,7 @@ export class Colony {
     // Handle spawning
     if (global.isFirstTick || isNthTick(config.ticks.SPAWN_CREEPS)) {
       this.hr.spawnCreeps(colonyCreeps);
-      this.hr.recycleCreeps();
+      // this.hr.recycleCreeps();
     }
 
     // Run creeps
