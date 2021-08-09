@@ -13,18 +13,25 @@ export class UpgraderCreep extends CreepBase {
     pattern: [WORK, WORK, CARRY, MOVE],
   };
 
-  // 2 if full container by controller
   targetNum(room: Room): number {
     const rcl = room.controller?.level ?? 0;
-    if (
+    if (rcl < 2) return 0;
+
+    const controllerContainer =
       room.controller &&
-      room.controller.pos.findInRange(FIND_STRUCTURES, 1, {
+      (room.controller.pos.findInRange(FIND_STRUCTURES, 1, {
         filter: struct =>
           struct.structureType === STRUCTURE_CONTAINER &&
           struct.store[RESOURCE_ENERGY] !== 0,
-      }).length
-    ) {
-      return rcl < 4 ? 3 : 2;
+      })[0] as StructureContainer);
+
+    if (controllerContainer) {
+      // Get number of positions around container
+      const numPositions =
+        controllerContainer.pos.getAdjacentPositions(1).length;
+
+      // Leave room for mover to fill container (num positions - 1)
+      return Math.min(3, numPositions - 1);
     }
 
     return 0;
