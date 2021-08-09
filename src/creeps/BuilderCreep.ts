@@ -176,10 +176,9 @@ export class BuilderCreep extends CreepBase {
         creep.memory.recycle--;
       }
 
-      // Transition to upgrading if nothing left to build
-      // There won't be any more until next RCL
       if (creep.memory.recycle <= 0) {
-        creep.memory.role = 'upgrader';
+        creep.travelTo(creep.room.findSpawns()[0], { range: 1 });
+        creep.say('recycle');
       } else {
         creep.say('...');
       }
