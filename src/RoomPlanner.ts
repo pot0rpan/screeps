@@ -430,16 +430,8 @@ export class RoomPlanner {
         // Check existing const sites, destroy if wrong type
         const existingSites = room.lookForAt(LOOK_CONSTRUCTION_SITES, plan.pos);
 
-        for (const site of existingSites) {
-          if (site.structureType === plan.structureType) {
-            alreadyBuilt = true;
-            break;
-          } else {
-            site.remove();
-          }
-        }
-
-        if (alreadyBuilt) continue;
+        // Can only have 1 construction site per spot
+        if (existingSites.length) continue;
 
         const res = room.createConstructionSite(plan.pos, plan.structureType);
 
