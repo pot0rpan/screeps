@@ -17,8 +17,9 @@ interface MinerTask extends CreepTask {
 export class HarvesterCreep extends CreepBase {
   role: CreepRole = 'harvester';
   bodyOpts: BodySettings = {
-    pattern: [WORK, MOVE],
+    pattern: [WORK],
     sizeLimit: 5,
+    suffix: [MOVE, MOVE],
   };
 
   // Same number as source containers built

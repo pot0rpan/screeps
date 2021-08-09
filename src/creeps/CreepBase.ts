@@ -45,6 +45,15 @@ export interface BodySettings {
   pattern: BodyPartConstant[];
   sizeLimit?: number;
   ordered?: boolean;
+  prefix?: BodyPartConstant[];
+  suffix?: BodyPartConstant[];
+}
+
+interface BodySettingsPopulated extends BodySettings {
+  sizeLimit: number;
+  ordered: boolean;
+  prefix: BodyPartConstant[];
+  suffix: BodyPartConstant[];
 }
 
 export abstract class CreepBase {
@@ -59,15 +68,28 @@ export abstract class CreepBase {
     const defaults: Partial<BodySettings> = {
       sizeLimit: Infinity,
       ordered: false,
+      prefix: [],
+      suffix: [],
     };
-    const opts = Object.assign(defaults, this.bodyOpts) as BodySettings;
+    const opts = Object.assign(
+      defaults,
+      this.bodyOpts
+    ) as BodySettingsPopulated;
 
     const body: BodyPartConstant[] = [];
+    const prefixCost = bodyCost(opts.prefix);
+    const suffixCost = bodyCost(opts.suffix);
     const patternCost = bodyCost(opts.pattern);
     const numRepeats = Math.min(
-      opts.sizeLimit as number,
-      Math.floor(energyAvailable / patternCost)
+      opts.sizeLimit,
+      Math.floor((energyAvailable - prefixCost - suffixCost) / patternCost)
     );
+
+    if (opts.prefix.length) {
+      for (const part of opts.prefix) {
+        body.push(part);
+      }
+    }
 
     if (opts.ordered) {
       for (const part of opts.pattern) {
@@ -78,6 +100,12 @@ export abstract class CreepBase {
     } else {
       for (let i = 0; i < numRepeats; i++) {
         body.push(...opts.pattern);
+      }
+    }
+
+    if (opts.suffix.length) {
+      for (const part of opts.suffix) {
+        body.push(part);
       }
     }
 

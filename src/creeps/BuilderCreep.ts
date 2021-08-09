@@ -170,17 +170,19 @@ export class BuilderCreep extends CreepBase {
 
   run(creep: Creep): void {
     if (!creep.memory.task) {
-      if (creep.memory.recycle === undefined) {
-        creep.memory.recycle = config.ticks.RECYCLE_CREEP_DELAY;
-      } else if (creep.memory.recycle > 0) {
-        creep.memory.recycle--;
-      }
+      if (creep.memory.working) {
+        if (creep.memory.recycle === undefined) {
+          creep.memory.recycle = config.ticks.RECYCLE_CREEP_DELAY;
+        } else if (creep.memory.recycle > 0) {
+          creep.memory.recycle--;
+        }
 
-      if (creep.memory.recycle <= 0) {
-        creep.travelTo(creep.room.findSpawns()[0], { range: 1 });
-        creep.say('recycle');
-      } else {
-        creep.say('...');
+        if (creep.memory.recycle <= 0) {
+          creep.travelTo(creep.room.findSpawns()[0], { range: 1 });
+          creep.say('recycle');
+        } else {
+          creep.say('...');
+        }
       }
       return;
     } else {

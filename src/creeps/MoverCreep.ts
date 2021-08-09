@@ -105,6 +105,11 @@ export class MoverCreep extends CreepBase {
       // Gather from fullest source container
       target = creep.room
         .findSourceContainers()
+        .filter(
+          container =>
+            container.store[RESOURCE_ENERGY] >=
+            creep.store.getFreeCapacity(RESOURCE_ENERGY)
+        )
         .sort(
           (a, b) =>
             a.store.getFreeCapacity(RESOURCE_ENERGY) -
