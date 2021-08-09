@@ -77,7 +77,7 @@ export class UpgraderCreep extends CreepBase {
       const res = creep.withdraw(container, RESOURCE_ENERGY);
       if (res === ERR_NOT_IN_RANGE) {
         creep.travelTo(container);
-      } else {
+      } else if (res !== OK) {
         creep.say('...');
       }
     }
