@@ -17,6 +17,7 @@ enum PlanType {
   tower = 'tower',
   container = 'container',
   storage = 'storage',
+  rampart = 'rampart',
 }
 
 export class RoomPlanner {
@@ -33,6 +34,7 @@ export class RoomPlanner {
     [PlanType.storage]: [],
     [PlanType.tower]: [],
     [PlanType.road]: [],
+    [PlanType.rampart]: [],
   };
 
   constructor(roomName: string) {
@@ -75,12 +77,14 @@ export class RoomPlanner {
       !this.plans.extension.length &&
       !this.plans.road.length &&
       !this.plans.storage.length &&
-      !this.plans.tower.length
+      !this.plans.tower.length &&
+      !this.plans.rampart.length
     ) {
       if (this.baseCenter) {
         this.planExtensions(this.baseCenter);
         this.planBaseCenter(this.baseCenter);
         this.planRoadsAndContainers(this.baseCenter);
+        this.planRamparts(this.baseCenter);
       }
     }
 
@@ -354,6 +358,33 @@ export class RoomPlanner {
     );
   }
 
+  planRamparts(baseCenter: RoomPosition) {
+    const room = Game.rooms[this.roomName];
+
+    // Protect controller
+    const controllerArea = room.controller?.pos.getAdjacentPositions() ?? [];
+
+    for (const pos of controllerArea) {
+      this.plans[PlanType.rampart].push({
+        pos,
+        structureType: STRUCTURE_RAMPART,
+      });
+    }
+
+    // Protect base center
+    const centerBlock = baseCenter
+      .getAdjacentPositions(4)
+      .concat(baseCenter)
+      .sort((a, b) => a.getRangeTo(baseCenter) - b.getRangeTo(baseCenter));
+
+    for (const pos of centerBlock) {
+      this.plans[PlanType.rampart].push({
+        pos,
+        structureType: STRUCTURE_RAMPART,
+      });
+    }
+  }
+
   // Place construction sites for all plans
   // If wrong construction site or structure is in place, it gets destroyed
   // Placed in order of this.plans PlanType keys,
@@ -374,6 +405,7 @@ export class RoomPlanner {
 
       if (planType === PlanType.road && rcl < 3) continue;
       if (planType === PlanType.storage && rcl < 4) continue;
+      if (planType === PlanType.rampart && rcl < 4) continue;
 
       for (const plan of plans) {
         if (numConstructionSites >= config.MAX_CONSTRUCTION_SITES) break;
@@ -426,7 +458,7 @@ export class RoomPlanner {
       if (room.visual.getSize() >= 512000) break;
 
       room.visual.circle(plan.pos.x, plan.pos.y, {
-        radius: 0.25,
+        radius: plan.structureType === STRUCTURE_RAMPART ? 0.75 : 0.25,
         fill:
           plan.structureType === STRUCTURE_ROAD
             ? 'grey'
@@ -437,6 +469,8 @@ export class RoomPlanner {
             ? 'red'
             : plan.structureType === STRUCTURE_EXTENSION
             ? 'yellow'
+            : plan.structureType === STRUCTURE_RAMPART
+            ? 'green'
             : 'white',
       });
       room.visual.text(i, plan.pos.x, plan.pos.y + 0.1, {
