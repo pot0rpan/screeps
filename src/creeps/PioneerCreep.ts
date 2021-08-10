@@ -11,6 +11,7 @@ export class PioneerCreep extends CreepBase {
   role: CreepRole = 'pioneer';
   bodyOpts: BodySettings = {
     pattern: [WORK, CARRY, MOVE, MOVE],
+    sizeLimit: 2,
   };
 
   // If controller is level 1, spawn 4
