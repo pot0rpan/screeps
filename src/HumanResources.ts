@@ -125,7 +125,7 @@ export class HumanResources {
               spawn.name,
               'waiting for more energy to spawn',
               role,
-              `${buildData.cost}/${room.energyAvailable}`
+              `${room.energyAvailable}/${buildData.cost}`
             );
             return;
           }
