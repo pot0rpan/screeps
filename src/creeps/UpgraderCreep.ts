@@ -33,7 +33,7 @@ export class UpgraderCreep extends CreepBase {
         controllerContainer.pos.getAdjacentPositions(1).length;
 
       // Leave room for mover to fill container (num positions - 1)
-      return Math.min(3, numPositions - 1);
+      return Math.min(rcl < 4 ? 3 : 2, numPositions - 1);
     }
 
     return 0;
