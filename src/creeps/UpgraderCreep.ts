@@ -10,7 +10,9 @@ interface UpgraderTask extends CreepTask {
 export class UpgraderCreep extends CreepBase {
   role: CreepRole = 'upgrader';
   bodyOpts: BodySettings = {
-    pattern: [WORK, WORK, CARRY, MOVE],
+    pattern: [WORK, WORK, CARRY],
+    sizeLimit: 5,
+    suffix: [MOVE],
   };
 
   targetNum(room: Room): number {
