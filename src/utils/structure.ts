@@ -6,7 +6,7 @@ export function isDamaged(struct: Structure) {
     struct.hits < struct.hitsMax &&
     (struct.structureType === STRUCTURE_WALL ||
     struct.structureType === STRUCTURE_RAMPART
-      ? struct.hits < config.MAX_REPAIR_HITS
+      ? struct.hits < config.MAX_REPAIR_HITS(struct.room.controller?.level ?? 0)
       : true)
   );
 }

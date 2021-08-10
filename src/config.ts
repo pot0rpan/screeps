@@ -1,5 +1,16 @@
 export default {
-  MAX_REPAIR_HITS: 250000,
+  MAX_REPAIR_HITS: (rcl: number): number => {
+    switch (rcl) {
+      case 3:
+        return 10000;
+      case 4:
+        return 25000;
+      case 5:
+        return 50000;
+      default:
+        return 100000;
+    }
+  },
   MAX_CONSTRUCTION_SITES: 5,
   MAX_TOWER_REFILL: 600,
   ticks: {

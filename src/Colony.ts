@@ -71,9 +71,11 @@ export class Colony {
     const room = Game.rooms[this.roomName];
     if (room.memory.defcon) return; // Attacking handled by ColonyDefense
 
+    // Only repair with towers that are more than half full
+    // Need to be prepared for attacks
     const towers = room
       .findTowers()
-      .filter(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) >= 10);
+      .filter(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) > 500);
     if (!towers.length) return;
 
     const damagedStructure = room
