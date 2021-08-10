@@ -55,11 +55,13 @@ export class MoverCreep extends CreepBase {
 
       // Towers
       if (!target) {
+        // Ignore max tower refill in defcon, keep them full
         target = creep.room.find<StructureTower>(FIND_MY_STRUCTURES, {
           filter: struct =>
             struct.structureType === STRUCTURE_TOWER &&
-            struct.store.getUsedCapacity(RESOURCE_ENERGY) <
-              config.MAX_TOWER_REFILL &&
+            (struct.store.getUsedCapacity(RESOURCE_ENERGY) <
+              config.MAX_TOWER_REFILL ||
+              creep.room.memory.defcon) &&
             !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
         })[0];
       }
