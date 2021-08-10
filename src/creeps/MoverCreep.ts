@@ -10,6 +10,7 @@ export class MoverCreep extends CreepBase {
   role: CreepRole = 'mover';
   bodyOpts: BodySettings = {
     pattern: [CARRY, MOVE],
+    sizeLimit: 8,
   };
 
   // Same number of source containers
