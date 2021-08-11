@@ -99,7 +99,7 @@ export class ColonyDefense {
     // and no defenders to help
     // Set timer to not activate too eagerly, towers may finish them off
     if (
-      this.colony.roomPlanner.baseCenter?.findInRange(FIND_HOSTILE_CREEPS, 5)
+      this.colony.roomPlanner.baseCenter?.findInRange(FIND_HOSTILE_CREEPS, 4)
         .length &&
       !this.mainRoom.find(FIND_MY_CREEPS, {
         filter: creep => creep.memory.role === 'defender',
