@@ -11,6 +11,18 @@ export default {
         return 100000;
     }
   },
+  MAX_ENERGY_STORAGE: (rcl: number): number => {
+    switch (rcl) {
+      case 4:
+        return 10000;
+      case 5:
+        return 20000;
+      case 6:
+        return 40000;
+      default:
+        return 100000;
+    }
+  },
   MAX_CONSTRUCTION_SITES: 5,
   MAX_TOWER_REFILL: 600,
   ticks: {
@@ -21,5 +33,6 @@ export default {
     PLAN_ROOMS: 69,
     SAFE_MODE_DELAY: 40,
     RECYCLE_CREEP_DELAY: 5,
+    CONTROLLER_DOWNGRADE_THRESHOLD: 5000,
   },
 };

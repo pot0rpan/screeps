@@ -1,3 +1,4 @@
+import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -16,7 +17,9 @@ export class UpgraderCreep extends CreepBase {
   };
 
   targetNum(room: Room): number {
-    const rcl = room.controller?.level ?? 0;
+    const controller = room.controller;
+    if (!controller) return 0;
+    const rcl = controller.level;
     if (rcl < 2) return 0;
 
     const controllerContainer =
@@ -32,8 +35,24 @@ export class UpgraderCreep extends CreepBase {
       const numPositions =
         controllerContainer.pos.getAdjacentPositions(1).length;
 
+      // Number that seems decent for rcl
+      const idealNum = rcl < 4 ? 3 : 2;
+
       // Leave room for mover to fill container (num positions - 1)
-      return Math.min(rcl < 4 ? 3 : 2, numPositions - 1);
+      const targetNum = Math.min(idealNum, numPositions - 1);
+
+      // If storage low and not about to downgrade, less upgraders
+      if (
+        (controller.ticksToDowngrade <
+          config.ticks.CONTROLLER_DOWNGRADE_THRESHOLD,
+        room.storage &&
+          room.storage.store.getUsedCapacity(RESOURCE_ENERGY) <
+            config.MAX_ENERGY_STORAGE(rcl))
+      ) {
+        return Math.floor(targetNum / 2);
+      } else {
+        return targetNum;
+      }
     }
 
     return 0;
