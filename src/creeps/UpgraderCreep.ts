@@ -41,13 +41,12 @@ export class UpgraderCreep extends CreepBase {
       // Leave room for mover to fill container (num positions - 1)
       const targetNum = Math.min(idealNum, numPositions - 1);
 
-      // If storage low and not about to downgrade, less upgraders
+      // If storage low and controller not half downgraded, less upgraders
       if (
-        (controller.ticksToDowngrade <
-          config.ticks.CONTROLLER_DOWNGRADE_THRESHOLD,
+        controller.ticksToDowngrade > CONTROLLER_DOWNGRADE[rcl] / 2 &&
         room.storage &&
-          room.storage.store.getUsedCapacity(RESOURCE_ENERGY) <
-            config.MAX_ENERGY_STORAGE(rcl))
+        room.storage.store.getUsedCapacity(RESOURCE_ENERGY) <
+          config.MAX_ENERGY_STORAGE(rcl)
       ) {
         return Math.floor(targetNum / 2);
       } else {
