@@ -117,7 +117,7 @@ export class RoomPlanner {
     if (controller) sources.unshift(controller);
 
     // Fix bug: Don't double place containers at sources
-    sources = sources.filter(
+    const sourcesNeedingContainers = sources.filter(
       source =>
         !source.pos.findInRange(FIND_STRUCTURES, 1, {
           filter: struct => struct.structureType === STRUCTURE_CONTAINER,
@@ -176,16 +176,19 @@ export class RoomPlanner {
       }
 
       // Add container construction site at last pos
-      if (source instanceof StructureController) {
-        containers.controller = {
-          pos: ret.path[ret.path.length - 1],
-          structureType: STRUCTURE_CONTAINER,
-        };
-      } else {
-        containers.sources.push({
-          pos: ret.path[ret.path.length - 1],
-          structureType: STRUCTURE_CONTAINER,
-        });
+      // Only add if not already one there, it places next to existing sometimes
+      if (sourcesNeedingContainers.includes(source)) {
+        if (source instanceof StructureController) {
+          containers.controller = {
+            pos: ret.path[ret.path.length - 1],
+            structureType: STRUCTURE_CONTAINER,
+          };
+        } else {
+          containers.sources.push({
+            pos: ret.path[ret.path.length - 1],
+            structureType: STRUCTURE_CONTAINER,
+          });
+        }
       }
 
       // Add road construction sites to plans,
