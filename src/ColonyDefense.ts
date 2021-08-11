@@ -37,11 +37,13 @@ export class ColonyDefense {
 
     // Load real room objects
     this.mainRoom = Game.rooms[this.roomName];
-    this.adjacentRooms = this.adjacentRoomNames.map(
-      roomName => Game.rooms[roomName]
-    );
+    this.adjacentRooms = this.adjacentRoomNames
+      .map(roomName => Game.rooms[roomName])
+      .filter(Boolean);
 
-    if (this.mainRoom.controller?.level ?? 0 < 3) {
+    const rcl = this.mainRoom.controller?.level ?? 0;
+
+    if (rcl < 3) {
       // No towers, not enough energy to spawn defenders ¯\_(ツ)_/¯
       return;
     }
@@ -51,6 +53,7 @@ export class ColonyDefense {
     const allRooms = [this.mainRoom, ...this.adjacentRooms];
 
     for (const room of allRooms) {
+      if (!room) continue;
       if (room.findHostiles().length) {
         this.defconRoomNames.push(room.name);
         room.memory.defcon = true;
@@ -65,7 +68,10 @@ export class ColonyDefense {
 
       if (defendMain) this.defendMainRoom();
       if (defendOthers) this.defendOtherRooms();
+    } else {
+      this.safeModeTimer = null;
     }
+
     console.log(
       this.colony.roomName,
       'ColonyDefense CPU:',

@@ -156,25 +156,12 @@ export default (() => {
     return this._towers;
   };
 
-  // Cached in Memory, frequently rescanned
+  // Cached for tick
   Room.prototype.findHostiles = function () {
     if (!this._hostiles) {
-      // If we dont have the value stored in memory,
-      // or enough time passed to rescan
-      if (!this.memory._hostileIds || isNthTick(3)) {
-        // Find the creeps and store their id's in memory
-        this.memory._hostileIds = this.find(FIND_HOSTILE_CREEPS, {
-          filter: creep =>
-            creep.getActiveBodyparts(ATTACK) ||
-            creep.getActiveBodyparts(RANGED_ATTACK) ||
-            creep.getActiveBodyparts(HEAL),
-        }).map(creep => creep.id);
-      }
-
-      // Get the tower objects from the id's in memory and store them locally
-      this._hostiles = this.memory._hostileIds
-        .map(id => Game.getObjectById<Creep>(id))
-        .filter((creep): creep is Creep => !!creep);
+      this._hostiles = this.find(FIND_HOSTILE_CREEPS, {
+        filter: creep => creep.isHostile(),
+      });
     }
 
     // Return the locally stored value

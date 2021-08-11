@@ -23,6 +23,8 @@ export default {
         return 100000;
     }
   },
+  USERNAME: 'poot',
+  FRIENDLY_NAMES: ['iiF'],
   MAX_CONSTRUCTION_SITES: 5,
   MAX_TOWER_REFILL: 600,
   ticks: {

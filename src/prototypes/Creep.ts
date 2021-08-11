@@ -1,3 +1,4 @@
+import { isFriendlyOwner } from 'utils';
 import { spawnTime } from 'utils/creep';
 
 declare global {
@@ -6,6 +7,7 @@ declare global {
     _isDying: boolean;
     isFull(): boolean;
     isEmpty(): boolean;
+    isHostile(): boolean;
   }
 }
 
@@ -26,5 +28,16 @@ export default (() => {
 
   Creep.prototype.isEmpty = function () {
     return this.store.getUsedCapacity() === 0;
+  };
+
+  Creep.prototype.isHostile = function () {
+    // Check owner and any potentially threatening body parts
+    return (
+      !isFriendlyOwner(this.owner.username) &&
+      (!!this.getActiveBodyparts(ATTACK) ||
+        !!this.getActiveBodyparts(RANGED_ATTACK) ||
+        !!this.getActiveBodyparts(HEAL) ||
+        !!this.getActiveBodyparts(WORK))
+    );
   };
 })();
