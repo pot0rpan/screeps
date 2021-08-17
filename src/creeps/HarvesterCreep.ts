@@ -5,7 +5,7 @@ import { BodySettings, CreepBase } from './CreepBase';
 // So the container is stored as the target instead of the source
 // This helps avoid task id conflicts with different roles
 // Should only really matter at early rcl when Pioneers still exist
-interface MinerTask extends CreepTask {
+interface HarvesterTask extends CreepTask {
   type: 'harvest';
   data: {
     source: string;
@@ -42,7 +42,7 @@ export class HarvesterCreep extends CreepBase {
     return numContainers;
   }
 
-  findTask(creep: Creep, taskManager: TaskManager): MinerTask | null {
+  findTask(creep: Creep, taskManager: TaskManager): HarvesterTask | null {
     const container = creep.room
       .findSourceContainers()
       .filter(
@@ -59,7 +59,7 @@ export class HarvesterCreep extends CreepBase {
         )[0];
 
       if (container) {
-        return taskManager.createTask<MinerTask>(
+        return taskManager.createTask<HarvesterTask>(
           container.pos.roomName,
           container.id,
           'harvest',
@@ -72,7 +72,7 @@ export class HarvesterCreep extends CreepBase {
     return null;
   }
 
-  isValidTask(creep: Creep, task: MinerTask): boolean {
+  isValidTask(creep: Creep, task: HarvesterTask): boolean {
     return (
       !!Game.getObjectById(task.target as Id<StructureContainer>) &&
       !!Game.getObjectById(task.data.source as Id<Source>)
@@ -82,7 +82,7 @@ export class HarvesterCreep extends CreepBase {
   run(creep: Creep): void {
     if (!creep.memory.task || creep.memory.task.complete) return;
 
-    const task = creep.memory.task as MinerTask;
+    const task = creep.memory.task as HarvesterTask;
     const container = Game.getObjectById(task.target as Id<StructureContainer>);
     const source = Game.getObjectById(task.data.source as Id<Source>);
 
