@@ -63,6 +63,7 @@ export class HumanResources {
       'mover',
       'builder',
       'upgrader',
+      'miner',
       'scout',
       // 'guard',
       // 'reserver',

@@ -44,7 +44,7 @@ export class TaskManager {
     target: string,
     type: TaskType,
     limit: number = -1,
-    data?: any
+    data?: Task['data']
   ): Task {
     // TODO: Fix generic typing and remove `as`
     const task = {

@@ -19,6 +19,7 @@ import { DefenderCreep } from 'creeps/DefenderCreep';
 import { ScoutCreep } from 'creeps/ScoutCreep';
 import { ReserverCreep } from 'creeps/ReserverCreep';
 import { GuardCreep } from 'creeps/GuardCreep';
+import { MinerCreep } from 'creeps/MinerCreep';
 
 declare global {
   /*
@@ -50,6 +51,7 @@ global.Creeps = {
   scout: new ScoutCreep(),
   reserver: new ReserverCreep(),
   guard: new GuardCreep(),
+  miner: new MinerCreep(),
 };
 
 global.empire = new Empire();

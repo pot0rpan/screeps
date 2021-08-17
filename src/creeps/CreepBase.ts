@@ -44,7 +44,8 @@ declare global {
     | 'defender'
     | 'scout'
     | 'reserver'
-    | 'guard';
+    | 'guard'
+    | 'miner';
 }
 
 export interface BodySettings {
