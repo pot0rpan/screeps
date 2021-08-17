@@ -9,7 +9,8 @@ interface ReserverTask extends CreepTask {
 export class ReserverCreep extends CreepBase {
   role: CreepRole = 'reserver';
   bodyOpts: BodySettings = {
-    pattern: [MOVE, CLAIM],
+    pattern: [CLAIM],
+    suffix: [MOVE],
     ordered: true,
   };
 
