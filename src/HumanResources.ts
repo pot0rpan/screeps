@@ -64,7 +64,8 @@ export class HumanResources {
       'builder',
       'upgrader',
       'scout',
-      'reserver',
+      // 'guard',
+      // 'reserver',
     ];
 
     for (const role of roleOrder) {
@@ -76,7 +77,7 @@ export class HumanResources {
 
     for (const creep of colonyCreeps) {
       // If creep is not dying, add 1 to role count
-      if (!creep.isDying()) {
+      if (!creep.isDying() && creepNums[creep.memory.role]) {
         creepNums[creep.memory.role].actual++;
       }
     }

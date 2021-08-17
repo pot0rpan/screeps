@@ -10,6 +10,7 @@ declare global {
     getDiagonalPositions(length?: number): RoomPosition[];
     _diagonalPositions: { [length: number]: RoomPosition[] };
     findClosestSource(creep: Creep): Source | null;
+    isNearEdge(distance?: number): boolean;
   }
 }
 
@@ -103,5 +104,14 @@ export default (() => {
         (creep.pos.getRangeTo(source) === 1 ||
           source.pos.getAdjacentPositions(1, false).length > 0),
     });
+  };
+
+  RoomPosition.prototype.isNearEdge = function isNearEdge(distance = 6) {
+    return (
+      this.x < distance ||
+      this.x > 49 - distance ||
+      this.y < distance ||
+      this.y > 49 - distance
+    );
   };
 })();

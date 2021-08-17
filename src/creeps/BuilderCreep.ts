@@ -16,9 +16,11 @@ export class BuilderCreep extends CreepBase {
   // Only if construction sites exist
   // Or no towers and repairs needed
   targetNum(room: Room): number {
+    const rcl = room.controller?.level ?? 0;
     const numSites = room.findConstructionSites().length;
+
     if (numSites) {
-      return Math.min(numSites * 2, 4);
+      return Math.min(numSites * 2, rcl > 3 ? 2 : 4);
     }
 
     const structures = room.find(FIND_STRUCTURES);

@@ -32,7 +32,8 @@ declare global {
     | 'attack'
     | 'patrol'
     | 'scout'
-    | 'reserve';
+    | 'reserve'
+    | 'guard';
 
   type CreepRole =
     | 'pioneer'
@@ -42,7 +43,8 @@ declare global {
     | 'upgrader'
     | 'defender'
     | 'scout'
-    | 'reserver';
+    | 'reserver'
+    | 'guard';
 }
 
 export interface BodySettings {

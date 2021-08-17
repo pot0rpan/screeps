@@ -1,5 +1,6 @@
 import config from 'config';
 import { TaskManager } from 'TaskManager';
+import { isFriendlyOwner } from 'utils';
 import { BodySettings, CreepBase } from './CreepBase';
 
 interface ReserverTask extends CreepTask {
@@ -9,18 +10,27 @@ interface ReserverTask extends CreepTask {
 export class ReserverCreep extends CreepBase {
   role: CreepRole = 'reserver';
   bodyOpts: BodySettings = {
-    pattern: [CLAIM],
-    suffix: [MOVE],
+    pattern: [MOVE, CLAIM],
     ordered: true,
   };
 
   targetNum(room: Room): number {
     let num = 0;
+    const { adjacentRoomNames } = global.empire.colonies[room.name];
 
-    for (const roomName of global.empire.colonies[room.name]
-      .adjacentRoomNames) {
+    for (const roomName of adjacentRoomNames) {
       const mem = Memory.rooms[roomName];
-      if (mem.colonize && mem.controller && mem.reserver !== config.USERNAME) {
+
+      if (!mem) continue;
+      if (!mem.colonize) continue;
+      if (!mem.controller) continue;
+
+      // If not reserved or visible and is close to downgrading
+      if (
+        !mem.reserver ||
+        (Game.rooms[roomName]?.controller?.reservation?.ticksToEnd ??
+          Infinity) < config.ticks.RCL_DOWNGRADE
+      ) {
         num++;
       }
     }

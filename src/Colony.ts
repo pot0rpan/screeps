@@ -107,13 +107,28 @@ export class Colony {
       mem: Memory.rooms[roomName],
     }));
 
-    // Get rooms we aren't in yet, not owned, 2 sources
+    const numInProgress = adjRoomMems.filter(({ mem }) => mem.colonize).length;
+
+    if (
+      numInProgress >=
+      config.MAX_REMOTES(Game.rooms[this.roomName].controller?.level ?? 0)
+    ) {
+      return;
+    }
+
+    // Get rooms we aren't in yet, not owned or reserved, 2 sources
     const possibleRooms = adjRoomMems.filter(
       ({ mem }) =>
-        !mem.colonize && !mem.owner && (mem.sources?.length ?? 0) === 2
+        !mem.colonize &&
+        !mem.owner &&
+        !mem.reserver &&
+        (mem.sources?.length ?? 0) === 2
     );
 
-    if (!possibleRooms.length) return;
+    if (!possibleRooms.length) {
+      console.log(this.roomName, 'no available rooms to expand to');
+      return;
+    }
 
     // Sort rooms by total distance to sources
     const sortedRooms = possibleRooms.sort((a, b) => {

@@ -23,8 +23,22 @@ export default {
         return 100000;
     }
   },
+  MAX_REMOTES: (rcl: number): number => {
+    switch (rcl) {
+      case 1:
+      case 2:
+      case 3:
+        return 0;
+      case 4:
+        return 1;
+      case 5:
+        return 2;
+      default:
+        return 3;
+    }
+  },
   USERNAME: 'poot',
-  FRIENDLY_NAMES: ['iiF'],
+  FRIENDLY_NAMES: ['iiF', 'Xephael'],
   MAX_CONSTRUCTION_SITES: 5,
   MAX_TOWER_REFILL: 600,
   ticks: {
@@ -36,5 +50,6 @@ export default {
     SAFE_MODE_DELAY: 40,
     RECYCLE_CREEP_DELAY: 5,
     SCOUT_ADJACENT_ROOMS: 200,
+    RCL_DOWNGRADE: 3000,
   },
 };

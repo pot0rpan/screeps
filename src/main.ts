@@ -18,6 +18,7 @@ import { isNthTick } from 'utils';
 import { DefenderCreep } from 'creeps/DefenderCreep';
 import { ScoutCreep } from 'creeps/ScoutCreep';
 import { ReserverCreep } from 'creeps/ReserverCreep';
+import { GuardCreep } from 'creeps/GuardCreep';
 
 declare global {
   /*
@@ -48,6 +49,7 @@ global.Creeps = {
   defender: new DefenderCreep(),
   scout: new ScoutCreep(),
   reserver: new ReserverCreep(),
+  guard: new GuardCreep(),
 };
 
 global.empire = new Empire();
