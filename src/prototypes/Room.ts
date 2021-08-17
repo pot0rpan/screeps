@@ -3,13 +3,13 @@ import { isNthTick } from 'utils';
 declare global {
   interface Room {
     findSpawns(): StructureSpawn[];
-    findSources(): Source[];
+    findSources(avoidHostiles?: boolean): Source[];
     _sources: Source[];
     findSourceContainers(): StructureContainer[];
     _sourceContainers: StructureContainer[];
     findUpgradeContainers(): StructureContainer[];
     _upgradeContainers: StructureContainer[];
-    numSources(): number;
+    numSources(avoidHostiles?: boolean): number;
     findConstructionSites(
       type?: BuildableStructureConstant | 'all'
     ): ConstructionSite<BuildableStructureConstant>[];
@@ -36,12 +36,12 @@ export default (() => {
     return this.find(FIND_MY_SPAWNS);
   };
 
-  Room.prototype.numSources = function () {
-    return this.findSources().length;
+  Room.prototype.numSources = function (avoidHostiles = true) {
+    return this.findSources(avoidHostiles).length;
   };
 
   // Cached in Memory
-  Room.prototype.findSources = function () {
+  Room.prototype.findSources = function (avoidHostiles = true) {
     if (!this._sources) {
       // If we dont have the value stored in memory
       if (!this.memory._sourceIds) {
@@ -56,11 +56,13 @@ export default (() => {
         .filter((source): source is Source => !!source);
     }
 
-    // Return the locally stored value,
-    // but filter out dangerous sources
-    return this._sources.filter(
-      source => !source.pos.findInRange(FIND_HOSTILE_CREEPS, 1).length
-    );
+    if (avoidHostiles) {
+      return this._sources.filter(
+        source => !source.pos.findInRange(FIND_HOSTILE_CREEPS, 1).length
+      );
+    }
+
+    return this._sources;
   };
 
   // Cached for tick

@@ -16,6 +16,8 @@ import { MoverCreep } from 'creeps/MoverCreep';
 import { ErrorMapper } from 'utils/ErrorMapper';
 import { isNthTick } from 'utils';
 import { DefenderCreep } from 'creeps/DefenderCreep';
+import { ScoutCreep } from 'creeps/ScoutCreep';
+import { ReserverCreep } from 'creeps/ReserverCreep';
 
 declare global {
   /*
@@ -24,21 +26,6 @@ declare global {
   */
 
   interface Memory {
-    colonies?: {
-      roomName: string;
-      adjacentRooms: {
-        name: string;
-        owner?: string | null;
-        controller?: {
-          id: string;
-          pos: [number, number];
-        };
-        sources?: {
-          id: string;
-          pos: [number, number];
-        }[];
-      }[];
-    }[];
     _showStats?: boolean;
   }
 
@@ -59,6 +46,8 @@ global.Creeps = {
   upgrader: new UpgraderCreep(),
   mover: new MoverCreep(),
   defender: new DefenderCreep(),
+  scout: new ScoutCreep(),
+  reserver: new ReserverCreep(),
 };
 
 global.empire = new Empire();

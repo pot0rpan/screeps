@@ -55,32 +55,24 @@ export class HumanResources {
     }
 
     // Listed in order of priority
-    const creepNums: CreepNums = {
-      pioneer: {
-        target: global.Creeps.pioneer.targetNum(room),
+    const creepNums: CreepNums = {};
+    const roleOrder = [
+      'pioneer',
+      'defender',
+      'harvester',
+      'mover',
+      'builder',
+      'upgrader',
+      'scout',
+      'reserver',
+    ];
+
+    for (const role of roleOrder) {
+      creepNums[role] = {
+        target: global.Creeps[role].targetNum(room),
         actual: 0,
-      },
-      defender: {
-        target: global.Creeps.defender.targetNum(room),
-        actual: 0,
-      },
-      harvester: {
-        target: global.Creeps.harvester.targetNum(room),
-        actual: 0,
-      },
-      mover: {
-        target: global.Creeps.mover.targetNum(room),
-        actual: 0,
-      },
-      builder: {
-        target: global.Creeps.builder.targetNum(room),
-        actual: 0,
-      },
-      upgrader: {
-        target: global.Creeps.upgrader.targetNum(room),
-        actual: 0,
-      },
-    };
+      };
+    }
 
     for (const creep of colonyCreeps) {
       // If creep is not dying, add 1 to role count

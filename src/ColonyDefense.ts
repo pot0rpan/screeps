@@ -1,6 +1,6 @@
 import { Colony } from 'Colony';
 import config from 'config';
-import { isNthTick } from 'utils';
+import { isFriendlyOwner, isNthTick } from 'utils';
 
 declare global {
   interface RoomMemory {
@@ -54,7 +54,12 @@ export class ColonyDefense {
 
     for (const room of allRooms) {
       if (!room) continue;
-      if (room.findHostiles().length) {
+
+      const shouldDefendRoom =
+        room.controller?.owner?.username === config.USERNAME ||
+        room.controller?.reservation?.username === config.USERNAME;
+
+      if (shouldDefendRoom && room.findHostiles().length) {
         this.defconRoomNames.push(room.name);
         room.memory.defcon = true;
       } else {

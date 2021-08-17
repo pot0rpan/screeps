@@ -6,6 +6,14 @@ import { TaskManager } from 'TaskManager';
 import { isNthTick } from 'utils';
 import { isDamaged } from 'utils/structure';
 
+declare global {
+  interface Memory {
+    colonies?: {
+      [roomName: string]: {};
+    };
+  }
+}
+
 // A Colony is a block of 9 rooms, with `room` in the center
 // All functionality of a colony stems from here
 export class Colony {
@@ -89,5 +97,41 @@ export class Colony {
     for (const tower of towers) {
       tower.repair(damagedStructure);
     }
+  }
+
+  // Scouts call this when they're done scouting all adjacent rooms
+  // They scout whenever adjacent rooms aren't visible and it's been a while
+  public handleExpansion(): void {
+    const adjRoomMems = this.adjacentRoomNames.map(roomName => ({
+      name: roomName,
+      mem: Memory.rooms[roomName],
+    }));
+
+    // Get rooms we aren't in yet, not owned, 2 sources
+    const possibleRooms = adjRoomMems.filter(
+      ({ mem }) =>
+        !mem.colonize && !mem.owner && (mem.sources?.length ?? 0) === 2
+    );
+
+    if (!possibleRooms.length) return;
+
+    // Sort rooms by total distance to sources
+    const sortedRooms = possibleRooms.sort((a, b) => {
+      const totalA = a.mem.sources
+        ?.map(src => src.distance)
+        .reduce((prev, curr) => prev + curr, 0) as number;
+      const totalB = b.mem.sources
+        ?.map(src => src.distance)
+        .reduce((prev, curr) => prev + curr, 0) as number;
+
+      return totalA - totalB;
+    });
+
+    const bestRoom = sortedRooms[0];
+
+    console.log(JSON.stringify(sortedRooms, null, 2));
+    console.log('Expanding to room', bestRoom.name);
+
+    bestRoom.mem.colonize = true;
   }
 }

@@ -9,19 +9,21 @@ export class Empire {
     console.log('Empire constructor()');
 
     // Read colony room names from Memory
+    if (Array.isArray(Memory.colonies)) delete Memory.colonies;
+
     if (Memory.colonies && Object.keys(Memory.colonies).length) {
-      for (const { roomName } of Memory.colonies) {
+      for (const roomName in Memory.colonies) {
         this.colonies[roomName] = new Colony(roomName);
       }
     } else {
       // No colonies in Memory, must be first game tick of new game
-      Memory.colonies = [];
+      Memory.colonies = {};
 
       for (const roomName in Game.rooms) {
         const room = Game.rooms[roomName];
         if (room.controller?.my && room.controller?.level > 0) {
           this.colonies[roomName] = new Colony(roomName);
-          Memory.colonies.push({ roomName, adjacentRooms: [] });
+          Memory.colonies[roomName] = { adjacentRooms: [] };
         }
       }
     }

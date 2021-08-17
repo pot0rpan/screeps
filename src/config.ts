@@ -35,5 +35,6 @@ export default {
     PLAN_ROOMS: 69,
     SAFE_MODE_DELAY: 40,
     RECYCLE_CREEP_DELAY: 5,
+    SCOUT_ADJACENT_ROOMS: 200,
   },
 };
