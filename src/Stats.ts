@@ -107,6 +107,8 @@ export class Stats {
         });
       }
 
+      this.showEnergyStats(room);
+
       this.showCpuStats(roomName);
     }
   }
@@ -150,5 +152,14 @@ export class Stats {
 
     printText(roomName, 'CPU:', 9.5, 2.5, { align: 'right' });
     printProgressBar(roomName, Game.cpu.getUsed() / 20, 10, 2.5);
+  }
+
+  showEnergyStats(room: Room) {
+    printText(
+      room.name,
+      `Energy: [${room.energyAvailable}/${room.energyCapacityAvailable}]`,
+      8,
+      4
+    );
   }
 }
