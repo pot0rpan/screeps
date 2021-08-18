@@ -19,12 +19,17 @@ export default {
   },
   MAX_ENERGY_STORAGE: (rcl: number): number => {
     switch (rcl) {
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+        return 0;
       case 4:
         return 10000;
       case 5:
-        return 20000;
+        return 25000;
       case 6:
-        return 40000;
+        return 50000;
       default:
         return 100000;
     }
