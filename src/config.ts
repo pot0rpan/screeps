@@ -29,9 +29,9 @@ export default {
       case 5:
         return 25000;
       case 6:
-        return 50000;
-      default:
         return 100000;
+      default:
+        return 300000;
     }
   },
   MAX_REMOTES: (rcl: number): number => {
