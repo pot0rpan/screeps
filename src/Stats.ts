@@ -99,6 +99,8 @@ export class Stats {
         );
       }
 
+      y += 0.5;
+
       for (const stats of spawnStats) {
         printText(
           roomName,
@@ -106,7 +108,7 @@ export class Stats {
             stats.ticksTotal
           }]`,
           1,
-          ++y
+          y++
         );
       }
 
