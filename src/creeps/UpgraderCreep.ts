@@ -21,6 +21,7 @@ export class UpgraderCreep extends CreepBase {
     if (!controller) return 0;
     const rcl = controller.level;
     if (rcl < 2) return 0;
+    if (room.memory.defcon) return 0;
 
     const controllerContainer =
       room.controller &&

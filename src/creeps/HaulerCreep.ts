@@ -1,3 +1,4 @@
+import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -8,7 +9,7 @@ interface HaulerTask extends CreepTask {
 export class HaulerCreep extends CreepBase {
   role: CreepRole = 'hauler';
   bodyOpts: BodySettings = {
-    pattern: [CARRY, CARRY, WORK, MOVE, MOVE, MOVE],
+    pattern: [CARRY, CARRY, CARRY, WORK, MOVE, MOVE, MOVE, MOVE],
     sizeLimit: 6,
     ordered: true,
   };
@@ -19,7 +20,9 @@ export class HaulerCreep extends CreepBase {
     return _.filter(
       Game.creeps,
       creep =>
-        creep.memory.homeRoom === room.name && creep.memory.role === 'miner'
+        !creep.spawning &&
+        creep.memory.homeRoom === room.name &&
+        creep.memory.role === 'miner'
     ).length;
   }
 
@@ -145,19 +148,6 @@ export class HaulerCreep extends CreepBase {
       // Assume room just has no visibility
       creep.travelTo(new RoomPosition(25, 25, task.room), { range: 10 });
 
-      // Fix damaged structures in remote rooms
-      if (
-        creep.memory.working &&
-        creep.room.name !== creep.memory.homeRoom &&
-        creep.store.getFreeCapacity(RESOURCE_ENERGY)
-      ) {
-        const struct = creep.pos.findInRange(FIND_STRUCTURES, 3, {
-          filter: struct => struct.hits < struct.hitsMax,
-        })[0];
-        if (struct) {
-          creep.repair(struct);
-        }
-      }
       return;
     }
 
@@ -183,6 +173,27 @@ export class HaulerCreep extends CreepBase {
       // Find dropped resources in range
       const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1)[0];
       if (dropped) creep.pickup(dropped);
+
+      if (
+        creep.memory.homeRoom !== creep.room.name &&
+        creep.memory.working &&
+        creep.store.getUsedCapacity(RESOURCE_ENERGY)
+      ) {
+        // Build construction sites in remote rooms
+        const site = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 3)[0];
+
+        if (site) {
+          creep.build(site);
+        } else {
+          // Fix damaged structures in remote rooms
+          const struct = creep.pos.findInRange(FIND_STRUCTURES, 3, {
+            filter: struct => struct.hits < struct.hitsMax,
+          })[0];
+          if (struct) {
+            creep.repair(struct);
+          }
+        }
+      }
 
       creep.travelTo(target);
     }

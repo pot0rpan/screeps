@@ -27,34 +27,32 @@ interface ScoutTask extends CreepTask {
   type: 'scout';
 }
 
-function findRoomsToScout(colonyRoom: Room): string[] {
+function findRoomsToScout(colonyRoom: Room, ignoreLastScan = false): string[] {
   const colonyMem = Memory.colonies?.[colonyRoom.name];
   if (!colonyMem) return []; // Should never happen
 
-  const roomsToScout: string[] = [];
+  const roomsToScout: { name: string; mem: RoomMemory }[] = [];
   const adjacentRoomNames =
     global.empire.colonies[colonyRoom.name].adjacentRoomNames;
 
   for (const roomName of adjacentRoomNames) {
-    // // If we have visibility, no need to scout
-    // if (Game.rooms[roomName]) continue;
-
-    // // If already colonized/colonizing, no need to scout again
-    // if (Memory.rooms[roomName]?.colonize) continue;
-
     const adjMem = Memory.rooms[roomName];
 
     // If adjacent room not saved in memory or if it's been a while since last scouting
+    // or ignoreLastScan=true (for when scout is alive)
     if (
       !adjMem ||
       !adjMem.lastScan ||
+      ignoreLastScan ||
       Game.time - adjMem.lastScan > config.ticks.SCOUT_ADJACENT_ROOMS
     ) {
-      roomsToScout.push(roomName);
+      roomsToScout.push({ name: roomName, mem: adjMem });
     }
   }
 
-  return roomsToScout;
+  return roomsToScout
+    .sort((a, b) => (a.mem.lastScan ?? 0) - (b.mem.lastScan ?? 0))
+    .map(({ name }) => name);
 }
 
 export class ScoutCreep extends CreepBase {
@@ -69,28 +67,33 @@ export class ScoutCreep extends CreepBase {
   targetNum(room: Room): number {
     const rcl = room.controller?.level ?? 0;
     if (rcl < 4) return 0;
-    return findRoomsToScout(room).length ? 1 : 0;
+    return findRoomsToScout(room, true).length ? 1 : 0;
   }
 
   isValidTask(creep: Creep, task: ScoutTask): boolean {
-    const targetRoomName = task.target;
+    return true;
 
-    const memory = Memory.rooms[targetRoomName];
+    // const targetRoomName = task.target;
 
-    if (
-      !memory ||
-      !memory.lastScan ||
-      Game.time - memory.lastScan > config.ticks.SCOUT_ADJACENT_ROOMS
-    ) {
-      return true;
-    }
+    // const memory = Memory.rooms[targetRoomName];
 
-    return false;
+    // if (
+    //   !memory ||
+    //   !memory.lastScan ||
+    //   Game.time - memory.lastScan > config.ticks.SCOUT_ADJACENT_ROOMS
+    // ) {
+    //   return true;
+    // }
+
+    // return false;
   }
 
   // Currently will have at most 1 scout, no need to check if task is taken
   findTask(creep: Creep, taskManager: TaskManager): ScoutTask | null {
-    const roomToScout = findRoomsToScout(Game.rooms[creep.memory.homeRoom])[0];
+    const roomToScout = findRoomsToScout(
+      Game.rooms[creep.memory.homeRoom],
+      true
+    ).filter(roomName => roomName !== creep.room.name)[0];
     if (!roomToScout) return null;
 
     return taskManager.createTask<ScoutTask>(roomToScout, roomToScout, 'scout');
@@ -146,6 +149,7 @@ export class ScoutCreep extends CreepBase {
       roomMemory.lastScan = Game.time;
 
       creep.memory.task.complete = true;
+      console.log(creep, 'scouted room:', creep.memory.task.room);
     } else {
       creep.travelTo(new RoomPosition(25, 25, targetRoomName));
       creep.say(targetRoomName);

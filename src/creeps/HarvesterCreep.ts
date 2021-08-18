@@ -25,6 +25,7 @@ export class HarvesterCreep extends CreepBase {
   // Same number as source containers built
   targetNum(room: Room): number {
     if (room.controller && room.controller.level < 2) return 0;
+    if (room.memory.defcon) return 0;
 
     const numContainers = room.find(FIND_STRUCTURES, {
       filter: struct =>

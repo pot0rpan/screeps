@@ -65,10 +65,10 @@ export class HumanResources {
       'upgrader',
       'scout',
       'exterminator',
+      'reserver',
       'miner',
       'hauler',
       // 'guard',
-      'reserver',
     ];
 
     for (const role of roleOrder) {

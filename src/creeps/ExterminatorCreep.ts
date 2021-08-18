@@ -178,9 +178,9 @@ export class ExterminatorCreep extends CreepBase {
       creep.cancelOrder('heal');
       creep.attack(target);
     } else {
-      // If not close and healed enough, pursue
-      if (range > 2 || creep.hits > creep.hitsMax * 0.75) {
-        creep.travelTo(target, { range: 1 });
+      // If not close or healed enough, pursue
+      if (range > 3 || creep.hits > creep.hitsMax * 0.75) {
+        creep.travelTo(target, { range: 1, maxRooms: 1, movingTarget: true });
       }
 
       // If didn't heal self this tick, heal friendlies

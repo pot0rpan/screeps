@@ -28,7 +28,7 @@ export class ReserverCreep extends CreepBase {
       // If no hostiles
       // and not reserved
       // or reserved by hostile and have Exterminator creeps
-      // or visible and reserved by me and is close to downgrading
+      // or not visible or reserved by me and is close to downgrading
       if (
         !mem.hostiles &&
         (!mem.reserver ||
@@ -36,8 +36,8 @@ export class ReserverCreep extends CreepBase {
             _.filter(Game.creeps, crp => crp.memory.role === 'exterminator')
               .length) ||
           (mem.reserver === config.USERNAME &&
-            (Game.rooms[roomName]?.controller?.reservation?.ticksToEnd ??
-              Infinity) < config.ticks.RCL_DOWNGRADE))
+            (Game.rooms[roomName]?.controller?.reservation?.ticksToEnd ?? 0) <
+              config.ticks.RCL_DOWNGRADE))
       ) {
         num++;
       }
@@ -48,7 +48,10 @@ export class ReserverCreep extends CreepBase {
 
   isValidTask(creep: Creep, task: ReserverTask): boolean {
     if (creep.room.name !== task.room) return true;
-    if (Game.getObjectById(task.target as Id<StructureController>)?.my)
+    if (
+      (Game.getObjectById(task.target as Id<StructureController>)?.reservation
+        ?.ticksToEnd ?? Infinity) > config.ticks.RCL_DOWNGRADE
+    )
       return false;
     return true;
   }
@@ -57,7 +60,10 @@ export class ReserverCreep extends CreepBase {
     for (const roomName of global.empire.colonies[creep.memory.homeRoom]
       .adjacentRoomNames) {
       const mem = Memory.rooms[roomName];
-      if (mem.colonize && mem.controller && mem.reserver !== config.USERNAME) {
+      if (
+        mem.colonize &&
+        mem.controller /* && mem.reserver !== config.USERNAME */
+      ) {
         return taskManager.createTask<ReserverTask>(
           roomName,
           mem.controller.id,

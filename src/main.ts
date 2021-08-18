@@ -52,9 +52,9 @@ global.Creeps = {
   upgrader: new UpgraderCreep(),
   scout: new ScoutCreep(),
   exterminator: new ExterminatorCreep(),
+  reserver: new ReserverCreep(),
   miner: new MinerCreep(),
   hauler: new HaulerCreep(),
-  reserver: new ReserverCreep(),
   // guard: new GuardCreep(),
 };
 

@@ -11,15 +11,26 @@ interface MinerTask extends CreepTask {
 export class MinerCreep extends CreepBase {
   role: CreepRole = 'miner';
   bodyOpts: BodySettings = {
-    pattern: [WORK],
-    sizeLimit: 6,
-    suffix: [MOVE, MOVE],
+    pattern: [MOVE, WORK, WORK],
+    sizeLimit: 3,
+    ordered: true,
   };
 
   // Number of sources in colonized adjacent rooms
   targetNum(room: Room): number {
+    if (!room.storage) return 0;
+
+    const rcl = room.controller?.level ?? 0;
+
     // Don't expand too early
-    if ((room.controller?.level ?? 0) < 4) return 0;
+    if (rcl < 4) return 0;
+
+    if (
+      room.storage.store.getUsedCapacity(RESOURCE_ENERGY) >
+      config.MAX_ENERGY_STORAGE(rcl)
+    ) {
+      return 0;
+    }
 
     const { adjacentRoomNames } = global.empire.colonies[room.name];
     let num = 0;
