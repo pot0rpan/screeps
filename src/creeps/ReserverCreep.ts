@@ -102,6 +102,9 @@ export class ReserverCreep extends CreepBase {
         } else {
           creep.reserveController(controller);
           creep.room.memory.reserver = config.USERNAME;
+          if (controller.sign?.username !== config.USERNAME) {
+            creep.signController(controller, '«ᴍɪɴᴇ»');
+          }
         }
       } else {
         creep.travelTo(controller, { range: 1 });
