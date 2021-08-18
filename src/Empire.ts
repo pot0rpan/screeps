@@ -5,7 +5,9 @@ export class Empire {
   colonies: { [roomName: string]: Colony } = {};
 
   constructor() {
-    console.log('----------------------- GLOBAL RESET ----------------------');
+    console.log(
+      '<span style="color:red">----------------------- GLOBAL RESET ----------------------</span>'
+    );
     console.log('Empire constructor()');
 
     // Read colony room names from Memory

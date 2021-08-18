@@ -11,14 +11,11 @@ export class DefenderCreep extends CreepBase {
   bodyOpts: BodySettings = {
     ordered: true,
     pattern: [
-      // Total 750
-      TOUGH, // 20
-      TOUGH,
-      MOVE, // 250
       MOVE,
       MOVE,
       MOVE,
       MOVE,
+      ATTACK, // 80
       ATTACK, // 80
       RANGED_ATTACK, // 150
       HEAL, // 250

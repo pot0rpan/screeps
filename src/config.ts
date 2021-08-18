@@ -1,14 +1,20 @@
 export default {
   MAX_REPAIR_HITS: (rcl: number): number => {
     switch (rcl) {
+      case 0:
+      case 1:
+      case 2:
+        return 0;
       case 3:
         return 10000;
       case 4:
         return 25000;
       case 5:
         return 50000;
-      default:
+      case 6:
         return 100000;
+      default:
+        return 30000000;
     }
   },
   MAX_ENERGY_STORAGE: (rcl: number): number => {
@@ -33,8 +39,10 @@ export default {
         return 1;
       case 5:
         return 2;
-      default:
+      case 6:
         return 3;
+      default:
+        return 4;
     }
   },
   USERNAME: 'poot',
@@ -44,12 +52,12 @@ export default {
   ticks: {
     SPAWN_CREEPS: 10,
     RECHECK_TASK_VALIDITY: 5,
-    CLEAN_TASK_CACHE: 33,
+    CLEAN_TASK_CACHE: 11,
     DELETE_DEAD_CREEP_MEMORY: 3,
     PLAN_ROOMS: 69,
     SAFE_MODE_DELAY: 40,
     RECYCLE_CREEP_DELAY: 5,
-    SCOUT_ADJACENT_ROOMS: 200,
+    SCOUT_ADJACENT_ROOMS: 100,
     RCL_DOWNGRADE: 3000,
   },
 };

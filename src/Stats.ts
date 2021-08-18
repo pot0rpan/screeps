@@ -2,7 +2,7 @@ import { Colony } from 'Colony';
 import { Empire } from 'Empire';
 
 type CreepStats = {
-  [role: string]: { target: number; actual: number };
+  [role: string]: { target: number; actual: number; spawning: number };
 };
 
 type SpawnStats = {
@@ -80,11 +80,22 @@ export class Stats {
       let y = 1;
       for (const role in creepStats) {
         const stats = creepStats[role];
+        if (stats.actual + stats.target + stats.spawning === 0) continue;
+
+        const color =
+          stats.spawning > 0
+            ? '#ffff88'
+            : stats.actual < stats.target
+            ? '#ff4488'
+            : stats.actual > stats.target
+            ? '#44ff88'
+            : undefined;
         printText(
           roomName,
           `${role}: [${stats.actual}/${stats.target}]`,
           1,
-          y++
+          y++,
+          { color }
         );
       }
 
@@ -120,13 +131,20 @@ export class Stats {
 
     // Populate target num
     for (const [role, Creep] of Object.entries(global.Creeps)) {
-      nums[role] = { target: Creep.targetNum(mainRoom), actual: 0 };
+      nums[role] = {
+        target: Creep.targetNum(mainRoom),
+        actual: 0,
+        spawning: 0,
+      };
     }
 
     // Populate actual num
     for (const creep of creeps) {
-      if (creep.spawning) continue;
-      nums[creep.memory.role].actual++;
+      if (creep.spawning) {
+        nums[creep.memory.role].spawning++;
+      } else {
+        nums[creep.memory.role].actual++;
+      }
     }
 
     return nums;

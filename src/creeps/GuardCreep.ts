@@ -129,7 +129,7 @@ export class GuardCreep extends CreepBase {
       return;
     }
 
-    let target: Creep | AnyStructure | null = null;
+    let target: Creep | null = null;
 
     const hostiles = creep.room
       .findHostiles()

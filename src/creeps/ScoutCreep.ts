@@ -8,6 +8,7 @@ declare global {
 
     owner?: string;
     reserver?: string;
+    hostiles?: number;
     controller?: {
       id: string;
       pos: [number, number];
@@ -35,8 +36,8 @@ function findRoomsToScout(colonyRoom: Room): string[] {
     global.empire.colonies[colonyRoom.name].adjacentRoomNames;
 
   for (const roomName of adjacentRoomNames) {
-    // If we have visibility, no need to scout
-    if (Game.rooms[roomName]) continue;
+    // // If we have visibility, no need to scout
+    // if (Game.rooms[roomName]) continue;
 
     // // If already colonized/colonizing, no need to scout again
     // if (Memory.rooms[roomName]?.colonize) continue;
@@ -141,10 +142,8 @@ export class ScoutCreep extends CreepBase {
         }));
       }
 
+      roomMemory.hostiles = room.findHostiles().length;
       roomMemory.lastScan = Game.time;
-
-      console.log(creep, 'Saved scouting results to room memory');
-      console.log(JSON.stringify(roomMemory, null, 2));
 
       creep.memory.task.complete = true;
     } else {

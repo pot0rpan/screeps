@@ -1,3 +1,4 @@
+import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -11,7 +12,7 @@ export class MinerCreep extends CreepBase {
   role: CreepRole = 'miner';
   bodyOpts: BodySettings = {
     pattern: [WORK],
-    sizeLimit: 5,
+    sizeLimit: 6,
     suffix: [MOVE, MOVE],
   };
 
@@ -25,7 +26,14 @@ export class MinerCreep extends CreepBase {
 
     for (const roomName of adjacentRoomNames) {
       const mem = Memory.rooms[roomName];
-      if (mem && mem.colonize && mem.sources) num += mem.sources.length;
+      if (
+        mem &&
+        mem.colonize &&
+        mem.sources &&
+        mem.reserver === config.USERNAME &&
+        !mem.hostiles
+      )
+        num += mem.sources.length;
     }
 
     return num;
@@ -71,6 +79,7 @@ export class MinerCreep extends CreepBase {
     const source = Game.getObjectById(task.target as Id<Source>);
     if (!source) {
       task.complete = true;
+      creep.say('wtf');
       return;
     }
 
@@ -97,7 +106,9 @@ export class MinerCreep extends CreepBase {
     } else if (creep.pos.getRangeTo(source) > 1) {
       creep.travelTo(source);
     } else {
-      creep.harvest(source);
+      if (creep.harvest(source) === ERR_NOT_OWNER) {
+        creep.say('cmon');
+      }
     }
   }
 }

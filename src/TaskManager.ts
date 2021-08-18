@@ -18,6 +18,10 @@ export class TaskManager {
     return `${room}${target}${type}`;
   }
 
+  getTaskById(taskId: string): TaskCache['id'] | undefined {
+    return this.tasks[taskId];
+  }
+
   removeTask(creep: Creep) {
     if (!creep.memory.task) return;
     const taskId = creep.memory.task.id;
@@ -42,7 +46,7 @@ export class TaskManager {
   createTask<Task extends CreepTask>(
     room: string,
     target: string,
-    type: TaskType,
+    type: Task['type'],
     limit: number = -1,
     data?: Task['data']
   ): Task {

@@ -3,7 +3,7 @@ import config from 'config';
 import { HumanResources } from 'HumanResources';
 import { RoomPlanner } from 'RoomPlanner';
 import { TaskManager } from 'TaskManager';
-import { isNthTick } from 'utils';
+import { isFriendlyOwner, isNthTick } from 'utils';
 import { isDamaged } from 'utils/structure';
 
 declare global {
@@ -117,13 +117,20 @@ export class Colony {
     }
 
     // Get rooms we aren't in yet, not owned or reserved, 2 sources
-    const possibleRooms = adjRoomMems.filter(
+    let possibleRooms = adjRoomMems.filter(
       ({ mem }) =>
         !mem.colonize &&
         !mem.owner &&
         !mem.reserver &&
         (mem.sources?.length ?? 0) === 2
     );
+
+    // Check for rooms reserved by hostiles
+    if (!possibleRooms.length) {
+      possibleRooms = adjRoomMems.filter(
+        ({ mem }) => mem.reserver && !isFriendlyOwner(mem.reserver)
+      );
+    }
 
     if (!possibleRooms.length) {
       console.log(this.roomName, 'no available rooms to expand to');

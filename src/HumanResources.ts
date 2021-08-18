@@ -63,10 +63,12 @@ export class HumanResources {
       'mover',
       'builder',
       'upgrader',
-      'miner',
       'scout',
+      'exterminator',
+      'miner',
+      'hauler',
       // 'guard',
-      // 'reserver',
+      'reserver',
     ];
 
     for (const role of roleOrder) {

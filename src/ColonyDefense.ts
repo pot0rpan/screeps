@@ -90,7 +90,10 @@ export class ColonyDefense {
   }
 
   private defendOtherRooms() {
-    // TODO: Send defense creeps from main room
+    for (const room of this.adjacentRooms) {
+      console.log(room, 'defense running');
+      room.memory.hostiles = room.findHostiles().length;
+    }
   }
 
   private handleSafeMode() {
