@@ -179,18 +179,19 @@ export class HaulerCreep extends CreepBase {
         creep.memory.working &&
         creep.store.getUsedCapacity(RESOURCE_ENERGY)
       ) {
-        // Build construction sites in remote rooms
-        const site = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 3)[0];
+        // Fix damaged structures in remote rooms
+        const struct = creep.pos.findInRange(FIND_STRUCTURES, 3, {
+          filter: struct => struct.hits < struct.hitsMax,
+        })[0];
 
-        if (site) {
-          creep.build(site);
+        if (struct) {
+          creep.repair(struct);
         } else {
-          // Fix damaged structures in remote rooms
-          const struct = creep.pos.findInRange(FIND_STRUCTURES, 3, {
-            filter: struct => struct.hits < struct.hitsMax,
-          })[0];
-          if (struct) {
-            creep.repair(struct);
+          // Build construction sites in remote rooms
+          const site = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 3)[0];
+
+          if (site) {
+            creep.build(site);
           }
         }
       }
