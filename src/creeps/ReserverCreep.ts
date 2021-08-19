@@ -80,7 +80,7 @@ export class ReserverCreep extends CreepBase {
       const task = creep.memory.task;
 
       if (creep.room.name !== task.room) {
-        creep.travelTo(new RoomPosition(25, 25, task.room));
+        creep.travelToRoom(task.room);
         return;
       }
 

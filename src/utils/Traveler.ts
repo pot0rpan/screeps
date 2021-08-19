@@ -6,6 +6,7 @@
 declare global {
   interface Creep {
     travelTo(destination: HasPos | RoomPosition, ops?: TravelToOptions): number;
+    travelToRoom(roomName: string, ops?: TravelToOptions): number;
   }
 
   interface CreepMemory {
@@ -846,4 +847,21 @@ Creep.prototype.travelTo = function (
   options?: TravelToOptions
 ) {
   return Traveler.travelTo(this, destination, options);
+};
+
+Creep.prototype.travelToRoom = function (
+  roomName: string,
+  options: TravelToOptions = {}
+) {
+  return this.travelTo(
+    new RoomPosition(25, 25, roomName),
+    Object.assign(
+      {
+        range: 20,
+        ignoreCreeps: true,
+        ignoreRoads: true,
+      },
+      options
+    )
+  );
 };

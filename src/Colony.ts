@@ -79,7 +79,7 @@ export class Colony {
     const room = Game.rooms[this.roomName];
     if (room.memory.defcon) return; // Attacking handled by ColonyDefense
 
-    // Only repair with towers that are more than half full
+    // Only repair or heal with towers that are more than half full
     // Need to be prepared for attacks
     const towers = room
       .findTowers()
@@ -92,10 +92,19 @@ export class Colony {
       })
       .sort((a, b) => a.hits - b.hits)[0];
 
-    if (!damagedStructure) return;
-
-    for (const tower of towers) {
-      tower.repair(damagedStructure);
+    if (damagedStructure) {
+      for (const tower of towers) {
+        tower.repair(damagedStructure);
+      }
+    } else {
+      const needsHealing = room
+        .find(FIND_MY_CREEPS, { filter: crp => crp.hits < crp.hitsMax })
+        .sort((a, b) => a.hits - b.hits)[0];
+      if (needsHealing) {
+        for (const tower of towers) {
+          tower.heal(needsHealing);
+        }
+      }
     }
   }
 

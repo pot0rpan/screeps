@@ -138,6 +138,11 @@ export class HaulerCreep extends CreepBase {
       return;
     }
 
+    if (!creep.getActiveBodyparts(CARRY)) {
+      creep.travelToRoom(creep.memory.homeRoom);
+      return;
+    }
+
     const task = creep.memory.task as HaulerTask;
 
     const target = Game.getObjectById(

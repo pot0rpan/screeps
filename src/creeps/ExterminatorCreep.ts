@@ -35,16 +35,16 @@ export class ExterminatorCreep extends CreepBase {
       const mem = Memory.rooms[roomName];
       if (!mem || !mem.colonize) continue;
 
-      const numHostiles = mem.hostiles ?? 0;
+      // Number of hostiles + 1, or 0
+      const numHostiles = (mem.hostiles ?? -1) + 1;
 
       // Abandon room for now if too expensive to defend
       if (numHostiles > this.ABANDON_LIMIT) continue;
 
-      // Defend rooms with few or no hostiles
-      // or reserved by hostile, since that's likely to be attacked
       if (numHostiles > 0) {
         num += numHostiles;
       } else if (mem.reserver && !isFriendlyOwner(mem.reserver)) {
+        // or reserved by hostile, since that's likely to be attacked
         num += 2;
       }
     }
@@ -56,11 +56,10 @@ export class ExterminatorCreep extends CreepBase {
     // Not in room, assume valid
     if (creep.room.name !== task.room) return true;
 
-    // Check if reserved by someone else or me
+    // Check if reserved by someone else
     if (
       creep.room.controller?.reservation &&
-      (!isFriendlyOwner(creep.room.controller.reservation.username) ||
-        creep.room.controller.reservation.username === config.USERNAME)
+      !isFriendlyOwner(creep.room.controller.reservation.username)
     ) {
       return true;
     }
@@ -80,15 +79,26 @@ export class ExterminatorCreep extends CreepBase {
         mem &&
         !mem.owner &&
         mem.colonize &&
-        // (!mem.reserver || mem.reserver === config.USERNAME) &&
-        !taskManager.isTaskTaken(roomName, roomName, 'exterminate')
+        (((!mem.reserver ||
+          !isFriendlyOwner(mem.reserver) ||
+          mem.reserver === config.USERNAME) &&
+          !taskManager.isTaskTaken(roomName, roomName, 'exterminate')) ||
+          Game.rooms[roomName]?.findHostiles().filter(crp => crp.isDangerous())
+            .length)
       ) {
-        return taskManager.createTask(
+        const task = taskManager.createTask(
           roomName,
           roomName,
           'exterminate',
-          mem.hostiles ?? 0
+          (mem.hostiles ?? 1) + 1
         );
+
+        if (taskManager.tasks[task.id]) {
+          // Synchronize limit
+          task.limit = taskManager.tasks[task.id].task.limit;
+        }
+
+        return task;
       }
     }
 
@@ -106,7 +116,8 @@ export class ExterminatorCreep extends CreepBase {
     }
 
     if (!task) {
-      creep.say('...');
+      creep.say('.....');
+      creep.travelTo(new RoomPosition(25, 25, creep.room.name), { range: 10 });
       return;
     }
 
@@ -128,13 +139,13 @@ export class ExterminatorCreep extends CreepBase {
           return;
         } else {
           // Full squad ready
-          creep.travelTo(new RoomPosition(25, 25, task.room), { range: 10 });
+          creep.travelToRoom(task.room);
           creep.say('leggo');
           return;
         }
       } else {
         // Must be in other adjacent room
-        creep.travelTo(new RoomPosition(25, 25, task.room), { range: 10 });
+        creep.travelToRoom(task.room);
         return;
       }
     }
@@ -165,12 +176,38 @@ export class ExterminatorCreep extends CreepBase {
       });
     }
 
+    // Heal any friendlies in the room
+    if (!target) {
+      const needsHealing = creep.pos.findClosestByRange(FIND_MY_CREEPS, {
+        filter: crp => crp.hits < crp.hitsMax,
+      });
+
+      if (needsHealing && needsHealing.hits < creep.hits) {
+        const range = creep.pos.getRangeTo(needsHealing);
+
+        if (range > 1) {
+          creep.travelTo(needsHealing);
+        }
+
+        if (range <= 3) {
+          creep.cancelOrder('heal');
+
+          if (range === 1) {
+            creep.heal(needsHealing);
+          } else {
+            creep.rangedHeal(needsHealing);
+          }
+        }
+
+        return;
+      }
+    }
+
     if (!target) {
       creep.say('...');
       creep.room.memory.hostiles = 0;
+      creep.travelTo(new RoomPosition(25, 25, creep.room.name), { range: 10 });
       return;
-
-      // TODO: heal any friendlies in the room
     }
 
     const range = creep.pos.getRangeTo(target);
@@ -181,7 +218,12 @@ export class ExterminatorCreep extends CreepBase {
     } else {
       // If not close or healed enough, pursue
       if (range > 3 || creep.hits > creep.hitsMax * 0.75) {
-        creep.travelTo(target, { range: 1, maxRooms: 1, movingTarget: true });
+        creep.travelTo(target, {
+          range: 1,
+          maxRooms: 1,
+          movingTarget: true,
+          stuckValue: 1, // Hopefully fix getting stuck behind stationary civilian hostiles
+        });
       }
 
       // If didn't heal self this tick, heal friendlies
