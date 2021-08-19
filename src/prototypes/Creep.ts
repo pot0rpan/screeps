@@ -8,6 +8,7 @@ declare global {
     isFull(): boolean;
     isEmpty(): boolean;
     isHostile(): boolean;
+    isDangerous(): boolean;
     moveAway(target: _HasRoomPosition): CreepMoveReturnCode;
   }
 }
@@ -40,6 +41,14 @@ export default (() => {
         !!this.getActiveBodyparts(HEAL) ||
         !!this.getActiveBodyparts(WORK) ||
         !!this.getActiveBodyparts(CLAIM))
+    );
+  };
+
+  Creep.prototype.isDangerous = function () {
+    return (
+      !!this.getActiveBodyparts(ATTACK) ||
+      !!this.getActiveBodyparts(RANGED_ATTACK) ||
+      !!this.getActiveBodyparts(HEAL)
     );
   };
 

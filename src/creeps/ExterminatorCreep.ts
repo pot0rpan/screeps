@@ -21,7 +21,6 @@ export class ExterminatorCreep extends CreepBase {
     ordered: true,
   };
 
-  private MAX_PER_ROOM = 2;
   private ABANDON_LIMIT = 5;
 
   // Harass any adjacent reserved rooms so we can expand
@@ -43,12 +42,14 @@ export class ExterminatorCreep extends CreepBase {
 
       // Defend rooms with few or no hostiles
       // or reserved by hostile, since that's likely to be attacked
-      if (numHostiles > 0 || (mem.reserver && !isFriendlyOwner(mem.reserver))) {
-        num++;
+      if (numHostiles > 0) {
+        num += numHostiles;
+      } else if (mem.reserver && !isFriendlyOwner(mem.reserver)) {
+        num += 2;
       }
     }
 
-    return num * 2;
+    return num;
   }
 
   isValidTask(creep: Creep, task: CreepTask): boolean {
@@ -86,7 +87,7 @@ export class ExterminatorCreep extends CreepBase {
           roomName,
           roomName,
           'exterminate',
-          this.MAX_PER_ROOM
+          mem.hostiles ?? 0
         );
       }
     }
@@ -120,7 +121,7 @@ export class ExterminatorCreep extends CreepBase {
           baseCenter &&
           creep.pos.getRangeTo(baseCenter) > 10 &&
           (colony.taskManager.getTaskById(task.id)?.creeps.length ?? 0) <
-            this.MAX_PER_ROOM
+            task.limit
         ) {
           // If only exterminator assigned to task room, wait for more
           creep.say('cmon');
@@ -140,17 +141,17 @@ export class ExterminatorCreep extends CreepBase {
 
     let target: Creep | null = null;
 
-    const dangerousHostiles = creep.room
+    let dangerousHostiles = creep.room
       .findHostiles()
-      .filter(hostile => !hostile.pos.isNearEdge(2))
-      .sort((a, b) => a.pos.getRangeTo(creep) - b.pos.getRangeTo(creep));
+      .filter(crp => crp.isDangerous());
     creep.room.memory.hostiles = dangerousHostiles.length;
 
+    dangerousHostiles = dangerousHostiles
+      .filter(hostile => !hostile.pos.isNearEdge(2))
+      .sort((a, b) => a.pos.getRangeTo(creep) - b.pos.getRangeTo(creep));
+
     // Most dangerous creeps
-    target = dangerousHostiles.filter(
-      hostile =>
-        !hostile.getActiveBodyparts(WORK) && !hostile.getActiveBodyparts(CLAIM)
-    )[0];
+    target = dangerousHostiles.filter(hostile => hostile.isDangerous())[0];
 
     // Potentially dangerous creep
     if (!target) {
