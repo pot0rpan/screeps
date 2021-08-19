@@ -34,6 +34,7 @@ export default {
         return 300000;
     }
   },
+  MAX_MINERAL_STORAGE: 10000,
   MAX_REMOTES: (rcl: number): number => {
     switch (rcl) {
       case 1:
@@ -61,7 +62,7 @@ export default {
     DELETE_DEAD_CREEP_MEMORY: 3,
     PLAN_ROOMS: 69,
     SAFE_MODE_DELAY: 40,
-    RECYCLE_CREEP_DELAY: 5,
+    RECYCLE_CREEP_DELAY: 20,
     SCOUT_ADJACENT_ROOMS: 100,
     RCL_DOWNGRADE: 3000,
   },

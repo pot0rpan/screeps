@@ -19,6 +19,12 @@ declare global {
       pos: [number, number];
       distance: number;
     }[];
+    minerals?: {
+      id: string;
+      type: MineralConstant;
+      pos: [number, number];
+      extractor?: string;
+    }[];
     lastScan?: number;
   }
 }
@@ -148,6 +154,25 @@ export class ScoutCreep extends CreepBase {
       roomMemory.hostiles = room
         .findHostiles()
         .filter(crp => crp.isDangerous()).length;
+
+      const minerals = room.find(FIND_MINERALS);
+
+      if (minerals.length) {
+        roomMemory.minerals = [];
+
+        for (const min of minerals) {
+          roomMemory.minerals.push({
+            id: min.id,
+            type: min.mineralType,
+            pos: [min.pos.x, min.pos.y],
+            extractor: min.pos
+              .lookFor(LOOK_STRUCTURES)
+              .filter(struct => struct.structureType === STRUCTURE_EXTRACTOR)[0]
+              ?.id,
+          });
+        }
+      }
+
       roomMemory.lastScan = Game.time;
 
       creep.memory.task.complete = true;

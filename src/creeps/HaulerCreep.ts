@@ -1,3 +1,4 @@
+import { recycle } from 'actions/recycle';
 import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
@@ -28,6 +29,8 @@ export class HaulerCreep extends CreepBase {
 
   isValidTask(creep: Creep, task: HaulerTask): boolean {
     if (creep.room.name !== task.room) return true;
+
+    if (Memory.rooms[task.room]?.hostiles) return false;
 
     switch (task.type) {
       case 'pickup':
@@ -69,6 +72,7 @@ export class HaulerCreep extends CreepBase {
 
       for (const roomName of adjacentRoomNames) {
         if (!Memory.rooms[roomName]?.colonize) continue;
+        if (Memory.rooms[roomName]?.hostiles) continue;
 
         const room = Game.rooms[roomName];
         if (!room) {
@@ -133,8 +137,10 @@ export class HaulerCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
+    creep.notifyWhenAttacked(false);
+
     if (!creep.memory.task) {
-      creep.say('...');
+      recycle(creep);
       return;
     }
 

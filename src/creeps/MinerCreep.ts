@@ -74,6 +74,8 @@ export class MinerCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
+    creep.notifyWhenAttacked(false);
+
     const task = creep.memory.task as MinerTask | undefined;
     if (!task) {
       creep.say('...');

@@ -36,7 +36,8 @@ export class ExterminatorCreep extends CreepBase {
       if (!mem || !mem.colonize) continue;
 
       // Number of hostiles + 1, or 0
-      const numHostiles = (mem.hostiles ?? -1) + 1;
+      // If mem.hostiles is undefined or 0, keep it at 0
+      const numHostiles = (mem.hostiles || -1) + 1;
 
       // Abandon room for now if too expensive to defend
       if (numHostiles > this.ABANDON_LIMIT) continue;
@@ -65,7 +66,13 @@ export class ExterminatorCreep extends CreepBase {
     }
 
     // Check for any hostiles
-    if (creep.room.find(FIND_HOSTILE_CREEPS).length) return true;
+    if (
+      creep.room.find(FIND_HOSTILE_CREEPS, {
+        filter: crp => !isFriendlyOwner(crp.owner.username),
+      }).length
+    ) {
+      return true;
+    }
 
     return false;
   }
@@ -75,6 +82,7 @@ export class ExterminatorCreep extends CreepBase {
 
     for (const roomName of adjacentRoomNames) {
       const mem = Memory.rooms[roomName];
+
       if (
         mem &&
         !mem.owner &&
@@ -83,8 +91,7 @@ export class ExterminatorCreep extends CreepBase {
           !isFriendlyOwner(mem.reserver) ||
           mem.reserver === config.USERNAME) &&
           !taskManager.isTaskTaken(roomName, roomName, 'exterminate')) ||
-          Game.rooms[roomName]?.findHostiles().filter(crp => crp.isDangerous())
-            .length)
+          Game.rooms[roomName]?.findHostiles().length)
       ) {
         const task = taskManager.createTask(
           roomName,
@@ -106,6 +113,8 @@ export class ExterminatorCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
+    creep.notifyWhenAttacked(false);
+
     const task = creep.memory.task as ExterminatorTask | undefined;
     let healedSelf = false;
 
@@ -117,7 +126,13 @@ export class ExterminatorCreep extends CreepBase {
 
     if (!task) {
       creep.say('.....');
-      creep.travelTo(new RoomPosition(25, 25, creep.room.name), { range: 10 });
+      if (creep.room.controller) {
+        creep.travelTo(creep.room.controller, { range: 5 });
+      } else {
+        creep.travelTo(new RoomPosition(25, 25, creep.room.name), {
+          range: 10,
+        });
+      }
       return;
     }
 
@@ -146,6 +161,7 @@ export class ExterminatorCreep extends CreepBase {
       } else {
         // Must be in other adjacent room
         creep.travelToRoom(task.room);
+        creep.say(task.room);
         return;
       }
     }
@@ -158,7 +174,7 @@ export class ExterminatorCreep extends CreepBase {
     creep.room.memory.hostiles = dangerousHostiles.length;
 
     dangerousHostiles = dangerousHostiles
-      .filter(hostile => !hostile.pos.isNearEdge(2))
+      .filter(hostile => !hostile.pos.isNearEdge(3))
       .sort((a, b) => a.pos.getRangeTo(creep) - b.pos.getRangeTo(creep));
 
     // Most dangerous creeps
@@ -183,10 +199,11 @@ export class ExterminatorCreep extends CreepBase {
       });
 
       if (needsHealing && needsHealing.hits < creep.hits) {
+        creep.say('heal');
         const range = creep.pos.getRangeTo(needsHealing);
 
         if (range > 1) {
-          creep.travelTo(needsHealing);
+          creep.travelTo(needsHealing, { range: 1, movingTarget: true });
         }
 
         if (range <= 3) {
@@ -206,7 +223,13 @@ export class ExterminatorCreep extends CreepBase {
     if (!target) {
       creep.say('...');
       creep.room.memory.hostiles = 0;
-      creep.travelTo(new RoomPosition(25, 25, creep.room.name), { range: 10 });
+      if (creep.room.controller) {
+        creep.travelTo(creep.room.controller, { range: 5 });
+      } else {
+        creep.travelTo(new RoomPosition(25, 25, creep.room.name), {
+          range: 10,
+        });
+      }
       return;
     }
 
@@ -221,7 +244,7 @@ export class ExterminatorCreep extends CreepBase {
         creep.travelTo(target, {
           range: 1,
           maxRooms: 1,
-          movingTarget: true,
+          // movingTarget: true,
           stuckValue: 1, // Hopefully fix getting stuck behind stationary civilian hostiles
         });
       }

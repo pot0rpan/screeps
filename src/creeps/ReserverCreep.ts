@@ -76,6 +76,8 @@ export class ReserverCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
+    creep.notifyWhenAttacked(false);
+
     if (creep.memory.task) {
       const task = creep.memory.task;
 

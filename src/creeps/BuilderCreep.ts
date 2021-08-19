@@ -1,7 +1,7 @@
-import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 import { isDamaged } from 'utils/structure';
+import { recycle } from 'actions/recycle';
 
 interface BuilderTask extends CreepTask {
   type: 'build' | 'repair' | 'withdraw' | 'harvest';
@@ -11,6 +11,7 @@ export class BuilderCreep extends CreepBase {
   role: CreepRole = 'builder';
   bodyOpts: BodySettings = {
     pattern: [WORK, CARRY, MOVE, MOVE],
+    sizeLimit: 8,
   };
 
   // Only if construction sites exist
@@ -173,18 +174,7 @@ export class BuilderCreep extends CreepBase {
   run(creep: Creep): void {
     if (!creep.memory.task) {
       if (creep.memory.working) {
-        if (creep.memory.recycle === undefined) {
-          creep.memory.recycle = config.ticks.RECYCLE_CREEP_DELAY;
-        } else if (creep.memory.recycle > 0) {
-          creep.memory.recycle--;
-        }
-
-        if (creep.memory.recycle <= 0) {
-          creep.travelTo(creep.room.findSpawns()[0], { range: 1 });
-          creep.say('recycle');
-        } else {
-          creep.say('...');
-        }
+        recycle(creep);
       }
       return;
     } else {

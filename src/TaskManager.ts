@@ -80,6 +80,9 @@ export class TaskManager {
       this.tasks[newTask.id] = { task: newTask, creeps: [creep.name] };
     }
 
+    // Reset recycle timer
+    delete creep.memory.recycle;
+
     console.log('assigned task to', creep, JSON.stringify(newTask));
   }
 

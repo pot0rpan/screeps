@@ -49,7 +49,8 @@ declare global {
     | 'guard'
     | 'miner'
     | 'exterminator'
-    | 'hauler';
+    | 'hauler'
+    | 'prospector';
 }
 
 export interface BodySettings {

@@ -9,8 +9,8 @@ interface MoverTask extends CreepTask {
 export class MoverCreep extends CreepBase {
   role: CreepRole = 'mover';
   bodyOpts: BodySettings = {
-    pattern: [CARRY, MOVE],
-    sizeLimit: 8,
+    pattern: [CARRY, CARRY, MOVE],
+    sizeLimit: 4,
   };
 
   // Same number of source containers
@@ -220,8 +220,20 @@ export class MoverCreep extends CreepBase {
       creep.memory.task.complete = true;
     } else if (res === ERR_NOT_IN_RANGE) {
       // Find dropped resources in range
-      const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1)[0];
-      if (dropped) creep.pickup(dropped);
+      const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
+        filter: res => res.resourceType === RESOURCE_ENERGY,
+      })[0];
+      if (dropped) {
+        creep.pickup(dropped);
+      } else {
+        // Find tombstones with energy
+        const tombstone = creep.pos.findInRange(FIND_TOMBSTONES, 1, {
+          filter: ts => ts.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
+        })[0];
+        if (tombstone) {
+          creep.withdraw(tombstone, RESOURCE_ENERGY);
+        }
+      }
 
       creep.travelTo(target);
     }

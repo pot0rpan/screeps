@@ -81,20 +81,25 @@ export class Colony {
 
     // Only repair or heal with towers that are more than half full
     // Need to be prepared for attacks
-    const towers = room
-      .findTowers()
-      .filter(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) > 500);
+    const towers = room.findTowers();
+
+    const fullTowers = towers.filter(
+      tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) > 500
+    );
+
     if (!towers.length) return;
 
-    const damagedStructure = room
-      .find(FIND_STRUCTURES, {
-        filter: isDamaged,
-      })
-      .sort((a, b) => a.hits - b.hits)[0];
+    if (fullTowers.length) {
+      const damagedStructure = room
+        .find(FIND_STRUCTURES, {
+          filter: isDamaged,
+        })
+        .sort((a, b) => a.hits - b.hits)[0];
 
-    if (damagedStructure) {
-      for (const tower of towers) {
-        tower.repair(damagedStructure);
+      if (damagedStructure) {
+        for (const tower of fullTowers) {
+          tower.repair(damagedStructure);
+        }
       }
     } else {
       const needsHealing = room

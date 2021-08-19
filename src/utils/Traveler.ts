@@ -194,7 +194,7 @@ export class Traveler {
       let color = 'orange';
       if (ret.incomplete) {
         // uncommenting this is a great way to diagnose creep behavior issues
-        // console.log(`TRAVELER: incomplete path for ${creep.name}`);
+        console.log(`TRAVELER: incomplete path for ${creep.name}`);
         color = 'red';
       }
 

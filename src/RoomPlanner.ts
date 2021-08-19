@@ -18,6 +18,7 @@ enum PlanType {
   container = 'container',
   storage = 'storage',
   rampart = 'rampart',
+  extractor = 'extractor',
 }
 
 export class RoomPlanner {
@@ -35,6 +36,7 @@ export class RoomPlanner {
     [PlanType.tower]: [],
     [PlanType.road]: [],
     [PlanType.rampart]: [],
+    [PlanType.extractor]: [],
   };
 
   constructor(roomName: string) {
@@ -70,6 +72,9 @@ export class RoomPlanner {
     // Nothing to build at level 1
     if (rcl < 2) return;
 
+    // Don't construct when under attack
+    if (Memory.rooms[this.roomName].defcon) return;
+
     // Only plan if no plans (usually global reset/code push)
     // TODO: Polyfill Array.prototype.flat()
     if (
@@ -78,13 +83,15 @@ export class RoomPlanner {
       !this.plans.road.length &&
       !this.plans.storage.length &&
       !this.plans.tower.length &&
-      !this.plans.rampart.length
+      !this.plans.rampart.length &&
+      !this.plans.extractor.length
     ) {
       if (this.baseCenter) {
         this.planExtensions(this.baseCenter);
         this.planBaseCenter(this.baseCenter);
         this.planRoadsAndContainers(this.baseCenter);
         this.planRamparts(this.baseCenter);
+        this.planMinerals(this.baseCenter, rcl);
       }
     }
 
@@ -388,6 +395,93 @@ export class RoomPlanner {
     }
   }
 
+  planMinerals(baseCenter: RoomPosition, rcl: number) {
+    if (rcl < 6) return;
+    const room = Game.rooms[this.roomName];
+    const minerals = room.find(FIND_MINERALS);
+
+    for (const mineral of minerals) {
+      // Place extractor
+      this.plans.extractor.push({
+        pos: mineral.pos,
+        structureType: STRUCTURE_EXTRACTOR,
+      });
+
+      // Place roads
+      const goal = { pos: mineral.pos, range: 1 };
+
+      const ret = PathFinder.search(baseCenter, goal, {
+        plainCost: 2,
+        swampCost: 10,
+        maxRooms: 1,
+
+        roomCallback: roomName => {
+          const room = Game.rooms[roomName];
+          const costs = new PathFinder.CostMatrix();
+
+          // Add road plans
+          for (const plan of this.plans[PlanType.road]) {
+            costs.set(plan.pos.x, plan.pos.y, 1);
+          }
+
+          // Add other plans as blocking
+          for (const plan of this.plans[PlanType.extension]
+            .concat(this.plans[PlanType.tower])
+            .concat(this.plans[PlanType.storage])) {
+            costs.set(plan.pos.x, plan.pos.y, 0xff);
+          }
+
+          for (const struct of room.find(FIND_STRUCTURES)) {
+            if (struct.structureType === STRUCTURE_ROAD) {
+              // Favor roads over plain tiles
+              costs.set(struct.pos.x, struct.pos.y, 1);
+            } else if (
+              struct.structureType !== STRUCTURE_CONTAINER &&
+              (struct.structureType !== STRUCTURE_RAMPART || !struct.my)
+            ) {
+              // Can't walk through non-walkable buildings
+              costs.set(struct.pos.x, struct.pos.y, 0xff);
+            }
+          }
+
+          return costs;
+        },
+      });
+
+      if (ret.incomplete || !ret.path.length) {
+        console.log('no path found for road to', mineral);
+        continue;
+      }
+
+      // Add road construction sites to plans
+      for (const pos of ret.path) {
+        let skip = false;
+
+        // Don't place road on baseCenter
+        if (pos.x === baseCenter.x && pos.y === baseCenter.y) continue;
+
+        for (const plan of this.plans[PlanType.road]) {
+          // Avoid duplicate road plans
+          if (
+            plan.pos.x === pos.x &&
+            plan.pos.y === pos.y &&
+            plan.structureType === STRUCTURE_ROAD
+          ) {
+            skip = true;
+            break;
+          }
+        }
+
+        if (!skip) {
+          this.plans[PlanType.road].push({
+            pos,
+            structureType: STRUCTURE_ROAD,
+          });
+        }
+      }
+    }
+  }
+
   // Place construction sites for all plans
   // If wrong construction site or structure is in place, it gets destroyed
   // Placed in order of this.plans PlanType keys,
@@ -466,6 +560,8 @@ export class RoomPlanner {
             ? 'yellow'
             : plan.structureType === STRUCTURE_RAMPART
             ? 'green'
+            : plan.structureType === STRUCTURE_EXTRACTOR
+            ? 'blue'
             : 'white',
       });
       room.visual.text(i, plan.pos.x, plan.pos.y + 0.1, {

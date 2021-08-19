@@ -15,16 +15,18 @@ export class HumanResources {
   }
 
   public recycleCreeps() {
-    const spawn = Game.rooms[this.roomName]
-      .findSpawns()
-      .filter(spawn => !spawn.spawning)[0];
-    if (!spawn) return;
-    const creepToRecycle = spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
-      filter: creep => creep.memory.recycle === 0,
-    })[0];
-    if (creepToRecycle) {
-      console.log('Recycling creep', creepToRecycle);
-      spawn.recycleCreep(creepToRecycle);
+    const spawns = Game.rooms[this.roomName].findSpawns();
+
+    for (const spawn of spawns) {
+      const creepToRecycle = spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
+        filter: creep =>
+          creep.memory.recycle !== undefined && creep.memory.recycle <= 0,
+      })[0];
+
+      if (creepToRecycle) {
+        console.log('Recycling creep', creepToRecycle);
+        spawn.recycleCreep(creepToRecycle);
+      }
     }
   }
 
@@ -68,6 +70,7 @@ export class HumanResources {
       'reserver',
       'miner',
       'hauler',
+      'prospector',
       // 'guard',
     ];
 
