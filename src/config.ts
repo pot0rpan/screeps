@@ -10,9 +10,9 @@ export default {
       case 4:
         return 25000;
       case 5:
-        return 50000;
+        return 75000;
       case 6:
-        return 100000;
+        return 200000;
       default:
         return 30000000;
     }
@@ -57,7 +57,7 @@ export default {
   ticks: {
     SPAWN_CREEPS: 10,
     RECHECK_TASK_VALIDITY: 5,
-    CLEAN_TASK_CACHE: 11,
+    CLEAN_TASK_CACHE: 7,
     DELETE_DEAD_CREEP_MEMORY: 3,
     PLAN_ROOMS: 69,
     SAFE_MODE_DELAY: 40,
