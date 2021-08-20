@@ -98,7 +98,7 @@ export class ExterminatorCreep extends CreepBase {
 
   private guardController(creep: Creep): void {
     if (creep.room.controller) {
-      creep.travelTo(creep.room.controller, { range: 8, ignoreRoads: true });
+      creep.travelTo(creep.room.controller, { range: 5, ignoreRoads: true });
     } else {
       creep.travelTo(new RoomPosition(25, 25, creep.room.name), {
         range: 10,
@@ -181,6 +181,7 @@ export class ExterminatorCreep extends CreepBase {
     let attacked = false;
     let doingSomething = false;
 
+    // Finds in room, so self may be in here
     const needHealing = creep.room
       .find(FIND_MY_CREEPS, {
         filter: crp => crp.hits < crp.hitsMax,
@@ -217,43 +218,50 @@ export class ExterminatorCreep extends CreepBase {
           creep.say('attack');
         }
       }
-    } else if (!healed && needHealing.length) {
-      // No target to pursue or attack, so heal
+    }
 
-      // Travel to most injured friendly,
-      // along the way, heal closest damaged friendly
+    if (!healed && needHealing.length) {
+      const injuredNearSelf = [...needHealing].sort(sortByRange(creep))[0];
+      const injuredNearSelfRange = creep.pos.getRangeTo(injuredNearSelf);
 
-      doingSomething = true;
-      // Travel to most injured
-      const mostInjured = needHealing[0];
-
-      const range = creep.pos.getRangeTo(mostInjured);
-
-      if (range > 1) {
-        // mostInjured must be a friendly, not self
-        creep.travelTo(mostInjured, {
-          range: 1,
-          movingTarget: !!mostInjured.getActiveBodyparts(MOVE),
-        });
-
-        // Heal injured creeps near me if more damaged than self, otherwise heal self if needed
-        const injuredNearSelf = needHealing.sort(sortByRange(creep))[0];
-
-        const range = creep.pos.getRangeTo(injuredNearSelf);
-
-        if (range <= 3) {
-          if (range <= 1) {
-            creep.heal(injuredNearSelf);
-            healed = true;
-          } else {
-            creep.rangedHeal(injuredNearSelf);
-            rangedHealed = true;
-          }
+      if (doingSomething) {
+        // Already pursuing a hostile, only heal in range
+        if (injuredNearSelfRange <= 1) {
+          creep.heal(injuredNearSelf);
+        } else if (injuredNearSelfRange <= 3) {
+          creep.rangedHeal(injuredNearSelf);
         }
       } else {
-        // Adjacent to most injured friendly (or maybe self)
-        creep.heal(mostInjured);
-        healed = true;
+        // No target to pursue or attack, so pursue and heal most damaged friendly
+        doingSomething = true;
+
+        // Travel to most injured
+        const mostInjured = needHealing[0];
+
+        const range = creep.pos.getRangeTo(mostInjured);
+
+        if (range > 1) {
+          // mostInjured must be a friendly, not self
+          creep.travelTo(mostInjured, {
+            range: 1,
+            movingTarget: !!mostInjured.getActiveBodyparts(MOVE),
+          });
+
+          // Heal injured creeps near me (may be self)
+          if (injuredNearSelfRange <= 3) {
+            if (injuredNearSelfRange <= 1) {
+              creep.heal(injuredNearSelf);
+              healed = true;
+            } else {
+              creep.rangedHeal(injuredNearSelf);
+              rangedHealed = true;
+            }
+          }
+        } else {
+          // Adjacent to most injured friendly (or maybe self)
+          creep.heal(mostInjured);
+          healed = true;
+        }
       }
     }
 
