@@ -62,6 +62,8 @@ export class Colony {
       this.hr.recycleCreeps();
     }
 
+    this.hr.renewCreeps();
+
     // Run creeps
     this.hr.runCreeps(colonyCreeps);
 

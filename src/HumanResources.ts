@@ -14,6 +14,26 @@ export class HumanResources {
     this.adjacentRoomNames = adjacentRoomNames;
   }
 
+  public renewCreeps() {
+    const spawns = Game.rooms[this.roomName]
+      .findSpawns()
+      .filter(spawn => !spawn.spawning);
+
+    for (const spawn of spawns) {
+      // Find creeps near spawn that have tasks to do
+      const creepToRenew = spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
+        filter: creep =>
+          creep.memory.task &&
+          creep.memory.recycle === undefined &&
+          (creep.ticksToLive ?? Infinity) < 1000,
+      })[0];
+
+      if (creepToRenew) {
+        console.log(spawn, 'renewing creep', creepToRenew);
+      }
+    }
+  }
+
   public recycleCreeps() {
     const spawns = Game.rooms[this.roomName].findSpawns();
 
