@@ -1,5 +1,6 @@
-import { recycle } from 'actions/recycle';
 import config from 'config';
+import { isNthTick } from 'utils';
+import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -149,6 +150,16 @@ export class ProspectorCreep extends CreepBase {
 
         if (creep.pos.getRangeTo(mineral) > 1) {
           creep.travelTo(mineral);
+
+          // Check for dropped resources along the way
+          if (isNthTick(2)) {
+            const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
+              filter: res => res.resourceType === task.data.type,
+            })[0];
+            if (dropped) {
+              creep.pickup(dropped);
+            }
+          }
         } else {
           creep.harvest(mineral);
         }
