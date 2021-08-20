@@ -1,8 +1,11 @@
 import config from 'config';
 
-export function recycle(creep: Creep): void {
+export function recycle(
+  creep: Creep,
+  delayTicks = config.ticks.RECYCLE_CREEP_DELAY
+): void {
   if (creep.memory.recycle === undefined) {
-    creep.memory.recycle = config.ticks.RECYCLE_CREEP_DELAY;
+    creep.memory.recycle = delayTicks;
   } else if (creep.memory.recycle > 0) {
     creep.memory.recycle--;
   }

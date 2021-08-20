@@ -2,6 +2,7 @@ import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 import { isDamaged } from 'utils/structure';
 import { recycle } from 'actions/recycle';
+import config from 'config';
 
 interface BuilderTask extends CreepTask {
   type: 'build' | 'repair' | 'withdraw' | 'harvest';
@@ -174,7 +175,7 @@ export class BuilderCreep extends CreepBase {
   run(creep: Creep): void {
     if (!creep.memory.task) {
       if (creep.memory.working) {
-        recycle(creep);
+        recycle(creep, config.ticks.PLAN_ROOMS);
       }
       return;
     } else {

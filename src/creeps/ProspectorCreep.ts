@@ -166,7 +166,9 @@ export class ProspectorCreep extends CreepBase {
 
     if (!task) {
       creep.say('...');
-      recycle(creep);
+      // Probably waiting for mineral to regenerate which takes a long time
+      // Recycle with short delay
+      recycle(creep, 5);
       return;
     }
 

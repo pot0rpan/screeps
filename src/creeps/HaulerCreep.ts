@@ -144,7 +144,7 @@ export class HaulerCreep extends CreepBase {
     creep.notifyWhenAttacked(false);
 
     if (!creep.memory.task) {
-      recycle(creep);
+      recycle(creep, 100);
       return;
     }
 
