@@ -19,12 +19,13 @@ declare global {
       pos: [number, number];
       distance: number;
     }[];
-    minerals?: {
+    mineral?: {
       id: string;
       type: MineralConstant;
       pos: [number, number];
+      amount: number;
       extractor?: string;
-    }[];
+    };
     lastScan?: number;
   }
 }
@@ -138,22 +139,19 @@ export class ScoutCreep extends CreepBase {
 
       roomMemory.hostiles = room.findDangerousHostiles().length;
 
-      const minerals = room.find(FIND_MINERALS);
+      const mineral = room.find(FIND_MINERALS)[0];
 
-      if (minerals.length) {
-        roomMemory.minerals = [];
-
-        for (const min of minerals) {
-          roomMemory.minerals.push({
-            id: min.id,
-            type: min.mineralType,
-            pos: [min.pos.x, min.pos.y],
-            extractor: min.pos
-              .lookFor(LOOK_STRUCTURES)
-              .filter(struct => struct.structureType === STRUCTURE_EXTRACTOR)[0]
-              ?.id,
-          });
-        }
+      if (mineral) {
+        roomMemory.mineral = {
+          id: mineral.id,
+          type: mineral.mineralType,
+          pos: [mineral.pos.x, mineral.pos.y],
+          amount: mineral.mineralAmount,
+          extractor: mineral.pos
+            .lookFor(LOOK_STRUCTURES)
+            .filter(struct => struct.structureType === STRUCTURE_EXTRACTOR)[0]
+            ?.id,
+        };
       }
 
       roomMemory.lastScan = Game.time;
