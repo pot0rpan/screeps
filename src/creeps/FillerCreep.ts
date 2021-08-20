@@ -52,7 +52,7 @@ export class FillerCreep extends CreepBase {
           .find<StructureTower>(FIND_MY_STRUCTURES, {
             filter: struct =>
               struct.structureType === STRUCTURE_TOWER &&
-              struct.store.getFreeCapacity(RESOURCE_ENERGY),
+              struct.store.getFreeCapacity(RESOURCE_ENERGY) > 100,
           })
           .sort(
             (a, b) =>
