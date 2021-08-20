@@ -42,6 +42,7 @@ declare global {
     | 'builder'
     | 'harvester'
     | 'mover'
+    | 'filler'
     | 'upgrader'
     | 'defender'
     | 'scout'

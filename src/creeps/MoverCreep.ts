@@ -21,53 +21,15 @@ export class MoverCreep extends CreepBase {
 
   findTask(creep: Creep, taskManager: TaskManager): MoverTask | null {
     if (creep.memory.working) {
-      // Fill extensions, spawn, towers, center/controller storage/container
-      let target:
-        | StructureSpawn
-        | StructureExtension
-        | StructureTower
-        | StructureStorage
-        | StructureContainer
-        | null;
-      const type: MoverTask['type'] = 'transfer';
+      if (
+        creep.room.storage &&
+        _.filter(Game.creeps, crp => crp.memory.role === 'filler').length
+      ) {
+        // Only fill controller container and storage, filler does the rest
+        let target: StructureStorage | StructureContainer | null;
+        const type: MoverTask['type'] = 'transfer';
 
-      // Extensions
-      target = creep.pos.findClosestByRange<StructureExtension>(
-        FIND_STRUCTURES,
-        {
-          filter: struct =>
-            struct.structureType === STRUCTURE_EXTENSION &&
-            struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
-        }
-      );
-
-      // Spawns
-      if (!target) {
-        target = creep.room
-          .findSpawns()
-          .filter(
-            spawn =>
-              spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-              !taskManager.isTaskTaken(spawn.pos.roomName, spawn.id, type)
-          )[0];
-      }
-
-      // Towers
-      if (!target) {
-        // Ignore max tower refill in defcon, keep them full
-        target = creep.room.find<StructureTower>(FIND_MY_STRUCTURES, {
-          filter: struct =>
-            struct.structureType === STRUCTURE_TOWER &&
-            (struct.store.getUsedCapacity(RESOURCE_ENERGY) <
-              config.MAX_TOWER_REFILL ||
-              creep.room.memory.defcon) &&
-            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
-        })[0];
-      }
-
-      // Controller container
-      if (!target) {
+        // Controller container
         target = creep.room
           .findUpgradeContainers()
           .filter(
@@ -76,33 +38,95 @@ export class MoverCreep extends CreepBase {
                 creep.store.getUsedCapacity(RESOURCE_ENERGY) &&
               !taskManager.isTaskTaken(creep.room.name, container.id, type)
           )[0];
-      }
 
-      // Center storage
-      if (!target) {
-        const storage = creep.room.storage;
-        if (
-          storage &&
-          !taskManager.isTaskTaken(storage.room.name, storage.id, type)
-        ) {
-          target = storage;
+        // Center storage
+        if (!target) {
+          const storage = creep.room.storage;
+          if (storage) {
+            target = storage;
+          }
         }
+
+        if (!target) return null;
+
+        return taskManager.createTask<MoverTask>(
+          target.pos.roomName,
+          target.id,
+          type,
+          target.structureType === STRUCTURE_CONTAINER ? 1 : -1
+        );
+      } else {
+        // Fill extensions, spawn, towers, center/controller storage/container
+        let target:
+          | StructureSpawn
+          | StructureExtension
+          | StructureTower
+          | StructureContainer
+          | null;
+        const type: MoverTask['type'] = 'transfer';
+
+        // Extensions
+        target = creep.pos.findClosestByRange<StructureExtension>(
+          FIND_STRUCTURES,
+          {
+            filter: struct =>
+              struct.structureType === STRUCTURE_EXTENSION &&
+              struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+              !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
+          }
+        );
+
+        // Spawns
+        if (!target) {
+          target = creep.room
+            .findSpawns()
+            .filter(
+              spawn =>
+                spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+                !taskManager.isTaskTaken(spawn.pos.roomName, spawn.id, type)
+            )[0];
+        }
+
+        // Towers
+        if (!target) {
+          // Ignore max tower refill in defcon, keep them full
+          target = creep.room.find<StructureTower>(FIND_MY_STRUCTURES, {
+            filter: struct =>
+              struct.structureType === STRUCTURE_TOWER &&
+              (struct.store.getUsedCapacity(RESOURCE_ENERGY) <
+                config.MAX_TOWER_REFILL ||
+                creep.room.memory.defcon) &&
+              !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
+          })[0];
+        }
+
+        // Controller container
+        if (!target) {
+          target = creep.room
+            .findUpgradeContainers()
+            .filter(
+              container =>
+                container.store.getFreeCapacity(RESOURCE_ENERGY) >
+                  creep.store.getUsedCapacity(RESOURCE_ENERGY) &&
+                !taskManager.isTaskTaken(creep.room.name, container.id, type)
+            )[0];
+        }
+
+        if (!target) return null;
+
+        return taskManager.createTask<MoverTask>(
+          target.pos.roomName,
+          target.id,
+          type,
+          target.structureType === STRUCTURE_EXTENSION ||
+            target.structureType === STRUCTURE_SPAWN ||
+            target.structureType === STRUCTURE_TOWER
+            ? 1
+            : -1
+        );
       }
-
-      if (!target) return null;
-
-      return taskManager.createTask<MoverTask>(
-        target.pos.roomName,
-        target.id,
-        type,
-        target.structureType === STRUCTURE_EXTENSION ||
-          target.structureType === STRUCTURE_SPAWN ||
-          target.structureType === STRUCTURE_TOWER
-          ? 1
-          : -1
-      );
     } else {
-      let target: StructureContainer | StructureStorage | null = null;
+      let target: StructureContainer | null = null;
       const type: MoverTask['type'] = 'withdraw';
 
       // Gather from fullest source container
@@ -118,16 +142,6 @@ export class MoverCreep extends CreepBase {
             a.store.getFreeCapacity(RESOURCE_ENERGY) -
             b.store.getFreeCapacity(RESOURCE_ENERGY)
         )[0];
-
-      // Gather from center storage if available
-      if (!target) {
-        target =
-          creep.room.storage &&
-          creep.room.storage.store[RESOURCE_ENERGY] >=
-            creep.store.getFreeCapacity(RESOURCE_ENERGY)
-            ? creep.room.storage
-            : null;
-      }
 
       if (!target) return null;
 
@@ -162,7 +176,7 @@ export class MoverCreep extends CreepBase {
     }
 
     if (task.type === 'transfer') {
-      // @ts-ignore-next-line
+      // @ts-ignore-next-line idk why this is needed
       if (target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
         return false;
       }
@@ -207,10 +221,7 @@ export class MoverCreep extends CreepBase {
         );
         break;
       case 'withdraw':
-        res = creep.withdraw(
-          target as StructureStorage | StructureContainer,
-          RESOURCE_ENERGY
-        );
+        res = creep.withdraw(target as StructureContainer, RESOURCE_ENERGY);
         break;
       default:
         creep.memory.task.complete = true;

@@ -62,6 +62,7 @@ export class HumanResources {
       'pioneer',
       'defender',
       'harvester',
+      'filler',
       'mover',
       'builder',
       'upgrader',

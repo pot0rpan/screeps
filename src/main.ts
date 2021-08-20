@@ -23,6 +23,7 @@ import { MinerCreep } from 'creeps/MinerCreep';
 import { ExterminatorCreep } from 'creeps/ExterminatorCreep';
 import { HaulerCreep } from 'creeps/HaulerCreep';
 import { ProspectorCreep } from 'creeps/ProspectorCreep';
+import { FillerCreep } from 'creeps/FillerCreep';
 
 declare global {
   /*
@@ -48,6 +49,7 @@ global.Creeps = {
   pioneer: new PioneerCreep(),
   defender: new DefenderCreep(),
   harvester: new HarvesterCreep(),
+  filler: new FillerCreep(),
   mover: new MoverCreep(),
   builder: new BuilderCreep(),
   upgrader: new UpgraderCreep(),
