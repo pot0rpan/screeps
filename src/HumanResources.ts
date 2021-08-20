@@ -1,3 +1,9 @@
+declare global {
+  interface CreepMemory {
+    birth: number;
+  }
+}
+
 interface CreepNums {
   [role: string]: {
     target: number;
@@ -29,7 +35,12 @@ export class HumanResources {
       })[0];
 
       if (creepToRenew) {
-        console.log(spawn, 'renewing creep', creepToRenew);
+        console.log(
+          `Renewing creep ${creepToRenew}, been alive for ${
+            Game.time - creepToRenew.memory.birth
+          } ticks`
+        );
+        spawn.renewCreep(creepToRenew);
       }
     }
   }
@@ -135,6 +146,7 @@ export class HumanResources {
                 role: role as CreepRole,
                 working: false,
                 homeRoom: spawn.room.name,
+                birth: Game.time,
               },
             });
 
