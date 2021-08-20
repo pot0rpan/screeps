@@ -10,21 +10,25 @@ interface HaulerTask extends CreepTask {
 export class HaulerCreep extends CreepBase {
   role: CreepRole = 'hauler';
   bodyOpts: BodySettings = {
-    pattern: [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
-    sizeLimit: 6,
+    pattern: [CARRY, MOVE],
+    sizeLimit: 22,
     ordered: true,
   };
 
+  // Adjacent rooms only get expanded to if 2 sources
+  // Only send 1 hauler per room
   targetNum(room: Room): number {
     if (!room.storage) return 0;
 
-    return _.filter(
-      Game.creeps,
-      creep =>
-        !creep.spawning &&
-        creep.memory.homeRoom === room.name &&
-        creep.memory.role === 'miner'
-    ).length;
+    return Math.floor(
+      _.filter(
+        Game.creeps,
+        creep =>
+          !creep.spawning &&
+          creep.memory.homeRoom === room.name &&
+          creep.memory.role === 'miner'
+      ).length / 2
+    );
   }
 
   isValidTask(creep: Creep, task: HaulerTask): boolean {
