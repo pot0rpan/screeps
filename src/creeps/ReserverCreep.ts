@@ -14,46 +14,46 @@ export class ReserverCreep extends CreepBase {
     ordered: true,
   };
 
+  private targetNumPerRoom(roomName: string): number {
+    const mem = Memory.rooms[roomName];
+
+    if (!mem) return 0;
+    if (!mem.colonize) return 0;
+    if (!mem.controller) return 0;
+
+    // If no hostiles
+    // and not reserved
+    // or reserved by hostile and have Exterminator creeps
+    // or not visible or reserved by me and is close to downgrading
+    if (
+      !mem.hostiles &&
+      (!mem.reserver ||
+        (!isFriendlyOwner(mem.reserver) &&
+          _.filter(Game.creeps, crp => crp.memory.role === 'exterminator')
+            .length) ||
+        (mem.reserver === config.USERNAME &&
+          (Game.rooms[roomName]?.controller?.reservation?.ticksToEnd ?? 0) <
+            config.ticks.RCL_DOWNGRADE))
+    ) {
+      return 1;
+    }
+
+    return 0;
+  }
+
   targetNum(room: Room): number {
     let num = 0;
     const { adjacentRoomNames } = global.empire.colonies[room.name];
 
     for (const roomName of adjacentRoomNames) {
-      const mem = Memory.rooms[roomName];
-
-      if (!mem) continue;
-      if (!mem.colonize) continue;
-      if (!mem.controller) continue;
-
-      // If no hostiles
-      // and not reserved
-      // or reserved by hostile and have Exterminator creeps
-      // or not visible or reserved by me and is close to downgrading
-      if (
-        !mem.hostiles &&
-        (!mem.reserver ||
-          (!isFriendlyOwner(mem.reserver) &&
-            _.filter(Game.creeps, crp => crp.memory.role === 'exterminator')
-              .length) ||
-          (mem.reserver === config.USERNAME &&
-            (Game.rooms[roomName]?.controller?.reservation?.ticksToEnd ?? 0) <
-              config.ticks.RCL_DOWNGRADE))
-      ) {
-        num++;
-      }
+      num += this.targetNumPerRoom(roomName);
     }
 
     return num;
   }
 
   isValidTask(creep: Creep, task: ReserverTask): boolean {
-    if (creep.room.name !== task.room) return true;
-    if (
-      (Game.getObjectById(task.target as Id<StructureController>)?.reservation
-        ?.ticksToEnd ?? Infinity) > config.ticks.RCL_DOWNGRADE
-    )
-      return false;
-    return true;
+    return !!this.targetNumPerRoom(task.room);
   }
 
   findTask(creep: Creep, taskManager: TaskManager): ReserverTask | null {
@@ -61,8 +61,9 @@ export class ReserverCreep extends CreepBase {
       .adjacentRoomNames) {
       const mem = Memory.rooms[roomName];
       if (
-        mem.colonize &&
-        mem.controller /* && mem.reserver !== config.USERNAME */
+        this.targetNumPerRoom(roomName) &&
+        mem.controller &&
+        !taskManager.isTaskTaken(roomName, mem.controller.id, 'reserve')
       ) {
         return taskManager.createTask<ReserverTask>(
           roomName,
