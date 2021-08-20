@@ -10,7 +10,7 @@ interface HaulerTask extends CreepTask {
 export class HaulerCreep extends CreepBase {
   role: CreepRole = 'hauler';
   bodyOpts: BodySettings = {
-    pattern: [CARRY, CARRY, CARRY, WORK, MOVE, MOVE, MOVE, MOVE],
+    pattern: [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
     sizeLimit: 6,
     ordered: true,
   };
@@ -184,28 +184,6 @@ export class HaulerCreep extends CreepBase {
       // Find dropped resources in range
       const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1)[0];
       if (dropped) creep.pickup(dropped);
-
-      if (
-        creep.memory.homeRoom !== creep.room.name &&
-        creep.memory.working &&
-        creep.store.getUsedCapacity(RESOURCE_ENERGY)
-      ) {
-        // Fix damaged structures in remote rooms
-        const struct = creep.pos.findInRange(FIND_STRUCTURES, 3, {
-          filter: struct => struct.hits < struct.hitsMax,
-        })[0];
-
-        if (struct) {
-          creep.repair(struct);
-        } else {
-          // Build construction sites in remote rooms
-          const site = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 3)[0];
-
-          if (site) {
-            creep.build(site);
-          }
-        }
-      }
 
       creep.travelTo(target);
     }

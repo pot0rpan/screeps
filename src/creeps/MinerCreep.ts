@@ -1,5 +1,6 @@
 import config from 'config';
 import { TaskManager } from 'TaskManager';
+import { isNthTick } from 'utils';
 import { BodySettings, CreepBase } from './CreepBase';
 
 interface MinerTask extends CreepTask {
@@ -11,6 +12,7 @@ interface MinerTask extends CreepTask {
 export class MinerCreep extends CreepBase {
   role: CreepRole = 'miner';
   bodyOpts: BodySettings = {
+    prefix: [CARRY],
     pattern: [MOVE, WORK, WORK],
     sizeLimit: 3,
     ordered: true,
@@ -119,7 +121,34 @@ export class MinerCreep extends CreepBase {
     } else if (creep.pos.getRangeTo(source) > 1) {
       creep.travelTo(source);
     } else {
-      if (creep.harvest(source) === ERR_NOT_OWNER) {
+      // If creep is full,
+      // do some work if needed, otherwise drop energy on ground/container
+      if (
+        creep.getActiveBodyparts(CARRY) &&
+        !creep.store.getFreeCapacity(RESOURCE_ENERGY)
+      ) {
+        let worked = false;
+
+        // Fix damaged container
+
+        if (container && container.hits < container.hitsMax) {
+          creep.repair(container);
+          worked = true;
+        } else {
+          // Build construction sites in remote rooms (container)
+          const site = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 3)[0];
+
+          if (site) {
+            creep.build(site);
+            worked = true;
+          }
+        }
+
+        // Drop on ground/container if no work to be done
+        if (!worked) {
+          creep.drop(RESOURCE_ENERGY);
+        }
+      } else if (creep.harvest(source) === ERR_NOT_OWNER) {
         creep.say('cmon');
       }
     }
