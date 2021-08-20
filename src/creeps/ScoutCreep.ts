@@ -78,20 +78,6 @@ export class ScoutCreep extends CreepBase {
 
   isValidTask(creep: Creep, task: ScoutTask): boolean {
     return true;
-
-    // const targetRoomName = task.target;
-
-    // const memory = Memory.rooms[targetRoomName];
-
-    // if (
-    //   !memory ||
-    //   !memory.lastScan ||
-    //   Game.time - memory.lastScan > config.ticks.SCOUT_ADJACENT_ROOMS
-    // ) {
-    //   return true;
-    // }
-
-    // return false;
   }
 
   // Currently will have at most 1 scout, no need to check if task is taken
@@ -107,7 +93,6 @@ export class ScoutCreep extends CreepBase {
 
   run(creep: Creep): void {
     if (!creep.memory.task) {
-      global.empire.colonies[creep.memory.homeRoom].handleExpansion();
       creep.suicide();
       return;
     }

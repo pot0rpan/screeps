@@ -72,6 +72,7 @@ export class Colony {
     // TODO: Check if enough cpu left
     if (global.isFirstTick || isNthTick(config.ticks.PLAN_ROOMS)) {
       this.roomPlanner.run();
+      this.handleExpansion();
     }
   }
 
@@ -113,13 +114,13 @@ export class Colony {
     }
   }
 
-  // Scouts call this when they're done scouting all adjacent rooms
-  // They scout whenever adjacent rooms aren't visible and it's been a while
-  public handleExpansion(): void {
-    const adjRoomMems = this.adjacentRoomNames.map(roomName => ({
-      name: roomName,
-      mem: Memory.rooms[roomName],
-    }));
+  private handleExpansion(): void {
+    const adjRoomMems = this.adjacentRoomNames
+      .filter(roomName => !!Memory.rooms[roomName])
+      .map(roomName => ({
+        name: roomName,
+        mem: Memory.rooms[roomName],
+      }));
 
     const numInProgress = adjRoomMems.filter(({ mem }) => mem.colonize).length;
 
