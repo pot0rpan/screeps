@@ -158,9 +158,21 @@ export class HumanResources {
   }
 
   public runCreeps(colonyCreeps: Creep[]) {
+    let start = 0;
+
     for (const creep of colonyCreeps) {
       if (creep.spawning) continue;
+      start = Game.cpu.getUsed();
+
       global.Creeps[creep.memory.role].run(creep);
+
+      if (global.stats.profile) {
+        console.log(
+          `<span style="color: #4488ff">${creep} CPU: ${(
+            Game.cpu.getUsed() - start
+          ).toFixed(3)}</span>`
+        );
+      }
     }
   }
 }

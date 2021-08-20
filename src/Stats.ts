@@ -4,6 +4,7 @@ import { Empire } from 'Empire';
 declare global {
   interface Memory {
     _showStats?: boolean;
+    _profile?: boolean;
   }
 }
 
@@ -55,9 +56,11 @@ function printProgressBar(
 
 export class Stats {
   _show: boolean;
+  _profile: boolean;
 
   constructor() {
     this._show = this.show;
+    this._profile = this.profile;
   }
 
   get show() {
@@ -71,6 +74,19 @@ export class Stats {
   set show(bool: boolean) {
     Memory._showStats = bool;
     this._show = bool;
+  }
+
+  get profile() {
+    if (typeof Memory._profile === 'undefined') {
+      Memory._profile = false;
+    }
+    this._profile = Memory._profile;
+    return this._profile;
+  }
+
+  set profile(bool: boolean) {
+    Memory._profile = bool;
+    this._profile = bool;
   }
 
   run(empire: Empire): void {
