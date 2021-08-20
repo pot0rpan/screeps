@@ -1,3 +1,4 @@
+import { isNthTick } from 'utils';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -20,24 +21,29 @@ export class FillerCreep extends CreepBase {
   findTask(creep: Creep, taskManager: TaskManager): FillerTask | null {
     if (creep.memory.working) {
       // Fill extensions, spawn, towers
-      let target: StructureSpawn | StructureExtension | StructureTower | null;
+      let target: StructureSpawn | StructureExtension | StructureTower | null =
+        null;
       const type: FillerTask['type'] = 'transfer';
 
-      // Extensions
-      target = creep.pos.findClosestByPath<StructureExtension>(
-        FIND_STRUCTURES,
-        {
-          filter: struct =>
-            struct.structureType === STRUCTURE_EXTENSION &&
-            struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0,
-        }
-      );
+      if (creep.room.energyAvailable < creep.room.energyCapacityAvailable) {
+        // Extensions
+        target = creep.pos.findClosestByPath<StructureExtension>(
+          FIND_STRUCTURES,
+          {
+            filter: struct =>
+              struct.structureType === STRUCTURE_EXTENSION &&
+              struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0,
+          }
+        );
 
-      // Spawns
-      if (!target) {
-        target = creep.room
-          .findSpawns()
-          .filter(spawn => spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0)[0];
+        // Spawns
+        if (!target) {
+          target = creep.room
+            .findSpawns()
+            .filter(
+              spawn => spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+            )[0];
+        }
       }
 
       // Towers
@@ -163,7 +169,7 @@ export class FillerCreep extends CreepBase {
       creep.memory.task.complete = true;
     } else if (res === ERR_NOT_IN_RANGE) {
       // Find dropped energy in range if creep has room
-      if (creep.store.getFreeCapacity(RESOURCE_ENERGY)) {
+      if (isNthTick(2) && creep.store.getFreeCapacity(RESOURCE_ENERGY)) {
         const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
           filter: res => res.resourceType === RESOURCE_ENERGY,
         })[0];
