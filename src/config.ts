@@ -29,12 +29,12 @@ export default {
       case 5:
         return 25000;
       case 6:
-        return 100000;
+        return 200000;
       default:
-        return 300000;
+        return 500000;
     }
   },
-  MAX_MINERAL_STORAGE: 10000,
+  MAX_MINERAL_STORAGE: 30000,
   MAX_REMOTES: (rcl: number): number => {
     switch (rcl) {
       case 1:
