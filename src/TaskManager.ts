@@ -72,13 +72,27 @@ export class TaskManager {
   }
 
   assignTask(creep: Creep, newTask: CreepTask): void {
-    creep.memory.task = newTask;
+    let cache = this.tasks[newTask.id];
 
-    if (this.tasks[newTask.id]) {
-      this.tasks[newTask.id].creeps.push(creep.name);
+    let limit = newTask.limit;
+
+    if (cache) {
+      if (cache.task.limit !== limit) {
+        // Update cache and other creeps memory if limit changed
+        cache.task.limit = limit;
+
+        for (const creepName of cache.creeps) {
+          const task = Memory.creeps[creepName].task;
+          if (task) task.limit = limit;
+        }
+      }
+
+      cache.creeps.push(creep.name);
     } else {
       this.tasks[newTask.id] = { task: newTask, creeps: [creep.name] };
     }
+
+    creep.memory.task = newTask;
 
     // Reset recycle timer
     delete creep.memory.recycle;
@@ -86,11 +100,20 @@ export class TaskManager {
     console.log('assigned task to', creep, JSON.stringify(newTask));
   }
 
-  isTaskTaken(room: string, target: string, type: TaskType): boolean {
+  isTaskTaken(
+    room: string,
+    target: string,
+    type: TaskType,
+    newLimit?: number
+  ): boolean {
     const cache = this.tasks[this.generateTaskId(room, target, type)];
     if (!cache) return false;
-    if (cache.task.limit < 0) return false;
-    return cache.creeps.length >= cache.task.limit;
+
+    const limit = newLimit === undefined ? cache.task.limit : newLimit;
+
+    if (limit < 0) return false;
+
+    return cache.creeps.length >= limit;
   }
 
   populateTaskCache(colonyCreeps: Creep[]): void {
@@ -153,6 +176,8 @@ export class TaskManager {
         const newTask = creepClass.findTask(creep, this);
         if (newTask) {
           this.assignTask(creep, newTask);
+        } else {
+          console.log(creep, 'no task to assign');
         }
       }
     }

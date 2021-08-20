@@ -1,7 +1,7 @@
-import { isFriendlyOwner, isNthTick } from 'utils';
+import { isFriendlyOwner } from 'utils';
+import { sortByRange } from 'utils/sort';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
-import config from 'config';
 
 interface ExterminatorTask extends CreepTask {
   type: 'exterminate';
@@ -21,7 +21,39 @@ export class ExterminatorCreep extends CreepBase {
     ordered: true,
   };
 
-  private ABANDON_LIMIT = 5;
+  // When to back off due to number of dangerous hostiles in room
+  private ABANDON_LIMIT = 3;
+
+  // Number of dangerous hostiles + 1,
+  // Or 2 if reserved by hostile and we want to colonize
+  private targetNumPerRoom(roomName: string): number {
+    const mem = Memory.rooms[roomName];
+
+    // Make sure room has been scouted
+    if (!mem) return 0;
+
+    if (!mem.colonize) return 0;
+
+    // We only reserve adjacent rooms, so an owner must be hostile and likely too powerful
+    if (mem.owner) return 0;
+
+    // Only defend rooms we're actively trying to use
+    if (!mem.colonize) return 0;
+
+    // If mem.hostiles is undefined or 0, keep it at 0
+    const numHostiles = mem.hostiles || 0;
+
+    // Abandon room for now if too expensive to defend
+    if (numHostiles > this.ABANDON_LIMIT) return 0;
+
+    if (numHostiles > 0) {
+      return numHostiles + 1;
+    } else if (mem.reserver && !isFriendlyOwner(mem.reserver)) {
+      return 2;
+    }
+
+    return 0;
+  }
 
   // Harass any adjacent reserved rooms so we can expand
   targetNum(room: Room): number {
@@ -32,237 +64,202 @@ export class ExterminatorCreep extends CreepBase {
     let num = 0;
 
     for (const roomName of adjacentRoomNames) {
-      const mem = Memory.rooms[roomName];
-      if (!mem || !mem.colonize) continue;
-
-      // Number of hostiles + 1, or 0
-      // If mem.hostiles is undefined or 0, keep it at 0
-      const numHostiles = (mem.hostiles || -1) + 1;
-
-      // Abandon room for now if too expensive to defend
-      if (numHostiles > this.ABANDON_LIMIT) continue;
-
-      if (numHostiles > 0) {
-        num += numHostiles;
-      } else if (mem.reserver && !isFriendlyOwner(mem.reserver)) {
-        // or reserved by hostile, since that's likely to be attacked
-        num += 2;
-      }
+      num += this.targetNumPerRoom(roomName);
     }
 
     return num;
   }
 
   isValidTask(creep: Creep, task: CreepTask): boolean {
-    // Not in room, assume valid
-    if (creep.room.name !== task.room) return true;
-
-    // Check if reserved by someone else
-    if (
-      creep.room.controller?.reservation &&
-      !isFriendlyOwner(creep.room.controller.reservation.username)
-    ) {
-      return true;
-    }
-
-    // Check for any hostiles
-    if (
-      creep.room.find(FIND_HOSTILE_CREEPS, {
-        filter: crp => !isFriendlyOwner(crp.owner.username),
-      }).length
-    ) {
-      return true;
-    }
-
-    return false;
+    return !!this.targetNumPerRoom(task.room);
   }
 
   findTask(creep: Creep, taskManager: TaskManager): CreepTask | null {
     const { adjacentRoomNames } = global.empire.colonies[creep.memory.homeRoom];
 
     for (const roomName of adjacentRoomNames) {
-      const mem = Memory.rooms[roomName];
+      const numNeeded = this.targetNumPerRoom(roomName);
 
       if (
-        mem &&
-        !mem.owner &&
-        mem.colonize &&
-        (((!mem.reserver ||
-          !isFriendlyOwner(mem.reserver) ||
-          mem.reserver === config.USERNAME) &&
-          !taskManager.isTaskTaken(roomName, roomName, 'exterminate')) ||
-          Game.rooms[roomName]?.findHostiles().length)
+        numNeeded > 0 &&
+        !taskManager.isTaskTaken(roomName, roomName, 'exterminate', numNeeded)
       ) {
-        const task = taskManager.createTask(
+        return taskManager.createTask(
           roomName,
           roomName,
           'exterminate',
-          (mem.hostiles ?? 1) + 1
+          numNeeded
         );
-
-        if (taskManager.tasks[task.id]) {
-          // Synchronize limit
-          task.limit = taskManager.tasks[task.id].task.limit;
-        }
-
-        return task;
       }
     }
 
     return null;
   }
 
+  private guardController(creep: Creep): void {
+    if (creep.room.controller) {
+      creep.travelTo(creep.room.controller, { range: 8, ignoreRoads: true });
+    } else {
+      creep.travelTo(new RoomPosition(25, 25, creep.room.name), {
+        range: 10,
+        ignoreRoads: true,
+      });
+    }
+  }
+
   run(creep: Creep): void {
     creep.notifyWhenAttacked(false);
 
     const task = creep.memory.task as ExterminatorTask | undefined;
-    let healedSelf = false;
 
-    // Always heal, gets cancelled if attacking
-    if (creep.hits < creep.hitsMax) {
-      creep.heal(creep);
-      healedSelf = true;
-    }
-
-    if (!task) {
-      creep.say('.....');
-      if (creep.room.controller) {
-        creep.travelTo(creep.room.controller, { range: 5 });
-      } else {
-        creep.travelTo(new RoomPosition(25, 25, creep.room.name), {
-          range: 10,
-        });
-      }
-      return;
-    }
-
-    if (creep.room.name !== task.room) {
-      // If in home room still
+    // Handle moving to task room if not already there
+    if (task && creep.room.name !== task.room) {
+      // If still in home room
       if (creep.room.name === creep.memory.homeRoom) {
-        const colony = global.empire.colonies[creep.room.name];
+        const colony = global.empire.colonies[creep.memory.homeRoom];
+
+        const { baseCenter } = colony.roomPlanner;
 
         // If far enough from spawn to not disrupt stuff
-        const { baseCenter } = colony.roomPlanner;
+        // and still waiting on more squad mates
         if (
           baseCenter &&
           creep.pos.getRangeTo(baseCenter) > 10 &&
           (colony.taskManager.getTaskById(task.id)?.creeps.length ?? 0) <
             task.limit
         ) {
-          // If only exterminator assigned to task room, wait for more
           creep.say('cmon');
-          return;
         } else {
           // Full squad ready
           creep.travelToRoom(task.room);
           creep.say('leggo');
-          return;
         }
       } else {
-        // Must be in other adjacent room
+        // In some other room
         creep.travelToRoom(task.room);
-        creep.say(task.room);
-        return;
+        creep.say('coming');
       }
+
+      return;
     }
 
+    // Look for hostiles to attack
     let target: Creep | null = null;
 
-    let dangerousHostiles = creep.room
-      .findHostiles()
-      .filter(crp => crp.isDangerous());
+    let dangerousHostiles = creep.room.findDangerousHostiles();
+
+    // Update room memory
     creep.room.memory.hostiles = dangerousHostiles.length;
 
+    // Filter out any creeps near an edge
     dangerousHostiles = dangerousHostiles
-      .filter(hostile => !hostile.pos.isNearEdge(3))
-      .sort((a, b) => a.pos.getRangeTo(creep) - b.pos.getRangeTo(creep));
+      .filter(hostile => !hostile.pos.isNearEdge(5))
+      .sort(sortByRange(creep));
 
-    // Most dangerous creeps
-    target = dangerousHostiles.filter(hostile => hostile.isDangerous())[0];
+    // Most dangerous creep
+    target = dangerousHostiles[0];
 
     // Potentially dangerous creep
     if (!target) {
-      target = dangerousHostiles[0];
+      target = creep.room
+        .findHostiles()
+        .filter(hostile => !hostile.pos.isNearEdge(5))
+        .sort(sortByRange(creep))[0];
     }
 
     // Civilians
     if (!target) {
       target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
-        filter: crp => !isFriendlyOwner(crp.owner.username),
+        filter: crp =>
+          !isFriendlyOwner(crp.owner.username) && !crp.pos.isNearEdge(5),
       });
     }
 
-    // Heal any friendlies in the room
-    if (!target) {
-      const needsHealing = creep.pos.findClosestByRange(FIND_MY_CREEPS, {
-        filter: crp => crp.hits < crp.hitsMax,
-      });
+    // Handle intents
+    let healed = false;
+    let rangedHealed = false;
+    let attacked = false;
+    let doingSomething = false;
 
-      if (needsHealing && needsHealing.hits < creep.hits) {
-        creep.say('heal');
-        const range = creep.pos.getRangeTo(needsHealing);
+    const needHealing = creep.room
+      .find(FIND_MY_CREEPS, {
+        filter: crp => crp.hits < crp.hitsMax,
+      })
+      .sort((a, b) => a.hits - b.hits);
+
+    if (target) {
+      doingSomething = true;
+
+      const range = creep.pos.getRangeTo(target);
+
+      // If significantly injured, retreat and heal self
+      if (creep.hits < creep.hitsMax * 0.75) {
+        creep.say('heal self');
+        creep.heal(creep);
+        healed = true;
+
+        // If in range of target, move away
+        // Otherwise follow at a distance
+        if (range <= 1) {
+          creep.moveAway(target);
+        } else if (range > 3) {
+          creep.travelTo(target);
+        }
+      } else {
+        // Pursue and attack
+        // Always travelTo, so that if target moves we're still adjacent
+        creep.travelTo(target);
 
         if (range > 1) {
-          creep.travelTo(needsHealing, { range: 1, movingTarget: true });
+          creep.say('grrr');
+        } else {
+          creep.attack(target);
+          creep.say('attack');
         }
+      }
+    } else if (!healed && needHealing.length) {
+      // No target to pursue or attack, so heal
+
+      // Travel to most injured friendly,
+      // along the way, heal closest damaged friendly
+
+      doingSomething = true;
+      // Travel to most injured
+      const mostInjured = needHealing[0];
+
+      const range = creep.pos.getRangeTo(mostInjured);
+
+      if (range > 1) {
+        // mostInjured must be a friendly, not self
+        creep.travelTo(mostInjured, {
+          range: 1,
+          movingTarget: !!mostInjured.getActiveBodyparts(MOVE),
+        });
+
+        // Heal injured creeps near me if more damaged than self, otherwise heal self if needed
+        const injuredNearSelf = needHealing.sort(sortByRange(creep))[0];
+
+        const range = creep.pos.getRangeTo(injuredNearSelf);
 
         if (range <= 3) {
-          creep.cancelOrder('heal');
-
-          if (range === 1) {
-            creep.heal(needsHealing);
+          if (range <= 1) {
+            creep.heal(injuredNearSelf);
+            healed = true;
           } else {
-            creep.rangedHeal(needsHealing);
+            creep.rangedHeal(injuredNearSelf);
+            rangedHealed = true;
           }
         }
-
-        return;
-      }
-    }
-
-    if (!target) {
-      creep.say('...');
-      creep.room.memory.hostiles = 0;
-      if (creep.room.controller) {
-        creep.travelTo(creep.room.controller, { range: 5 });
       } else {
-        creep.travelTo(new RoomPosition(25, 25, creep.room.name), {
-          range: 10,
-        });
+        // Adjacent to most injured friendly (or maybe self)
+        creep.heal(mostInjured);
+        healed = true;
       }
-      return;
     }
 
-    const range = creep.pos.getRangeTo(target);
-    if (range <= 1 && creep.getActiveBodyparts(ATTACK)) {
-      // Attack if in range
-      creep.cancelOrder('heal');
-      creep.attack(target);
-    } else {
-      // If not close or healed enough, pursue
-      if (range > 3 || creep.hits > creep.hitsMax * 0.75) {
-        creep.travelTo(target, {
-          range: 1,
-          maxRooms: 1,
-          // movingTarget: true,
-          stuckValue: 1, // Hopefully fix getting stuck behind stationary civilian hostiles
-        });
-      }
-
-      // If didn't heal self this tick, heal friendlies
-      if (!healedSelf) {
-        const closestFriendly = creep.pos.findClosestByRange(FIND_MY_CREEPS, {
-          filter: crp => crp.hits < crp.hitsMax,
-        });
-        if (closestFriendly) {
-          const range = creep.pos.getRangeTo(closestFriendly);
-          if (range === 1) {
-            creep.heal(closestFriendly);
-          } else if (range <= 3) {
-            creep.rangedHeal(closestFriendly);
-          }
-        }
-      }
+    if (!doingSomething) {
+      this.guardController(creep);
+      creep.say('guarding');
     }
   }
 }

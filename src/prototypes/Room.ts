@@ -22,6 +22,8 @@ declare global {
     _towers: StructureTower[];
     findHostiles(): Creep[];
     _hostiles: Creep[];
+    findDangerousHostiles(): Creep[];
+    _dangerousHostiles: Creep[];
   }
 
   interface RoomMemory {
@@ -168,5 +170,16 @@ export default (() => {
 
     // Return the locally stored value
     return this._hostiles;
+  };
+
+  // Cached for tick
+  Room.prototype.findDangerousHostiles = function () {
+    if (!this._dangerousHostiles) {
+      this._dangerousHostiles = this.findHostiles().filter(hostile =>
+        hostile.isDangerous()
+      );
+    }
+
+    return this._dangerousHostiles;
   };
 })();

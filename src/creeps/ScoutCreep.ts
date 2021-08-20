@@ -151,9 +151,7 @@ export class ScoutCreep extends CreepBase {
         }));
       }
 
-      roomMemory.hostiles = room
-        .findHostiles()
-        .filter(crp => crp.isDangerous()).length;
+      roomMemory.hostiles = room.findDangerousHostiles().length;
 
       const minerals = room.find(FIND_MINERALS);
 

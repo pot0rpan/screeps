@@ -92,9 +92,7 @@ export class ColonyDefense {
   private defendOtherRooms() {
     for (const room of this.adjacentRooms) {
       console.log(room, 'defense running');
-      room.memory.hostiles = room
-        .findHostiles()
-        .filter(crp => crp.isDangerous()).length;
+      room.memory.hostiles = room.findDangerousHostiles().length;
     }
   }
 
