@@ -13,10 +13,16 @@ export class MoverCreep extends CreepBase {
     sizeLimit: 4,
   };
 
-  // Same number of source containers
+  // Number of source containers + 1
   // Max of 3
   targetNum(room: Room): number {
-    return Math.min(room.findSourceContainers().length + 1, 3);
+    const numSourceContainers = room.findSourceContainers().length;
+
+    if (numSourceContainers) {
+      return Math.min(numSourceContainers + 1, 3);
+    }
+
+    return 0;
   }
 
   findTask(creep: Creep, taskManager: TaskManager): MoverTask | null {
