@@ -31,10 +31,6 @@ declare global {
     Interfaces matching on name from @types/screeps will be merged. This is how you can extend the 'built-in' interfaces from @types/screeps.
   */
 
-  interface Memory {
-    _showStats?: boolean;
-  }
-
   namespace NodeJS {
     interface Global {
       empire: Empire;

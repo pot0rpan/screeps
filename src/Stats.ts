@@ -1,6 +1,12 @@
 import { Colony } from 'Colony';
 import { Empire } from 'Empire';
 
+declare global {
+  interface Memory {
+    _showStats?: boolean;
+  }
+}
+
 type CreepStats = {
   [role: string]: { target: number; actual: number; spawning: number };
 };
