@@ -72,7 +72,6 @@ export class HumanResources {
       'miner',
       'hauler',
       'prospector',
-      // 'guard',
     ];
 
     for (const role of roleOrder) {

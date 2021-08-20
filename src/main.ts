@@ -5,20 +5,20 @@ import 'prototypes/RoomPosition';
 import 'utils/Traveler';
 
 import config from 'config';
+import { ErrorMapper } from 'utils/ErrorMapper';
+import { isNthTick } from 'utils';
 import { Empire } from 'Empire';
 import { Stats } from 'Stats';
+
 import { CreepBase } from 'creeps/CreepBase';
 import { PioneerCreep } from 'creeps/PioneerCreep';
 import { BuilderCreep } from 'creeps/BuilderCreep';
 import { HarvesterCreep } from 'creeps/HarvesterCreep';
 import { UpgraderCreep } from 'creeps/UpgraderCreep';
 import { MoverCreep } from 'creeps/MoverCreep';
-import { ErrorMapper } from 'utils/ErrorMapper';
-import { isNthTick } from 'utils';
 import { DefenderCreep } from 'creeps/DefenderCreep';
 import { ScoutCreep } from 'creeps/ScoutCreep';
 import { ReserverCreep } from 'creeps/ReserverCreep';
-import { GuardCreep } from 'creeps/GuardCreep';
 import { MinerCreep } from 'creeps/MinerCreep';
 import { ExterminatorCreep } from 'creeps/ExterminatorCreep';
 import { HaulerCreep } from 'creeps/HaulerCreep';
@@ -59,7 +59,6 @@ global.Creeps = {
   miner: new MinerCreep(),
   hauler: new HaulerCreep(),
   prospector: new ProspectorCreep(),
-  // guard: new GuardCreep(),
 };
 
 global.empire = new Empire();
