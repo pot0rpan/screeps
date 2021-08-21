@@ -9,6 +9,7 @@ declare global {
     owner?: string;
     reserver?: string;
     hostiles?: number;
+    invaders?: number;
     controller?: {
       id: string;
       pos: [number, number];
@@ -137,7 +138,12 @@ export class ScoutCreep extends CreepBase {
         }));
       }
 
-      roomMemory.hostiles = room.findDangerousHostiles().length;
+      const hostiles = room.findDangerousHostiles();
+
+      roomMemory.hostiles = hostiles.length;
+      roomMemory.invaders = hostiles.filter(
+        hostile => hostile.owner.username === 'Invader'
+      ).length;
 
       const mineral = room.find(FIND_MINERALS)[0];
 

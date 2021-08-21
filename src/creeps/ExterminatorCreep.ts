@@ -42,7 +42,8 @@ export class ExterminatorCreep extends CreepBase {
     if (!mem.colonize) return 0;
 
     // If mem.hostiles is undefined or 0, keep it at 0
-    const numHostiles = mem.hostiles || 0;
+    // Filter out invaders, those are handled by other creeps
+    const numHostiles = (mem.hostiles || 0) - (mem.invaders || 0);
 
     // Abandon room for now if too expensive to defend
     if (numHostiles > this.ABANDON_LIMIT) return 0;
@@ -98,13 +99,9 @@ export class ExterminatorCreep extends CreepBase {
   }
 
   private guardController(creep: Creep): void {
-    if (
-      creep.room.controller &&
-      creep.pos.getRangeTo(creep.room.controller) > 5
-    ) {
+    // Guard controller until recycle timer reaches 0
+    if (recycle(creep, 100) && creep.room.controller) {
       creep.travelTo(creep.room.controller, { range: 5, ignoreRoads: true });
-    } else {
-      recycle(creep, 100);
     }
   }
 

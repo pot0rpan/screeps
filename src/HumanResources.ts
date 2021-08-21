@@ -99,6 +99,7 @@ export class HumanResources {
       'upgrader',
       'scout',
       'exterminator',
+      'assassin',
       'reserver',
       'miner',
       'hauler',
