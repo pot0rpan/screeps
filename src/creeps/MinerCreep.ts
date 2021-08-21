@@ -78,6 +78,12 @@ export class MinerCreep extends CreepBase {
   run(creep: Creep): void {
     creep.notifyWhenAttacked(false);
 
+    // Retreat if hostiles
+    if (creep.room.memory.hostiles) {
+      creep.travelToRoom(creep.memory.homeRoom);
+      return;
+    }
+
     const task = creep.memory.task as MinerTask | undefined;
     if (!task) {
       creep.say('...');

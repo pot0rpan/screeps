@@ -162,6 +162,15 @@ export class ProspectorCreep extends CreepBase {
   run(creep: Creep): void {
     creep.notifyWhenAttacked(false);
 
+    // Retreat if hostiles and not in home room
+    if (
+      creep.room.memory.hostiles &&
+      creep.room.name !== creep.memory.homeRoom
+    ) {
+      creep.travelToRoom(creep.memory.homeRoom);
+      return;
+    }
+
     const task = creep.memory.task as ProspectorTask;
 
     if (!task) {

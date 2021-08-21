@@ -86,6 +86,12 @@ export class ReserverCreep extends CreepBase {
   run(creep: Creep): void {
     creep.notifyWhenAttacked(false);
 
+    // Retreat if hostiles
+    if (creep.room.memory.hostiles) {
+      creep.travelToRoom(creep.memory.homeRoom);
+      return;
+    }
+
     if (creep.memory.task) {
       const task = creep.memory.task;
 
