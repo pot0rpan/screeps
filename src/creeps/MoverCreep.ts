@@ -29,7 +29,10 @@ export class MoverCreep extends CreepBase {
     if (creep.memory.working) {
       if (
         creep.room.storage?.store.getUsedCapacity(RESOURCE_ENERGY) &&
-        _.filter(Game.creeps, crp => crp.memory.role === 'filler').length
+        _.filter(
+          global.empire.colonies[creep.memory.homeRoom].getColonyCreeps(),
+          crp => crp.memory.role === 'filler'
+        ).length
       ) {
         // Only fill controller container and storage, filler does the rest
         let target: StructureStorage | StructureContainer | null;
