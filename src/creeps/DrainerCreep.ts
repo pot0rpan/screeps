@@ -46,7 +46,8 @@ export class DrainerCreep extends CreepBase {
         return taskManager.createTask<DrainerTask>(
           flag.pos.roomName,
           flag.name,
-          'drain'
+          'drain',
+          1
         );
       }
     }
