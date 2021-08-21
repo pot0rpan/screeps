@@ -55,6 +55,8 @@ export class DrainerCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
+    creep.notifyWhenAttacked(false);
+
     const task = creep.memory.task as DrainerTask;
 
     // Always heal
@@ -73,20 +75,25 @@ export class DrainerCreep extends CreepBase {
       return;
     }
 
-    // Retreat if injured
-    if (creep.hits < creep.hitsMax) {
+    if (creep.memory.working && creep.hits < creep.hitsMax * 0.6) {
+      creep.memory.working = false;
+    } else if (!creep.memory.working && creep.hits === creep.hitsMax) {
+      creep.memory.working = true;
+    }
+
+    if (creep.memory.working) {
+      // Move to flag and drain towers
+      creep.travelTo(Game.flags[task.target]);
+    } else {
+      // Retreat to heal
       // Move to home room if not there or could bounce on exit
+      // Otherwise do nothing and just heal
       if (
         creep.room.name !== creep.memory.homeRoom ||
-        creep.pos.isNearEdge(2)
+        creep.pos.isNearEdge(1)
       ) {
         creep.travelToRoom(creep.memory.homeRoom);
       }
-
-      return;
     }
-
-    // Move to flag and drain towers
-    creep.travelTo(Game.flags[task.target]);
   }
 }
