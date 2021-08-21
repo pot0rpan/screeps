@@ -383,7 +383,12 @@ export class RoomPlanner {
 
     // Protect base center
     const centerBlock = baseCenter
-      .getAdjacentPositions(4)
+      .getAdjacentPositions(5)
+      .filter(
+        ({ x, y }) =>
+          Math.abs(baseCenter.x - x) !== 5 ||
+          Math.abs(x - baseCenter.x) !== Math.abs(y - baseCenter.y)
+      )
       .concat(baseCenter)
       .sort((a, b) => a.getRangeTo(baseCenter) - b.getRangeTo(baseCenter));
 
