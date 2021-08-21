@@ -3,7 +3,7 @@ import config from 'config';
 export function recycle(
   creep: Creep,
   delayTicks = config.ticks.RECYCLE_CREEP_DELAY
-): void {
+): number {
   if (creep.memory.recycle === undefined) {
     creep.memory.recycle = delayTicks;
   } else if (creep.memory.recycle > 0) {
@@ -17,7 +17,9 @@ export function recycle(
       creep.travelTo(creep.room.findSpawns()[0], { range: 1 });
     }
     creep.say('recycle');
+    return 0;
   } else {
     creep.say('... ' + creep.memory.recycle);
+    return creep.memory.recycle;
   }
 }
