@@ -1,5 +1,4 @@
 import { recycle } from 'actions/recycle';
-import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -11,7 +10,6 @@ export class HaulerCreep extends CreepBase {
   role: CreepRole = 'hauler';
   bodyOpts: BodySettings = {
     pattern: [CARRY, MOVE],
-    sizeLimit: 22,
     ordered: true,
   };
 
