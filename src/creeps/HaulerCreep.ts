@@ -146,12 +146,13 @@ export class HaulerCreep extends CreepBase {
       return;
     }
 
-    if (!creep.getActiveBodyparts(CARRY)) {
+    const task = creep.memory.task as HaulerTask;
+
+    // Retreat if hostiles
+    if (Memory.rooms[task.room].hostiles) {
       creep.travelToRoom(creep.memory.homeRoom);
       return;
     }
-
-    const task = creep.memory.task as HaulerTask;
 
     const target = Game.getObjectById(
       task.target as Id<StructureContainer | StructureStorage | Resource>

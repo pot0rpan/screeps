@@ -86,48 +86,48 @@ export class ReserverCreep extends CreepBase {
   run(creep: Creep): void {
     creep.notifyWhenAttacked(false);
 
+    const task = creep.memory.task as ReserverTask;
+
+    if (!task) {
+      // Recycle
+      creep.say('recycle');
+    }
+
     // Retreat if hostiles
-    if (creep.room.memory.hostiles) {
+    if (Memory.rooms[task.room].hostiles) {
       creep.travelToRoom(creep.memory.homeRoom);
       return;
     }
 
-    if (creep.memory.task) {
-      const task = creep.memory.task;
+    if (creep.room.name !== task.room) {
+      creep.travelToRoom(task.room);
+      return;
+    }
 
-      if (creep.room.name !== task.room) {
-        creep.travelToRoom(task.room);
-        return;
-      }
+    const controller = Game.getObjectById(
+      task.target as Id<StructureController>
+    );
 
-      const controller = Game.getObjectById(
-        task.target as Id<StructureController>
-      );
+    if (!controller) {
+      task.complete = true;
+      return;
+    }
 
-      if (!controller) {
-        creep.memory.task.complete = true;
-        return;
-      }
-
-      if (creep.pos.getRangeTo(controller.pos.x, controller.pos.y) === 1) {
-        if (
-          controller.reservation &&
-          controller.reservation.username !== config.USERNAME
-        ) {
-          creep.attackController(controller);
-        } else {
-          creep.reserveController(controller);
-          creep.room.memory.reserver = config.USERNAME;
-          if (controller.sign?.username !== config.USERNAME) {
-            creep.signController(controller, '«ᴍɪɴᴇ»');
-          }
-        }
+    if (creep.pos.getRangeTo(controller.pos.x, controller.pos.y) === 1) {
+      if (
+        controller.reservation &&
+        controller.reservation.username !== config.USERNAME
+      ) {
+        creep.attackController(controller);
       } else {
-        creep.travelTo(controller, { range: 1 });
+        creep.reserveController(controller);
+        creep.room.memory.reserver = config.USERNAME;
+        if (controller.sign?.username !== config.USERNAME) {
+          creep.signController(controller, '«ᴍɪɴᴇ»');
+        }
       }
     } else {
-      // Recycle
-      creep.say('recycle');
+      creep.travelTo(controller, { range: 1 });
     }
   }
 }

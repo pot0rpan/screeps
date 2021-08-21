@@ -162,15 +162,6 @@ export class ProspectorCreep extends CreepBase {
   run(creep: Creep): void {
     creep.notifyWhenAttacked(false);
 
-    // Retreat if hostiles and not in home room
-    if (
-      creep.room.memory.hostiles &&
-      creep.room.name !== creep.memory.homeRoom
-    ) {
-      creep.travelToRoom(creep.memory.homeRoom);
-      return;
-    }
-
     const task = creep.memory.task as ProspectorTask;
 
     if (!task) {
@@ -178,6 +169,15 @@ export class ProspectorCreep extends CreepBase {
       // Probably waiting for mineral to regenerate which takes a long time
       // Recycle with short delay
       recycle(creep, 5);
+      return;
+    }
+
+    // Retreat if hostiles
+    if (
+      task.room === creep.memory.homeRoom &&
+      Memory.rooms[task.room].hostiles
+    ) {
+      creep.travelToRoom(creep.memory.homeRoom);
       return;
     }
 
