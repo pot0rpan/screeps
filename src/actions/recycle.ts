@@ -18,6 +18,6 @@ export function recycle(
     }
     creep.say('recycle');
   } else {
-    creep.say('...');
+    creep.say('... ' + creep.memory.recycle);
   }
 }
