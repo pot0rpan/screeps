@@ -19,10 +19,21 @@ export class BuilderCreep extends CreepBase {
   // Or no towers and repairs needed
   targetNum(room: Room): number {
     const rcl = room.controller?.level ?? 0;
-    const numSites = room.findConstructionSites().length;
+    const sites = room.findConstructionSites();
 
-    if (numSites) {
-      return Math.min(numSites * 2, rcl > 3 ? 2 : 4);
+    if (sites.length) {
+      // If only rampart/wall construction sites, only spawn 1
+      if (
+        !sites.filter(
+          sites =>
+            sites.structureType !== STRUCTURE_RAMPART &&
+            sites.structureType !== STRUCTURE_WALL
+        ).length
+      ) {
+        return 1;
+      }
+
+      return Math.min(sites.length * 2, rcl > 3 ? 2 : 4);
     }
 
     const structures = room.find(FIND_STRUCTURES);
