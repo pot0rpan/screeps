@@ -94,7 +94,15 @@ export class Colony {
 
     if (!towers.length) return;
 
-    if (fullTowers.length) {
+    const needsHealing = room
+      .find(FIND_MY_CREEPS, { filter: crp => crp.hits < crp.hitsMax })
+      .sort((a, b) => a.hits - b.hits)[0];
+
+    if (needsHealing) {
+      for (const tower of towers) {
+        tower.heal(needsHealing);
+      }
+    } else if (fullTowers.length) {
       const damagedStructure = room
         .find(FIND_STRUCTURES, {
           filter: isDamaged,
@@ -104,15 +112,6 @@ export class Colony {
       if (damagedStructure) {
         for (const tower of fullTowers) {
           tower.repair(damagedStructure);
-        }
-      }
-    } else {
-      const needsHealing = room
-        .find(FIND_MY_CREEPS, { filter: crp => crp.hits < crp.hitsMax })
-        .sort((a, b) => a.hits - b.hits)[0];
-      if (needsHealing) {
-        for (const tower of towers) {
-          tower.heal(needsHealing);
         }
       }
     }
