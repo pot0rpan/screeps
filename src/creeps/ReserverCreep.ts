@@ -53,6 +53,13 @@ export class ReserverCreep extends CreepBase {
   }
 
   isValidTask(creep: Creep, task: ReserverTask): boolean {
+    if (
+      creep.room.name === task.room &&
+      creep.pos.getRangeTo(creep.room.controller as StructureController) === 1
+    ) {
+      return true;
+    }
+
     return !!this.targetNumPerRoom(task.room);
   }
 
