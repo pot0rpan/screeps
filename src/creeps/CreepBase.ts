@@ -35,7 +35,8 @@ declare global {
     | 'reserve'
     | 'guard'
     | 'exterminate'
-    | 'pickup';
+    | 'pickup'
+    | 'drain';
 
   type CreepRole =
     | 'pioneer'
@@ -51,7 +52,8 @@ declare global {
     | 'miner'
     | 'exterminator'
     | 'hauler'
-    | 'prospector';
+    | 'prospector'
+    | 'drainer';
 }
 
 export interface BodySettings {
