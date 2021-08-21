@@ -16,6 +16,8 @@ export class DrainerCreep extends CreepBase {
     suffix: [MOVE],
   };
 
+  private RETREAT_HEALTH = 0.8;
+
   private findFlags(room: Room): Flag[] {
     const adjacentRoomNames =
       global.empire.colonies[room.name].adjacentRoomNames;
@@ -76,7 +78,10 @@ export class DrainerCreep extends CreepBase {
       return;
     }
 
-    if (creep.memory.working && creep.hits < creep.hitsMax * 0.6) {
+    if (
+      creep.memory.working &&
+      creep.hits < creep.hitsMax * this.RETREAT_HEALTH
+    ) {
       creep.memory.working = false;
     } else if (!creep.memory.working && creep.hits === creep.hitsMax) {
       creep.memory.working = true;
