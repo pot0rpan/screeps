@@ -39,7 +39,7 @@ export class DefenderCreep extends CreepBase {
     const task = creep.memory.task as DefenderTask | undefined;
 
     if (!task || task.complete) {
-      recycle(creep, 20);
+      recycle(creep, 100);
       return;
     }
 
@@ -59,11 +59,15 @@ export class DefenderCreep extends CreepBase {
           filter: struct =>
             struct.structureType === STRUCTURE_RAMPART &&
             !struct.pos
-              .look()
+              .lookFor(LOOK_CREEPS)
+              .filter(crp => crp.name !== creep.name).length &&
+            !struct.pos
+              .lookFor(LOOK_STRUCTURES)
               .filter(
-                res =>
-                  !res.creep && (!res.structure || res.structure.structureType)
-              ),
+                s =>
+                  s.structureType !== STRUCTURE_RAMPART &&
+                  s.structureType !== STRUCTURE_CONTAINER
+              ).length,
         }
       );
 
