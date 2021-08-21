@@ -2,6 +2,7 @@ import { isFriendlyOwner } from 'utils';
 import { sortByRange } from 'utils/sort';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
+import { recycle } from 'actions/recycle';
 
 interface ExterminatorTask extends CreepTask {
   type: 'exterminate';
@@ -97,13 +98,13 @@ export class ExterminatorCreep extends CreepBase {
   }
 
   private guardController(creep: Creep): void {
-    if (creep.room.controller) {
+    if (
+      creep.room.controller &&
+      creep.pos.getRangeTo(creep.room.controller) > 5
+    ) {
       creep.travelTo(creep.room.controller, { range: 5, ignoreRoads: true });
     } else {
-      creep.travelTo(new RoomPosition(25, 25, creep.room.name), {
-        range: 10,
-        ignoreRoads: true,
-      });
+      recycle(creep, 100);
     }
   }
 
@@ -267,7 +268,6 @@ export class ExterminatorCreep extends CreepBase {
 
     if (!doingSomething) {
       this.guardController(creep);
-      creep.say('guarding');
     }
   }
 }
