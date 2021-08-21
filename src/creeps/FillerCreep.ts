@@ -168,26 +168,26 @@ export class FillerCreep extends CreepBase {
     if (res === OK) {
       creep.memory.task.complete = true;
     } else if (res === ERR_NOT_IN_RANGE) {
-      // Find dropped energy in range if creep has room
-      if (isNthTick(2) && creep.store.getFreeCapacity(RESOURCE_ENERGY)) {
-        const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
-          filter: res => res.resourceType === RESOURCE_ENERGY,
-        })[0];
+      creep.travelTo(target, { range: 1 });
+    }
 
-        if (dropped) {
-          creep.pickup(dropped);
-        } else {
-          // Find tombstones with energy
-          const tombstone = creep.pos.findInRange(FIND_TOMBSTONES, 1, {
-            filter: ts => ts.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
-          })[0];
-          if (tombstone) {
-            creep.withdraw(tombstone, RESOURCE_ENERGY);
-          }
+    // Find dropped energy in range if creep has room
+    if (isNthTick(2) && creep.store.getFreeCapacity(RESOURCE_ENERGY)) {
+      const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
+        filter: res => res.resourceType === RESOURCE_ENERGY,
+      })[0];
+
+      if (dropped) {
+        creep.pickup(dropped);
+      } else {
+        // Find tombstones with energy
+        const tombstone = creep.pos.findInRange(FIND_TOMBSTONES, 1, {
+          filter: ts => ts.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
+        })[0];
+        if (tombstone) {
+          creep.withdraw(tombstone, RESOURCE_ENERGY);
         }
       }
-
-      creep.travelTo(target, { range: 1 });
     }
 
     // Toggle `working` boolean if working and out of energy
