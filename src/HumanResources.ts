@@ -74,8 +74,8 @@ export class HumanResources {
       .filter(spawn => !spawn.spawning)
       .sort(
         (a, b) =>
-          a.store.getFreeCapacity(RESOURCE_ENERGY) -
-          b.store.getFreeCapacity(RESOURCE_ENERGY)
+          b.store.getFreeCapacity(RESOURCE_ENERGY) -
+          a.store.getFreeCapacity(RESOURCE_ENERGY)
       )[0];
     if (!spawn) {
       console.log('no spawns available for spawning');
