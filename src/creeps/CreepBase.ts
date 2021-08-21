@@ -30,7 +30,6 @@ declare global {
     | 'build'
     | 'repair'
     | 'attack'
-    | 'patrol'
     | 'scout'
     | 'reserve'
     | 'guard'
