@@ -134,12 +134,12 @@ export class Colony {
       return;
     }
 
-    // Get rooms we aren't in yet, not owned or reserved, 2 sources
+    // Get rooms we aren't in yet, not owned or reserved by hostiles, 2 sources
     let possibleRooms = adjRoomMems.filter(
       ({ mem }) =>
         !mem.colonize &&
         !mem.owner &&
-        !mem.reserver &&
+        mem.reserver === config.USERNAME &&
         (mem.sources?.length ?? 0) === 2
     );
 
