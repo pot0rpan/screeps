@@ -1,6 +1,6 @@
 import { Colony } from 'Colony';
 import config from 'config';
-import { isFriendlyOwner, isNthTick } from 'utils';
+import { isNthTick } from 'utils';
 
 declare global {
   interface RoomMemory {
@@ -11,70 +11,38 @@ declare global {
 export class ColonyDefense {
   private colony: Colony;
   private roomName: string;
-  private adjacentRoomNames: string[];
   private safeModeTimer: number | null = null;
-
-  // Reset every run to avoid stale objects
-  private mainRoom: Room = null!;
-  private adjacentRooms: Room[] = [];
-  private defconRoomNames: string[] = [];
 
   constructor(colony: Colony) {
     this.colony = colony;
     this.roomName = colony.roomName;
-    this.adjacentRoomNames = colony.adjacentRoomNames;
   }
 
-  public run() {
+  public run(): void {
+    const mainRoom = Game.rooms[this.roomName];
+
     // Always run if hostiles were around last tick,
     // Otherwise only check for hostiles every few ticks
-    if (!this.defconRoomNames.length && !isNthTick(10)) {
+    if (!mainRoom.memory.defcon && !isNthTick(10)) {
       return;
     }
 
     console.log(this.colony.roomName, 'ColonyDefense run()');
     const start = Game.cpu.getUsed();
 
-    // Load real room objects
-    this.mainRoom = Game.rooms[this.roomName];
-    this.adjacentRooms = this.adjacentRoomNames
-      .map(roomName => Game.rooms[roomName])
-      .filter(Boolean);
-
-    const rcl = this.mainRoom.controller?.level ?? 0;
-
-    if (rcl < 3) {
+    if ((mainRoom.controller?.level ?? 0) < 3) {
       // No towers, not enough energy to spawn defenders ¯\_(ツ)_/¯
       return;
     }
 
-    // Rescan rooms for hostiles
-    this.defconRoomNames = [];
-    const allRooms = [this.mainRoom, ...this.adjacentRooms];
-
-    for (const room of allRooms) {
-      if (!room) continue;
-
-      const shouldDefendRoom =
-        room.controller?.owner?.username === config.USERNAME ||
-        room.controller?.reservation?.username === config.USERNAME;
-
-      if (shouldDefendRoom && room.findHostiles().length) {
-        this.defconRoomNames.push(room.name);
-        room.memory.defcon = true;
-      } else {
-        room.memory.defcon = false;
-      }
+    if (mainRoom.findHostiles().length) {
+      mainRoom.memory.defcon = true;
+    } else {
+      mainRoom.memory.defcon = false;
     }
 
-    if (this.defconRoomNames.length) {
-      const defendMain = this.defconRoomNames.includes(this.roomName);
-      const defendOthers = defendMain ? this.defconRoomNames.length > 1 : true;
-
-      if (defendMain) this.defendMainRoom();
-      if (defendOthers) this.defendOtherRooms();
-    } else {
-      this.safeModeTimer = null;
+    if (mainRoom.memory.defcon) {
+      this.defendMainRoom();
     }
 
     console.log(
@@ -84,22 +52,16 @@ export class ColonyDefense {
     );
   }
 
-  private defendMainRoom() {
+  private defendMainRoom(): void {
     this.runTowers();
     this.handleSafeMode();
   }
 
-  private defendOtherRooms() {
-    for (const room of this.adjacentRooms) {
-      console.log(room, 'defense running');
-      room.memory.hostiles = room.findDangerousHostiles().length;
-    }
-  }
-
-  private handleSafeMode() {
-    const controller = this.mainRoom.controller;
+  private handleSafeMode(): void {
+    const mainRoom = Game.rooms[this.roomName];
+    const controller = mainRoom.controller;
     if (!controller || controller.safeMode || !controller.safeModeAvailable) {
-      if (this.safeModeTimer) this.safeModeTimer = null;
+      this.safeModeTimer = null;
       return;
     }
 
@@ -107,9 +69,11 @@ export class ColonyDefense {
     // and no defenders to help
     // Set timer to not activate too eagerly, towers may finish them off
     if (
-      this.colony.roomPlanner.baseCenter?.findInRange(FIND_HOSTILE_CREEPS, 4)
-        .length &&
-      !this.mainRoom.find(FIND_MY_CREEPS, {
+      this.colony.roomPlanner.baseCenter?.findInRange(FIND_HOSTILE_CREEPS, 3, {
+        filter: crp => crp.isHostile(),
+      }).length &&
+      !mainRoom.find(FIND_MY_CREEPS, {
+        // This will also count any defenders that are spawning
         filter: creep => creep.memory.role === 'defender',
       }).length
     ) {
@@ -119,7 +83,7 @@ export class ColonyDefense {
         this.safeModeTimer = null;
         controller.activateSafeMode();
         Game.notify(
-          `Activated safe mode on tick ${Game.time}, hostiles too close to base center`
+          `${mainRoom} Activated safe mode on tick ${Game.time}, hostiles too close to base center`
         );
       } else {
         this.safeModeTimer--;
@@ -130,15 +94,17 @@ export class ColonyDefense {
   }
 
   private runTowers() {
+    const mainRoom = Game.rooms[this.roomName];
+
     // Only attack if hostiles are <20 away from center
-    const towers = this.mainRoom
+    const towers = mainRoom
       .findTowers()
       .filter(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) >= 10);
     const baseCenter =
       this.colony.roomPlanner.baseCenter ||
       new RoomPosition(25, 25, this.roomName);
 
-    const mostInjuredHostile = this.mainRoom
+    const mostInjuredHostile = mainRoom
       .findHostiles()
       .filter(creep => creep.pos.getRangeTo(baseCenter) < 20)
       .sort((a, b) => a.hits - b.hits)[0];
