@@ -175,7 +175,7 @@ export class FillerCreep extends CreepBase {
     }
 
     // Find dropped energy in range if creep has room
-    if (isNthTick(2) && creep.store.getFreeCapacity(RESOURCE_ENERGY)) {
+    if (isNthTick(3) && creep.store.getFreeCapacity(RESOURCE_ENERGY)) {
       const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
         filter: res => res.resourceType === RESOURCE_ENERGY,
       })[0];
