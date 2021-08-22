@@ -48,7 +48,7 @@ export class DefenderCreep extends CreepBase {
     // Find closest open rampart to hostile that's walkable
     // Also avoid roads to not block other creeps
     const closestRampart =
-      closestHostile.pos.findClosestByRange<StructureRampart>(
+      closestHostile.pos.findClosestByPath<StructureRampart>(
         FIND_MY_STRUCTURES,
         {
           filter: struct =>
