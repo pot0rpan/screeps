@@ -19,6 +19,7 @@ enum PlanType {
   storage = 'storage',
   rampart = 'rampart',
   extractor = 'extractor',
+  terminal = 'terminal',
 }
 
 export class RoomPlanner {
@@ -37,6 +38,7 @@ export class RoomPlanner {
     [PlanType.road]: [],
     [PlanType.rampart]: [],
     [PlanType.extractor]: [],
+    [PlanType.terminal]: [],
   };
 
   constructor(roomName: string) {
@@ -84,7 +86,8 @@ export class RoomPlanner {
       !this.plans.storage.length &&
       !this.plans.tower.length &&
       !this.plans.rampart.length &&
-      !this.plans.extractor.length
+      !this.plans.extractor.length &&
+      !this.plans.terminal.length
     ) {
       if (this.baseCenter) {
         this.planExtensions(this.baseCenter);
@@ -264,6 +267,11 @@ export class RoomPlanner {
         continue;
       }
 
+      // Leave room for terminal above baseCenter
+      if (pos.x === baseCenter.x && pos.y === baseCenter.y - 1) {
+        continue;
+      }
+
       // Leave room for 1 tower on each side of baseCenter
       if (
         pos.y === baseCenter.y &&
@@ -280,6 +288,9 @@ export class RoomPlanner {
 
     // Plan container/storage below center
     this.planCenterStorage(baseCenter);
+
+    // Plan terminal above center
+    this.planTerminal(baseCenter);
   }
 
   planTowers(baseCenter: RoomPosition) {
@@ -322,6 +333,13 @@ export class RoomPlanner {
     this.plans[PlanType.storage].push({
       pos: new RoomPosition(x, y, this.roomName),
       structureType: STRUCTURE_STORAGE,
+    });
+  }
+
+  planTerminal(baseCenter: RoomPosition) {
+    this.plans[PlanType.terminal].push({
+      pos: new RoomPosition(baseCenter.x, baseCenter.y - 1, this.roomName),
+      structureType: STRUCTURE_TERMINAL,
     });
   }
 
@@ -508,6 +526,8 @@ export class RoomPlanner {
       if (planType === PlanType.road && rcl < 3) continue;
       if (planType === PlanType.storage && rcl < 4) continue;
       if (planType === PlanType.rampart && rcl < 4) continue;
+      if (planType === PlanType.extractor && rcl < 6) continue;
+      if (planType === PlanType.terminal && rcl < 6) continue;
 
       for (const plan of plans) {
         if (numConstructionSites >= config.MAX_CONSTRUCTION_SITES) break;
@@ -566,6 +586,8 @@ export class RoomPlanner {
             : plan.structureType === STRUCTURE_RAMPART
             ? 'green'
             : plan.structureType === STRUCTURE_EXTRACTOR
+            ? 'blue'
+            : plan.structureType === STRUCTURE_TERMINAL
             ? 'blue'
             : 'white',
       });
