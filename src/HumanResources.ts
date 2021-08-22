@@ -181,10 +181,17 @@ export class HumanResources {
       global.Creeps[creep.memory.role].run(creep);
 
       if (global.stats.profile) {
+        const cpuUsed = Game.cpu.getUsed() - start;
         console.log(
-          `<span style="color: #4488ff">${creep} CPU: ${(
-            Game.cpu.getUsed() - start
-          ).toFixed(3)}</span>`
+          `<span style="color: #4488ff">${creep} CPU: <span style="color: ${
+            cpuUsed >= 0.5
+              ? 'red'
+              : cpuUsed >= 0.3
+              ? 'yellow'
+              : cpuUsed < 0.2
+              ? 'green'
+              : 'white'
+          }">${cpuUsed.toFixed(3)}</span></span>`
         );
       }
     }
