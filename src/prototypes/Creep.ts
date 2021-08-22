@@ -10,6 +10,8 @@ declare global {
     isHostile(): boolean;
     isDangerous(): boolean;
     moveAway(target: _HasRoomPosition): CreepMoveReturnCode;
+    hasRoomForResource(resource: ResourceConstant): boolean;
+    getCarryingResources(): ResourceConstant[];
   }
 }
 
@@ -69,5 +71,21 @@ export default (() => {
     }
 
     return this.move(reverseDirection(this.pos.getDirectionTo(target)));
+  };
+
+  Creep.prototype.hasRoomForResource = function (resource) {
+    return !!this.store.getFreeCapacity(resource);
+  };
+
+  Creep.prototype.getCarryingResources = function () {
+    const resources: ResourceConstant[] = [];
+
+    for (const resType in this.store) {
+      if (this.store.getUsedCapacity(resType as ResourceConstant)) {
+        resources.push(resType as ResourceConstant);
+      }
+    }
+
+    return resources;
   };
 })();

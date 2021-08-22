@@ -54,7 +54,8 @@ declare global {
     | 'hauler'
     | 'prospector'
     | 'drainer'
-    | 'assassin';
+    | 'assassin'
+    | 'salesman';
 }
 
 export interface BodySettings {
