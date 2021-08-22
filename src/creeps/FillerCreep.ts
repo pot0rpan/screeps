@@ -121,6 +121,8 @@ export class FillerCreep extends CreepBase {
   run(creep: Creep): void {
     if (!creep.memory.task) {
       creep.say('...');
+      const ramp = creep.pos.findClosestWalkableRampart();
+      if (ramp) creep.travelTo(ramp);
       return;
     }
 

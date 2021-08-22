@@ -11,6 +11,7 @@ declare global {
     _diagonalPositions: { [length: number]: RoomPosition[] };
     findClosestSource(creep: Creep): Source | null;
     isNearEdge(distance?: number): boolean;
+    findClosestWalkableRampart(): StructureRampart | null;
   }
 }
 
@@ -113,5 +114,34 @@ export default (() => {
       this.y < distance ||
       this.y > 49 - distance
     );
+  };
+
+  RoomPosition.prototype.findClosestWalkableRampart = function () {
+    return this.findClosestByPath<StructureRampart>(FIND_MY_STRUCTURES, {
+      filter: struct => {
+        if (struct.structureType !== STRUCTURE_RAMPART) return false;
+
+        // Same position, avoids creep check if creep is already there
+        if (struct.pos.x === this.x && struct.pos.y === this.y) return true;
+
+        if (struct.pos.lookFor(LOOK_CREEPS).length) {
+          return false;
+        }
+
+        if (
+          struct.pos
+            .lookFor(LOOK_STRUCTURES)
+            .filter(
+              s =>
+                s.structureType !== STRUCTURE_RAMPART &&
+                s.structureType !== STRUCTURE_CONTAINER
+            ).length
+        ) {
+          return false;
+        }
+
+        return true;
+      },
+    });
   };
 })();
