@@ -28,29 +28,40 @@ export class MoverCreep extends CreepBase {
   findTask(creep: Creep, taskManager: TaskManager): MoverTask | null {
     if (creep.memory.working) {
       if (
-        creep.room.storage?.store.getUsedCapacity(RESOURCE_ENERGY) &&
+        creep.room.storage &&
         _.filter(
           global.empire.colonies[creep.memory.homeRoom].getColonyCreeps(),
           crp => crp.memory.role === 'filler'
         ).length
       ) {
         // Only fill controller container and storage, filler does the rest
-        let target: StructureStorage | StructureContainer | null;
+        let target: StructureStorage | StructureContainer | null = null;
         const type: MoverTask['type'] = 'transfer';
 
+        const storage = creep.room.storage;
+
+        if (
+          storage &&
+          storage.store.getUsedCapacity(RESOURCE_ENERGY) <
+            creep.store.getUsedCapacity(RESOURCE_ENERGY)
+        ) {
+          target = storage;
+        }
+
         // Controller container
-        target = creep.room
-          .findUpgradeContainers()
-          .filter(
-            container =>
-              container.store.getFreeCapacity(RESOURCE_ENERGY) >
-                creep.store.getUsedCapacity(RESOURCE_ENERGY) &&
-              !taskManager.isTaskTaken(creep.room.name, container.id, type)
-          )[0];
+        if (!target) {
+          target = creep.room
+            .findUpgradeContainers()
+            .filter(
+              container =>
+                container.store.getFreeCapacity(RESOURCE_ENERGY) >
+                  creep.store.getUsedCapacity(RESOURCE_ENERGY) &&
+                !taskManager.isTaskTaken(creep.room.name, container.id, type)
+            )[0];
+        }
 
         // Center storage
         if (!target) {
-          const storage = creep.room.storage;
           if (storage) {
             target = storage;
           }
