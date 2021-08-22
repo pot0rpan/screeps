@@ -177,7 +177,7 @@ export default (() => {
         ramp.pos.lookFor(LOOK_CREEPS).length
       ) {
         // Remove rampart id from cache, it's no longer available
-        roomMem._cwm[key].pop();
+        delete roomMem._cwm[key];
         return null;
       }
 
