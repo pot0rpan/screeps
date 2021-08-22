@@ -40,11 +40,7 @@ export class MoverCreep extends CreepBase {
 
         const storage = creep.room.storage;
 
-        if (
-          storage &&
-          storage.store.getUsedCapacity(RESOURCE_ENERGY) <
-            creep.store.getUsedCapacity(RESOURCE_ENERGY)
-        ) {
+        if (storage && storage.store.getUsedCapacity(RESOURCE_ENERGY) < 10000) {
           target = storage;
         }
 
