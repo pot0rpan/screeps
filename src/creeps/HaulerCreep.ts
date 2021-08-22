@@ -66,6 +66,11 @@ export class HaulerCreep extends CreepBase {
         'transfer'
       );
     } else {
+      // Don't grab any energy if likely to die with it
+      if (!creep.spawning && (creep.ticksToLive ?? 0) < 100) {
+        return null;
+      }
+
       // Find fullest adjacent room contaier that's not taken by other hauler
       const { adjacentRoomNames } =
         global.empire.colonies[creep.memory.homeRoom];
@@ -142,7 +147,7 @@ export class HaulerCreep extends CreepBase {
     creep.notifyWhenAttacked(false);
 
     if (!creep.memory.task) {
-      recycle(creep, 100);
+      recycle(creep, 50);
       return;
     }
 
