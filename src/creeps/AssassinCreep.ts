@@ -1,3 +1,4 @@
+import config from 'config';
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
@@ -11,12 +12,17 @@ export class AssassinCreep extends CreepBase {
   role: CreepRole = 'assassin';
   bodyOpts: BodySettings = {
     pattern: [MOVE, ATTACK],
-    sizeLimit: 5,
+    sizeLimit: 3,
   };
 
   private targetNumPerRoom(roomName: string): number {
     const mem = Memory.rooms[roomName];
-    if (mem && mem.invaders) {
+    if (
+      mem &&
+      mem.colonize &&
+      mem.invaders &&
+      (!mem.reserver || mem.reserver === config.USERNAME)
+    ) {
       return mem.invaders;
     }
     return 0;
@@ -41,9 +47,11 @@ export class AssassinCreep extends CreepBase {
     const { adjacentRoomNames } = global.empire.colonies[creep.memory.homeRoom];
 
     for (const roomName of adjacentRoomNames) {
+      if (!this.targetNumPerRoom(roomName)) continue;
       const mem = Memory.rooms[roomName];
+
+      // Take out invaders
       if (
-        mem &&
         mem.invaders &&
         !taskManager.isTaskTaken(
           roomName,
@@ -66,6 +74,7 @@ export class AssassinCreep extends CreepBase {
 
   run(creep: Creep): void {
     creep.notifyWhenAttacked(false);
+    Game.notify('DEBUG: assassin running');
 
     const task = creep.memory.task as AssassinTask | undefined;
 
@@ -82,6 +91,7 @@ export class AssassinCreep extends CreepBase {
         creep.travelTo(invader);
         creep.attack(invader);
       } else {
+        if (task) task.complete = true;
         recycle(creep, 10);
       }
     }
