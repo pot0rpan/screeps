@@ -64,7 +64,23 @@ export class DrainerCreep extends CreepBase {
     const task = creep.memory.task as DrainerTask;
 
     // Always heal
-    creep.heal(creep);
+    if (creep.hits < creep.hitsMax) {
+      creep.heal(creep);
+    } else {
+      const injuredNearSelf = creep.pos
+        .findInRange(FIND_MY_CREEPS, 3, {
+          filter: crp => crp.hits < crp.hitsMax,
+        })
+        .sort((a, b) => a.hits - b.hits)[0];
+
+      if (injuredNearSelf) {
+        if (creep.pos.getRangeTo(injuredNearSelf) > 1) {
+          creep.rangedHeal(injuredNearSelf);
+        } else {
+          creep.heal(injuredNearSelf);
+        }
+      }
+    }
 
     if (!task) {
       // If in different room or home room but still near edge, travel
