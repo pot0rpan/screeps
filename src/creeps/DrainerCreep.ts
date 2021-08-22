@@ -14,6 +14,7 @@ export class DrainerCreep extends CreepBase {
     prefix: [ATTACK], // May be needed to make towers attack
     pattern: [MOVE, HEAL],
     suffix: [MOVE],
+    ordered: true,
   };
 
   private RETREAT_HEALTH = 0.8;
