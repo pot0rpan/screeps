@@ -1,5 +1,6 @@
 import config from 'config';
 import { TaskManager } from 'TaskManager';
+import { getAllResourceAmounts } from 'utils/store';
 import { BodySettings, CreepBase } from './CreepBase';
 
 declare global {
@@ -27,6 +28,11 @@ declare global {
       amount: number;
       extractor?: string;
     };
+    tombstones?: {
+      id: string;
+      pos: [number, number];
+      store: Partial<Record<ResourceConstant, number>>;
+    }[];
     lastScan?: number;
   }
 }
@@ -144,6 +150,18 @@ export class ScoutCreep extends CreepBase {
       roomMemory.invaders = hostiles.filter(
         hostile => hostile.owner.username === 'Invader'
       ).length;
+
+      const tombstonesWithResources = room.find(FIND_TOMBSTONES, {
+        filter: ts => ts.store.getUsedCapacity(),
+      });
+      roomMemory.tombstones = [];
+      for (const ts of tombstonesWithResources) {
+        roomMemory.tombstones.push({
+          id: ts.id,
+          pos: [ts.pos.x, ts.pos.y],
+          store: getAllResourceAmounts(ts.store),
+        });
+      }
 
       const mineral = room.find(FIND_MINERALS)[0];
 
