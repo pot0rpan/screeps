@@ -121,22 +121,18 @@ export default (() => {
       filter: struct => {
         if (struct.structureType !== STRUCTURE_RAMPART) return false;
 
+        if (
+          struct.pos
+            .lookFor(LOOK_STRUCTURES)
+            .filter(s => s.structureType !== STRUCTURE_RAMPART).length
+        ) {
+          return false;
+        }
+
         // Same position, avoids creep check if creep is already there
         if (struct.pos.x === this.x && struct.pos.y === this.y) return true;
 
         if (struct.pos.lookFor(LOOK_CREEPS).length) {
-          return false;
-        }
-
-        if (
-          struct.pos
-            .lookFor(LOOK_STRUCTURES)
-            .filter(
-              s =>
-                s.structureType !== STRUCTURE_RAMPART &&
-                s.structureType !== STRUCTURE_CONTAINER
-            ).length
-        ) {
           return false;
         }
 
