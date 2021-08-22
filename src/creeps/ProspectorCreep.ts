@@ -224,6 +224,17 @@ export class ProspectorCreep extends CreepBase {
           }
         } else {
           creep.harvest(mineral);
+
+          // When empty, pickup dropped (from last that died here)
+          if (!creep.store.getUsedCapacity(mineral.mineralType)) {
+            const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
+              filter: drop =>
+                drop.amount && drop.resourceType === mineral.mineralType,
+            })[0];
+            if (dropped) {
+              creep.pickup(dropped);
+            }
+          }
         }
       }
     }
