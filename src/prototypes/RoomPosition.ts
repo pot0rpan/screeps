@@ -123,7 +123,7 @@ export default (() => {
   // Cached in room memory for n ticks
   RoomPosition.prototype.findClosestWalkableRampart = function () {
     const roomMem = Memory.rooms[this.roomName];
-    const cacheTicks = roomMem.defcon ? 5 : 200;
+    const cacheTicks = roomMem.defcon ? 5 : 100;
     const key = `${this.x}${this.y}`;
 
     if (!roomMem._cwm) {
@@ -165,7 +165,23 @@ export default (() => {
     }
 
     if (roomMem._cwm[key].length > 1) {
-      return Game.getObjectById(roomMem._cwm[key][1] as Id<StructureRampart>);
+      const ramp = Game.getObjectById(
+        roomMem._cwm[key][1] as Id<StructureRampart>
+      );
+
+      if (!ramp) return null;
+
+      // If pos is different than this, make sure no creeps there
+      if (
+        (ramp.pos.x !== this.x || ramp.pos.y !== this.y) &&
+        ramp.pos.lookFor(LOOK_CREEPS).length
+      ) {
+        // Remove rampart id from cache, it's no longer available
+        roomMem._cwm[key].pop();
+        return null;
+      }
+
+      return ramp;
     }
 
     return null;
