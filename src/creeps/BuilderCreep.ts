@@ -155,7 +155,7 @@ export class BuilderCreep extends CreepBase {
     if (!target) return false;
 
     if (task.type === 'harvest') {
-      if ((target as Source).energy < 0) return false;
+      if ((target as Source).energy <= 0) return false;
       if (creep.pos.isNearTo(target.pos.x, target.pos.y)) return true;
       if (target.pos.getAdjacentPositions(1, false).length === 0) return false;
     }

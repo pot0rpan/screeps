@@ -139,7 +139,7 @@ export class PioneerCreep extends CreepBase {
     if (!target) return false;
 
     if (task.type === 'harvest') {
-      if ((target as Source).energy < 0) return false;
+      if ((target as Source).energy <= 0) return false;
       if (creep.pos.isNearTo(target.pos.x, target.pos.y)) return true;
 
       // Check number of open spaces around source
