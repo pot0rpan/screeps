@@ -15,7 +15,6 @@ export class ProspectorCreep extends CreepBase {
   role: CreepRole = 'prospector';
   bodyOpts: BodySettings = {
     pattern: [WORK, CARRY, MOVE],
-    sizeLimit: 4,
   };
 
   private needMoreMineralOfType(
@@ -213,19 +212,7 @@ export class ProspectorCreep extends CreepBase {
         if (creep.pos.getRangeTo(mineral) > 1) {
           creep.travelTo(mineral);
 
-          // Check for dropped resources along the way
-          if (isNthTick(2)) {
-            const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
-              filter: res => res.resourceType === task.data.type,
-            })[0];
-            if (dropped) {
-              creep.pickup(dropped);
-            }
-          }
-        } else {
-          creep.harvest(mineral);
-
-          // When empty, pickup dropped (from last that died here)
+          // Check for dropped resources when empty
           if (!creep.store.getUsedCapacity(mineral.mineralType)) {
             const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
               filter: drop =>
@@ -235,6 +222,8 @@ export class ProspectorCreep extends CreepBase {
               creep.pickup(dropped);
             }
           }
+        } else {
+          creep.harvest(mineral);
         }
       }
     }
