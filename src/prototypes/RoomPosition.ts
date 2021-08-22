@@ -13,6 +13,10 @@ declare global {
     isNearEdge(distance?: number): boolean;
     findClosestWalkableRampart(): StructureRampart | null;
   }
+
+  interface RoomMemory {
+    _cwm?: { [key: string]: [number, string] | [number] };
+  }
 }
 
 export default (() => {
@@ -116,32 +120,54 @@ export default (() => {
     );
   };
 
+  // Cached in room memory for n ticks
   RoomPosition.prototype.findClosestWalkableRampart = function () {
-    return this.findClosestByPath<StructureRampart>(FIND_MY_STRUCTURES, {
-      filter: struct => {
-        // Make sure it's a rampart
-        if (struct.structureType !== STRUCTURE_RAMPART) return false;
+    const roomMem = Memory.rooms[this.roomName];
+    const cacheTicks = roomMem.defcon ? 5 : 200;
+    const key = `${this.x}${this.y}`;
 
-        // Make sure it's the only structure here
-        if (struct.pos.lookFor(LOOK_STRUCTURES).length > 1) {
-          return false;
+    if (!roomMem._cwm) {
+      roomMem._cwm = {};
+    }
+
+    if (!roomMem._cwm[key] || Game.time - roomMem._cwm[key][0] > cacheTicks) {
+      const ramp = this.findClosestByPath<StructureRampart>(
+        FIND_MY_STRUCTURES,
+        {
+          filter: struct => {
+            // Make sure it's a rampart
+            if (struct.structureType !== STRUCTURE_RAMPART) return false;
+
+            // Make sure it's the only structure here
+            if (struct.pos.lookFor(LOOK_STRUCTURES).length > 1) {
+              return false;
+            }
+
+            // No construction sites
+            if (struct.pos.lookFor(LOOK_CONSTRUCTION_SITES).length) {
+              return false;
+            }
+
+            // If pos is different than this, make sure no creeps there
+            if (
+              (struct.pos.x !== this.x || struct.pos.y !== this.y) &&
+              struct.pos.lookFor(LOOK_CREEPS).length
+            ) {
+              return false;
+            }
+
+            return true;
+          },
         }
+      );
 
-        // No construction sites
-        if (struct.pos.lookFor(LOOK_CONSTRUCTION_SITES).length) {
-          return false;
-        }
+      roomMem._cwm[key] = ramp ? [Game.time, ramp.id] : [Game.time];
+    }
 
-        // If pos is different than this, make sure no creeps there
-        if (
-          (struct.pos.x !== this.x || struct.pos.y !== this.y) &&
-          struct.pos.lookFor(LOOK_CREEPS).length
-        ) {
-          return false;
-        }
+    if (roomMem._cwm[key].length > 1) {
+      return Game.getObjectById(roomMem._cwm[key][1] as Id<StructureRampart>);
+    }
 
-        return true;
-      },
-    });
+    return null;
   };
 })();
