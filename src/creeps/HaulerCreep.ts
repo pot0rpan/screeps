@@ -71,7 +71,8 @@ export class HaulerCreep extends CreepBase {
         return null;
       }
 
-      // Find fullest adjacent room contaier that's not taken by other hauler
+      // Find dropped resources in adjacent rooms first,
+      // then find fullest adjacent room container that's not taken by other hauler
       const { adjacentRoomNames } =
         global.empire.colonies[creep.memory.homeRoom];
       let containers: StructureContainer[] = [];
@@ -100,6 +101,19 @@ export class HaulerCreep extends CreepBase {
         );
       }
 
+      if (dropped.length) {
+        dropped = dropped.sort((a, b) => b.amount - a.amount);
+        return taskManager.createTask<HaulerTask>(
+          dropped[0].pos.roomName,
+          dropped[0].id,
+          'pickup',
+          dropped[0].amount >
+            creep.store.getFreeCapacity(dropped[0].resourceType)
+            ? 2
+            : 1
+        );
+      }
+
       if (containers.length) {
         containers = containers.sort(
           (a, b) =>
@@ -123,18 +137,6 @@ export class HaulerCreep extends CreepBase {
             );
           }
         }
-      }
-
-      if (dropped.length) {
-        dropped = dropped.sort((a, b) => b.amount - a.amount);
-        return taskManager.createTask<HaulerTask>(
-          dropped[0].pos.roomName,
-          dropped[0].id,
-          'pickup',
-          dropped[0].amount > creep.store.getFreeCapacity(RESOURCE_ENERGY)
-            ? 2
-            : 1
-        );
       }
 
       console.log('no tasks for', creep);
@@ -174,7 +176,10 @@ export class HaulerCreep extends CreepBase {
 
     switch (task.type) {
       case 'transfer':
-        res = creep.transfer(target as StructureStorage, RESOURCE_ENERGY);
+        res = creep.transfer(
+          target as StructureStorage,
+          creep.getCarryingResources()[0]
+        );
         break;
       case 'withdraw':
         res = creep.withdraw(target as StructureContainer, RESOURCE_ENERGY);
