@@ -86,11 +86,12 @@ export class ReserverCreep extends CreepBase {
   run(creep: Creep): void {
     creep.notifyWhenAttacked(false);
 
-    const task = creep.memory.task as ReserverTask;
+    const task = creep.memory.task as ReserverTask | undefined;
 
     if (!task) {
       // Recycle
       creep.say('recycle');
+      return;
     }
 
     // Retreat if hostiles
