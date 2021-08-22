@@ -47,7 +47,7 @@ export class DefenderCreep extends CreepBase {
 
     // Find closest open rampart to hostile that's walkable
     // Also avoid roads to not block other creeps
-    const closestRampart = creep.pos.findClosestWalkableRampart();
+    const closestRampart = closestHostile.pos.findClosestWalkableRampart();
 
     // Travel to closest rampart no matter what
     if (closestRampart) {
