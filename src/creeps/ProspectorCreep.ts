@@ -17,23 +17,6 @@ export class ProspectorCreep extends CreepBase {
     pattern: [WORK, CARRY, MOVE],
   };
 
-  private needMoreMineralOfType(
-    homeRoom: string,
-    type: ResourceConstant
-  ): boolean {
-    const room = Game.rooms[homeRoom];
-
-    if (
-      room &&
-      room.storage &&
-      room.storage.store.getUsedCapacity(type) < config.MAX_MINERAL_STORAGE
-    ) {
-      return true;
-    }
-
-    return false;
-  }
-
   targetNum(room: Room): number {
     if ((room.controller?.level ?? 0) < 6) return 0;
     if (!room.storage) return 0;
@@ -49,10 +32,7 @@ export class ProspectorCreep extends CreepBase {
           if (struct.structureType !== STRUCTURE_EXTRACTOR) return false;
           const mineral = struct.pos.lookFor(LOOK_MINERALS)[0];
           if (!mineral || !mineral.mineralAmount) return false;
-          return (
-            room.storage &&
-            this.needMoreMineralOfType(room.name, mineral.mineralType)
-          );
+          return !!room.storage;
         },
       }).length
     ) {
@@ -68,8 +48,7 @@ export class ProspectorCreep extends CreepBase {
         !mem.hostiles &&
         mem.mineral &&
         mem.mineral.extractor &&
-        mem.mineral.amount &&
-        this.needMoreMineralOfType(room.name, mem.mineral.type)
+        mem.mineral.amount
       ) {
         num++;
       }
@@ -82,22 +61,13 @@ export class ProspectorCreep extends CreepBase {
     if (task.room === creep.memory.homeRoom) {
       const mineral = Game.getObjectById(task.target as Id<Mineral>);
 
-      if (
-        mineral &&
-        mineral.mineralAmount &&
-        this.needMoreMineralOfType(creep.memory.homeRoom, mineral.mineralType)
-      ) {
+      if (mineral && mineral.mineralAmount) {
         return true;
       }
     } else {
       const roomMem = Memory.rooms[task.room];
 
-      if (
-        roomMem.mineral &&
-        roomMem.mineral.amount > 0 &&
-        this.needMoreMineralOfType(creep.memory.homeRoom, roomMem.mineral.type)
-      )
-        return true;
+      if (roomMem.mineral && roomMem.mineral.amount) return true;
     }
 
     return false;
@@ -120,7 +90,6 @@ export class ProspectorCreep extends CreepBase {
 
       if (
         mineral.mineralAmount &&
-        this.needMoreMineralOfType(homeRoom.name, mineral.mineralType) &&
         !taskManager.isTaskTaken(homeRoom.name, mineral.id, 'harvest')
       ) {
         return taskManager.createTask<ProspectorTask>(
@@ -143,7 +112,6 @@ export class ProspectorCreep extends CreepBase {
         mem.mineral &&
         mem.mineral.extractor &&
         mem.mineral.amount &&
-        this.needMoreMineralOfType(creep.memory.homeRoom, mem.mineral.type) &&
         !taskManager.isTaskTaken(roomName, mem.mineral.extractor, 'harvest')
       ) {
         return taskManager.createTask<ProspectorTask>(
