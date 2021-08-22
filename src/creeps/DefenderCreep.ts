@@ -11,19 +11,12 @@ export class DefenderCreep extends CreepBase {
   role: CreepRole = 'defender';
   bodyOpts: BodySettings = {
     ordered: true,
-    pattern: [
-      MOVE,
-      MOVE,
-      MOVE,
-      ATTACK, // 80
-      ATTACK, // 80
-      RANGED_ATTACK, // 150
-    ],
+    pattern: [ATTACK, MOVE],
   };
 
   targetNum(room: Room): number {
     // Base body pattern needs RCL3 extensions to spawn
-    return (room.controller?.level ?? 0) >= 3 && room.memory.defcon ? 5 : 0;
+    return (room.controller?.level ?? 0) >= 3 && room.memory.defcon ? 3 : 0;
   }
 
   findTask(creep: Creep, taskManager: TaskManager): DefenderTask | null {
@@ -52,6 +45,8 @@ export class DefenderCreep extends CreepBase {
       return;
     }
 
+    // Find closest open rampart to hostile that's walkable
+    // Also avoid roads to not block other creeps
     const closestRampart =
       closestHostile.pos.findClosestByRange<StructureRampart>(
         FIND_MY_STRUCTURES,
@@ -76,15 +71,8 @@ export class DefenderCreep extends CreepBase {
       creep.travelTo(closestRampart);
     }
 
-    const rangeToHostile = creep.pos.getRangeTo(closestHostile);
-
-    if (rangeToHostile === 1) {
+    if (creep.pos.getRangeTo(closestHostile) === 1) {
       creep.attack(closestHostile);
-    } else if (
-      rangeToHostile <= 3 &&
-      !!creep.getActiveBodyparts(RANGED_ATTACK)
-    ) {
-      creep.rangedAttack(closestHostile);
     }
   }
 }
