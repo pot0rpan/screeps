@@ -129,10 +129,10 @@ export default (() => {
           return false;
         }
 
-        // Same position, avoids creep check if creep is already there
-        if (struct.pos.x === this.x && struct.pos.y === this.y) return true;
-
-        if (struct.pos.lookFor(LOOK_CREEPS).length) {
+        if (
+          (struct.pos.x !== this.x || struct.pos.y !== this.y) &&
+          struct.pos.lookFor(LOOK_CREEPS).length
+        ) {
           return false;
         }
 
