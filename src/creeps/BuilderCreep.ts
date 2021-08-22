@@ -18,6 +18,15 @@ export class BuilderCreep extends CreepBase {
   // Only if construction sites exist
   // Or no towers and repairs needed
   targetNum(room: Room): number {
+    // If we're high rcl and have storage, building can wait
+    if (
+      room.storage &&
+      room.storage.isActive() &&
+      room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 10000
+    ) {
+      return 0;
+    }
+
     const rcl = room.controller?.level ?? 0;
     const sites = room.findConstructionSites();
 
