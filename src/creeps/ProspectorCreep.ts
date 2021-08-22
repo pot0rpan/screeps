@@ -36,6 +36,7 @@ export class ProspectorCreep extends CreepBase {
 
   targetNum(room: Room): number {
     if ((room.controller?.level ?? 0) < 6) return 0;
+    if (!room.storage) return 0;
 
     let num = 0;
 
