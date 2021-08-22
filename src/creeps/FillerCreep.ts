@@ -32,6 +32,7 @@ export class FillerCreep extends CreepBase {
           {
             filter: struct =>
               struct.structureType === STRUCTURE_EXTENSION &&
+              struct.isActive() &&
               struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0,
           }
         );

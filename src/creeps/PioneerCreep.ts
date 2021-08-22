@@ -50,6 +50,7 @@ export class PioneerCreep extends CreepBase {
           filter: struct =>
             struct.structureType === STRUCTURE_EXTENSION &&
             struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+            struct.isActive() &&
             !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
         }
       );
