@@ -119,16 +119,20 @@ export default (() => {
   RoomPosition.prototype.findClosestWalkableRampart = function () {
     return this.findClosestByPath<StructureRampart>(FIND_MY_STRUCTURES, {
       filter: struct => {
+        // Make sure it's a rampart
         if (struct.structureType !== STRUCTURE_RAMPART) return false;
 
-        if (
-          struct.pos
-            .lookFor(LOOK_STRUCTURES)
-            .filter(s => s.structureType !== STRUCTURE_RAMPART).length
-        ) {
+        // Make sure it's the only structure here
+        if (struct.pos.lookFor(LOOK_STRUCTURES).length > 1) {
           return false;
         }
 
+        // No construction sites
+        if (struct.pos.lookFor(LOOK_CONSTRUCTION_SITES).length) {
+          return false;
+        }
+
+        // If pos is different than this, make sure no creeps there
         if (
           (struct.pos.x !== this.x || struct.pos.y !== this.y) &&
           struct.pos.lookFor(LOOK_CREEPS).length
