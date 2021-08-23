@@ -1,3 +1,5 @@
+import config from 'config';
+
 export function getAdjacentRoomNames(roomName: string): string[] {
   const [centerX, centerY] = roomNameToXY(roomName);
   const adjacentRooms: string[] = [];
@@ -46,4 +48,13 @@ function roomNameToXY(name: string): [number, number] {
     yy = -yy - 1;
   }
   return [xx, yy];
+}
+
+export function maxToStoreOfResource(
+  room: Room,
+  resourceType: ResourceConstant
+): number {
+  return resourceType === 'energy'
+    ? config.MAX_ENERGY_STORAGE(room.controller?.level ?? 0)
+    : config.MAX_MINERAL_STORAGE;
 }

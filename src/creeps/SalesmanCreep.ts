@@ -1,37 +1,29 @@
+import { maxToStoreOfResource } from 'utils/room';
 import { recycle } from 'actions/recycle';
-import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
-// Target is withdraw target id
+// task.target is withdraw target id, to target id is in data.to
 interface SalesmanTask extends CreepTask {
-  type: 'withdraw';
+  type: 'balance';
   data: { to: string; resourceType: ResourceConstant };
 }
 
-// Currently this creep only moves excess resources from storage to terminal
-// TODO: Implement a non-creep class for handling market stuff
+// Salesman balances resources between terminal and storage
 export class SalesmanCreep extends CreepBase {
   role: CreepRole = 'salesman';
   bodyOpts: BodySettings = {
-    pattern: [MOVE, CARRY],
-    sizeLimit: 4,
+    pattern: [CARRY, CARRY, MOVE],
+    sizeLimit: 2,
   };
 
-  private maxToStoreOfResource(
-    room: Room,
-    resourceType: ResourceConstant
-  ): number {
-    return resourceType === 'energy'
-      ? config.MAX_ENERGY_STORAGE(room.controller?.level ?? 0)
-      : config.MAX_MINERAL_STORAGE;
-  }
+  private threshold = 5000;
 
   private findExcessResources(
     room: Room,
     target: StructureStorage | StructureTerminal
-  ): ResourceConstant[] {
-    const excessResources: { type: ResourceConstant; amount: number }[] = [];
+  ): { [resourceType: string]: number } {
+    const excessResources: { [resourceType: string]: number } = {};
 
     if (target) {
       for (const resType in target.store) {
@@ -39,19 +31,14 @@ export class SalesmanCreep extends CreepBase {
           target.store.getUsedCapacity(resType as ResourceConstant) ?? 0;
 
         const amountExcess =
-          amount - this.maxToStoreOfResource(room, resType as ResourceConstant);
+          amount - maxToStoreOfResource(room, resType as ResourceConstant);
         if (amountExcess > 0) {
-          excessResources.push({
-            type: resType as ResourceConstant,
-            amount: amountExcess,
-          });
+          excessResources[resType] = amountExcess;
         }
       }
     }
 
-    return excessResources
-      .sort((a, b) => b.amount - a.amount)
-      .map(({ type }) => type);
+    return excessResources;
   }
 
   private findResourceToMove(room: Room): {
@@ -61,55 +48,60 @@ export class SalesmanCreep extends CreepBase {
   } | null {
     if (!room.storage || !room.terminal) return null;
 
-    const excessResourcesInStorage = this.findExcessResources(
-      room,
-      room.storage
-    );
-    const excessResourcesInTerminal = this.findExcessResources(
-      room,
-      room.terminal
-    );
+    // Balance out storage between storage/terminal
+    // use threshold so there are no more tasks when they're close enough
+    const excessInTerminal = this.findExcessResources(room, room.terminal);
+    const excessInStorage = this.findExcessResources(room, room.storage);
 
-    for (const excessInTerminal of excessResourcesInTerminal) {
-      // Only move if target has less of the resource
-      if (
-        excessInTerminal &&
-        room.terminal.store.getUsedCapacity(excessInTerminal) >
-          room.storage.store.getUsedCapacity(excessInTerminal)
-      ) {
-        return {
-          from: room.terminal,
-          to: room.storage,
-          type: excessInTerminal,
-        };
-      }
+    // Gather excess amounts of each resource in both storage/terminal
+    const excessResources: {
+      [resourceType: string]: { terminal?: number; storage?: number };
+    } = {};
+
+    for (const resType in excessInTerminal) {
+      if (!excessResources[resType]) excessResources[resType] = {};
+      excessResources[resType].terminal = excessInTerminal[resType];
     }
 
-    for (const excessInStorage of excessResourcesInStorage) {
-      if (
-        excessInStorage &&
-        room.storage.store.getUsedCapacity(excessInStorage) >
-          room.terminal.store.getUsedCapacity(excessInStorage)
-      ) {
-        return {
-          from: room.storage,
-          to: room.terminal,
-          type: excessInStorage,
-        };
+    for (const resType in excessInStorage) {
+      if (!excessResources[resType]) excessResources[resType] = {};
+      excessResources[resType].storage = excessInStorage[resType];
+    }
+
+    // Check if should move
+    for (const resType in excessResources) {
+      const excessTerminal = excessResources[resType].terminal ?? 0;
+      const excessStorage = excessResources[resType].storage ?? 0;
+
+      // If not close enough, transfer from fullest
+      if (Math.abs(excessTerminal - excessStorage) > this.threshold) {
+        if (excessTerminal > excessStorage) {
+          return {
+            from: room.terminal,
+            to: room.storage,
+            type: resType as ResourceConstant,
+          };
+        } else {
+          return {
+            from: room.storage,
+            to: room.terminal,
+            type: resType as ResourceConstant,
+          };
+        }
       }
     }
 
     return null;
   }
 
-  // 1 if any resources in storage are above max (with a small buffer)
+  // 1 if any resources are above max (with a small buffer)
   targetNum(room: Room): number {
-    const potentialTask = this.findResourceToMove(room);
-    if (!potentialTask) return 0;
-
     if (
-      potentialTask.from.store.getUsedCapacity(potentialTask.type) >
-      this.maxToStoreOfResource(room, potentialTask.type) + 2000
+      room.terminal &&
+      room.terminal.isActive() &&
+      room.storage &&
+      room.storage.isActive() &&
+      this.findResourceToMove(room)
     ) {
       return 1;
     }
@@ -127,21 +119,10 @@ export class SalesmanCreep extends CreepBase {
     );
     if (!resourceToMove) return null;
 
-    if (
-      resourceToMove.from.store.getUsedCapacity(resourceToMove.type) -
-        this.maxToStoreOfResource(
-          Game.rooms[creep.memory.homeRoom],
-          resourceToMove.type
-        ) <
-      creep.store.getCapacity()
-    ) {
-      return null;
-    }
-
     return taskManager.createTask<SalesmanTask>(
       creep.memory.homeRoom,
       resourceToMove.from.id,
-      'withdraw',
+      'balance',
       -1,
       { to: resourceToMove.to.id, resourceType: resourceToMove.type }
     );
@@ -160,6 +141,7 @@ export class SalesmanCreep extends CreepBase {
           creep.travelTo(storage);
         }
       } else {
+        // Recycle quickly, probably in the way of other creeps
         recycle(creep, 3);
       }
       return;
@@ -189,5 +171,7 @@ export class SalesmanCreep extends CreepBase {
         creep.travelTo(to);
       }
     }
+
+    creep.say(`${task.data.resourceType} → ${to.structureType.substr(0, 4)}`);
   }
 }

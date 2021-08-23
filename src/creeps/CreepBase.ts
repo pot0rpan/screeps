@@ -36,7 +36,8 @@ declare global {
     | 'exterminate'
     | 'pickup'
     | 'drain'
-    | 'assassinate';
+    | 'assassinate'
+    | 'balance';
 
   type CreepRole =
     | 'pioneer'
