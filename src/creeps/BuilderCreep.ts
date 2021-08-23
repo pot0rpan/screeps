@@ -81,7 +81,7 @@ export class BuilderCreep extends CreepBase {
             filter: struct =>
               isDamaged(struct) &&
               (struct.structureType !== STRUCTURE_ROAD ||
-                struct.hits > struct.hitsMax / 2) &&
+                struct.hits < struct.hitsMax / 2) &&
               !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
           })
           .sort((a, b) => a.hits - b.hits)[0];
@@ -175,7 +175,7 @@ export class BuilderCreep extends CreepBase {
     }
 
     if (task.type === 'repair') {
-      if (!isDamaged(target as Structure)) {
+      if ((target as Structure).hits < (target as Structure).hitsMax) {
         return false;
       }
     }
