@@ -11,7 +11,7 @@ interface BuilderTask extends CreepTask {
 export class BuilderCreep extends CreepBase {
   role: CreepRole = 'builder';
   bodyOpts: BodySettings = {
-    pattern: [WORK, CARRY, MOVE, MOVE],
+    pattern: [WORK, CARRY, MOVE],
     sizeLimit: 8,
   };
 
@@ -45,18 +45,10 @@ export class BuilderCreep extends CreepBase {
       return Math.min(sites.length * 2, rcl > 3 ? 2 : 4);
     }
 
-    const structures = room.find(FIND_STRUCTURES);
-
     if (
-      structures.filter(struct => struct.structureType === STRUCTURE_TOWER)
-        .length
+      room.find(FIND_STRUCTURES, { filter: struct => isDamaged(struct) }).length
     ) {
-      return 0;
-    }
-
-    const numDamaged = structures.filter(struct => isDamaged(struct)).length;
-    if (numDamaged) {
-      return Math.min(numDamaged, 3);
+      return room.memory.defcon ? 2 : 1;
     }
 
     return 0;
@@ -65,28 +57,22 @@ export class BuilderCreep extends CreepBase {
   findTask(creep: Creep, taskManager: TaskManager) {
     if (creep.memory.working) {
       // Repairs or construction
-      let target: ConstructionSite | Structure | null;
+      let target: ConstructionSite | Structure | null = null;
       let type: BuilderTask['type'] = 'build';
 
       // Allow multiple builders to target same construction site
       // Work on these 1 at a time (most completed one first)
       // If all are equal progress, should automatically go in placement order
-      target = creep.room
-        .findConstructionSites()
-        .sort((a, b) => b.progress - a.progress)[0];
+      // Only construct if not under attack
+      if (!creep.room.memory.defcon) {
+        target = creep.room
+          .findConstructionSites()
+          .sort((a, b) => b.progress - a.progress)[0];
+      }
 
       if (!target) {
         // Repair structures if no towers
         type = 'repair';
-
-        const structures = creep.room.find(FIND_STRUCTURES);
-
-        if (
-          structures.filter(struct => struct.structureType === STRUCTURE_TOWER)
-            .length
-        ) {
-          return null;
-        }
 
         // Find most damaged structure
         target = creep.room
@@ -239,6 +225,7 @@ export class BuilderCreep extends CreepBase {
         break;
       case 'repair':
         res = creep.repair(target as Structure);
+        if (!isDamaged(target as Structure)) task.complete = true;
         break;
       default:
         creep.memory.task.complete = true;
