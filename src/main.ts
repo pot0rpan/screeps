@@ -1,6 +1,7 @@
 import 'prototypes/Creep';
 import 'prototypes/Room';
 import 'prototypes/RoomPosition';
+import 'prototypes/StructureTerminal';
 
 import 'utils/Traveler';
 
