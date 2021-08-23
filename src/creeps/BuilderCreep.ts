@@ -237,10 +237,18 @@ export class BuilderCreep extends CreepBase {
     if (task.type === 'withdraw' && res === OK) {
       creep.memory.task.complete = true;
     }
-    if (res === ERR_NOT_IN_RANGE) {
-      creep.travelTo(target, {
-        range: task.type === 'build' || task.type === 'repair' ? 3 : undefined,
-      });
+    if (task.type === 'build' || task.type === 'repair') {
+      const ramp = target.pos.findClosestWalkableRampart([creep.name]);
+      if (ramp && target.pos.getRangeTo(ramp) <= 3) {
+        creep.travelTo(ramp);
+      } else if (res === ERR_NOT_IN_RANGE) {
+        creep.travelTo(target, {
+          range:
+            task.type === 'build' || task.type === 'repair' ? 3 : undefined,
+        });
+      }
+    } else if (res === ERR_NOT_IN_RANGE) {
+      creep.travelTo(target, { range: 1 });
     }
 
     // Toggle `working` boolean if working and out of energy

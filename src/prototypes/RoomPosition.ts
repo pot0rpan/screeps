@@ -11,7 +11,9 @@ declare global {
     _diagonalPositions: { [length: number]: RoomPosition[] };
     findClosestSource(creep: Creep): Source | null;
     isNearEdge(distance?: number): boolean;
-    findClosestWalkableRampart(): StructureRampart | null;
+    findClosestWalkableRampart(
+      ignoreCreeps?: string[]
+    ): StructureRampart | null;
   }
 
   interface RoomMemory {
@@ -121,7 +123,9 @@ export default (() => {
   };
 
   // Cached in room memory for n ticks
-  RoomPosition.prototype.findClosestWalkableRampart = function () {
+  RoomPosition.prototype.findClosestWalkableRampart = function (
+    ignoreCreeps = []
+  ) {
     const roomMem = Memory.rooms[this.roomName];
     const cacheTicks = roomMem.defcon ? 5 : 100;
     const key = `${this.x}${this.y}`;
@@ -151,7 +155,9 @@ export default (() => {
             // If pos is different than this, make sure no creeps there
             if (
               (struct.pos.x !== this.x || struct.pos.y !== this.y) &&
-              struct.pos.lookFor(LOOK_CREEPS).length
+              struct.pos
+                .lookFor(LOOK_CREEPS)
+                .filter(crp => !ignoreCreeps.includes(crp.name)).length
             ) {
               return false;
             }
