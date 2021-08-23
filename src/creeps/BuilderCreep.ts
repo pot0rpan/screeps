@@ -96,8 +96,7 @@ export class BuilderCreep extends CreepBase {
       // Find room storage
       if (
         creep.room.storage &&
-        creep.room.storage.store[RESOURCE_ENERGY] >=
-          creep.store.getFreeCapacity(RESOURCE_ENERGY)
+        creep.room.storage.store[RESOURCE_ENERGY] > 5000
       ) {
         return taskManager.createTask(
           creep.room.name,
