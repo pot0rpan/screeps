@@ -175,7 +175,7 @@ export class BuilderCreep extends CreepBase {
     }
 
     if (task.type === 'repair') {
-      if ((target as Structure).hits < (target as Structure).hitsMax) {
+      if ((target as Structure).hits === (target as Structure).hitsMax) {
         return false;
       }
     }
