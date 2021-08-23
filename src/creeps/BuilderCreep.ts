@@ -105,6 +105,9 @@ export class BuilderCreep extends CreepBase {
         );
       }
 
+      // If storage and it's not full enough, recycle
+      if (creep.room.storage) return null;
+
       // Find closest container that can fully fill creep
       const nearestContainer = creep.pos.findClosestByRange(FIND_STRUCTURES, {
         filter: struct =>
@@ -179,11 +182,9 @@ export class BuilderCreep extends CreepBase {
 
   run(creep: Creep): void {
     if (!creep.memory.task) {
-      if (creep.memory.working) {
-        if (recycle(creep, config.ticks.PLAN_ROOMS)) {
-          const ramp = creep.pos.findClosestWalkableRampart();
-          if (ramp) creep.travelTo(ramp);
-        }
+      if (recycle(creep, config.ticks.PLAN_ROOMS)) {
+        const ramp = creep.pos.findClosestWalkableRampart();
+        if (ramp) creep.travelTo(ramp);
       }
       return;
     } else {
