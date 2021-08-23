@@ -17,6 +17,7 @@ export class SalesmanCreep extends CreepBase {
     sizeLimit: 2,
   };
 
+  // Creep carry capacity gets added to this to stop bouncing
   private threshold = 5000;
 
   private findExcessResources(
@@ -74,7 +75,14 @@ export class SalesmanCreep extends CreepBase {
       const excessStorage = excessResources[resType].storage ?? 0;
 
       // If not close enough, transfer from fullest
-      if (Math.abs(excessTerminal - excessStorage) > this.threshold) {
+      if (
+        Math.abs(excessTerminal - excessStorage) >
+        this.threshold +
+          this.generateBody(room.energyCapacityAvailable).filter(
+            part => part === CARRY
+          ).length *
+            50
+      ) {
         if (excessTerminal > excessStorage) {
           return {
             from: room.terminal,
