@@ -53,6 +53,14 @@ export class MinerCreep extends CreepBase {
   }
 
   isValidTask(creep: Creep, task: MinerTask): boolean {
+    const mem = Memory.rooms[task.room];
+    if (
+      !mem ||
+      (mem.reserver && mem.reserver !== config.USERNAME) ||
+      mem.hostiles
+    ) {
+      return false;
+    }
     return true;
   }
 
@@ -64,6 +72,8 @@ export class MinerCreep extends CreepBase {
       if (!mem) continue;
       if (!mem.colonize) continue;
       if (!mem.sources?.length) continue;
+      if (mem.reserver !== config.USERNAME) continue;
+      if (mem.hostiles) continue;
 
       for (const { id } of mem.sources) {
         if (!taskManager.isTaskTaken(roomName, id, 'harvest')) {
