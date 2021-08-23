@@ -118,6 +118,7 @@ export class Colony {
   }
 
   private handleExpansion(): void {
+    // Get rooms we have scouted and aren't colonizing yet
     const adjRoomMems = this.adjacentRoomNames
       .filter(roomName => !!Memory.rooms[roomName])
       .map(roomName => ({
@@ -134,19 +135,37 @@ export class Colony {
       return;
     }
 
-    // Get rooms we aren't in yet, not owned or reserved by hostiles, 2 sources
-    let possibleRooms = adjRoomMems.filter(
+    // Rooms we aren't colonizing and no hostiles (Source Keepers most likely)
+    const availableAdjRoomMems = adjRoomMems.filter(
+      ({ mem }) => !mem.colonize && !mem.hostiles
+    );
+
+    // Rooms not owned or reserved by hostiles, 2 sources
+    let possibleRooms = availableAdjRoomMems.filter(
       ({ mem }) =>
-        !mem.colonize &&
         !mem.owner &&
-        mem.reserver === config.USERNAME &&
+        (!mem.reserver || mem.reserver === config.USERNAME) &&
         (mem.sources?.length ?? 0) === 2
     );
 
-    // Check for rooms reserved by hostiles
+    // Rooms not owned or reserved by hostiles, 1 source
     if (!possibleRooms.length) {
-      possibleRooms = adjRoomMems.filter(
-        ({ mem }) => mem.reserver && !isFriendlyOwner(mem.reserver)
+      possibleRooms = availableAdjRoomMems.filter(
+        ({ mem }) =>
+          !mem.owner &&
+          (!mem.reserver || mem.reserver === config.USERNAME) &&
+          mem.sources?.length
+      );
+    }
+
+    // Rooms reserved by hostiles, 1+ source
+    if (!possibleRooms.length) {
+      possibleRooms = availableAdjRoomMems.filter(
+        ({ mem }) =>
+          !mem.owner &&
+          mem.reserver &&
+          !isFriendlyOwner(mem.reserver) &&
+          mem.sources?.length
       );
     }
 
