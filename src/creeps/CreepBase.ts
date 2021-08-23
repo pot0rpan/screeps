@@ -82,7 +82,13 @@ export abstract class CreepBase {
   abstract findTask(creep: Creep, taskManager: TaskManager): CreepTask | null;
   abstract run(creep: Creep): void;
 
+  private bodySizeCache: Record<number, BodyPartConstant[]> = {};
+
   generateBody(energyAvailable: number) {
+    if (this.bodySizeCache[energyAvailable]) {
+      return this.bodySizeCache[energyAvailable];
+    }
+
     const defaults: Partial<BodySettings> = {
       sizeLimit: Infinity,
       ordered: false,
@@ -126,6 +132,8 @@ export abstract class CreepBase {
         body.push(part);
       }
     }
+
+    this.bodySizeCache[energyAvailable] = body;
 
     return body;
   }
