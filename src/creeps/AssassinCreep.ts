@@ -12,7 +12,7 @@ export class AssassinCreep extends CreepBase {
   role: CreepRole = 'assassin';
   bodyOpts: BodySettings = {
     pattern: [MOVE, ATTACK],
-    sizeLimit: 3,
+    sizeLimit: 5,
   };
 
   private targetNumPerRoom(roomName: string): number {
