@@ -14,7 +14,7 @@ interface ProspectorTask extends CreepTask {
 export class ProspectorCreep extends CreepBase {
   role: CreepRole = 'prospector';
   bodyOpts: BodySettings = {
-    pattern: [WORK, CARRY, MOVE],
+    pattern: [WORK, WORK, CARRY, MOVE, MOVE],
   };
 
   targetNum(room: Room): number {
