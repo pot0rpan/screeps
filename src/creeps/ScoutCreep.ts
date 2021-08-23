@@ -65,7 +65,7 @@ function findRoomsToScout(colonyRoom: Room, ignoreLastScan = false): string[] {
   }
 
   return roomsToScout
-    .sort((a, b) => (a.mem.lastScan ?? 0) - (b.mem.lastScan ?? 0))
+    .sort((a, b) => (a.mem?.lastScan ?? 0) - (b.mem?.lastScan ?? 0))
     .map(({ name }) => name);
 }
 
