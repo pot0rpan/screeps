@@ -1,8 +1,8 @@
-import { TaskManager } from 'TaskManager';
-import { BodySettings, CreepBase } from './CreepBase';
+import config from 'config';
 import { isDamaged } from 'utils/structure';
 import { recycle } from 'actions/recycle';
-import config from 'config';
+import { TaskManager } from 'TaskManager';
+import { BodySettings, CreepBase } from './CreepBase';
 
 interface BuilderTask extends CreepTask {
   type: 'build' | 'repair' | 'withdraw' | 'harvest';
@@ -75,10 +75,13 @@ export class BuilderCreep extends CreepBase {
         type = 'repair';
 
         // Find most damaged structure
+        // Target roads at lower hits
         target = creep.room
           .find(FIND_STRUCTURES, {
             filter: struct =>
               isDamaged(struct) &&
+              (struct.structureType !== STRUCTURE_ROAD ||
+                struct.hits > struct.hitsMax / 2) &&
               !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
           })
           .sort((a, b) => a.hits - b.hits)[0];
