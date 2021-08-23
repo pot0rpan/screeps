@@ -25,7 +25,7 @@ export class HaulerCreep extends CreepBase {
           !creep.spawning &&
           creep.memory.homeRoom === room.name &&
           creep.memory.role === 'miner'
-      ).length / 2
+      ).length
     );
   }
 
