@@ -32,7 +32,7 @@ export class ProspectorCreep extends CreepBase {
           if (struct.structureType !== STRUCTURE_EXTRACTOR) return false;
           const mineral = struct.pos.lookFor(LOOK_MINERALS)[0];
           if (!mineral || !mineral.mineralAmount) return false;
-          return !!room.storage;
+          return true;
         },
       }).length
     ) {
@@ -78,8 +78,6 @@ export class ProspectorCreep extends CreepBase {
 
     if (!homeRoom.storage) return null;
 
-    const { adjacentRoomNames } = global.empire.colonies[creep.memory.homeRoom];
-
     // Home room
     const extractor = homeRoom.find<StructureExtractor>(FIND_STRUCTURES, {
       filter: struct => struct.structureType === STRUCTURE_EXTRACTOR,
@@ -101,6 +99,8 @@ export class ProspectorCreep extends CreepBase {
         );
       }
     }
+
+    const { adjacentRoomNames } = global.empire.colonies[creep.memory.homeRoom];
 
     // Adjacent rooms
     for (const roomName of adjacentRoomNames) {
@@ -142,7 +142,7 @@ export class ProspectorCreep extends CreepBase {
 
     // Retreat if hostiles
     if (
-      task.room === creep.memory.homeRoom &&
+      task.room !== creep.memory.homeRoom &&
       Memory.rooms[task.room].hostiles
     ) {
       creep.travelToRoom(creep.memory.homeRoom);
