@@ -27,13 +27,6 @@ export class MinerCreep extends CreepBase {
     // Don't expand too early
     if (rcl < 4) return 0;
 
-    if (
-      room.storage.store.getUsedCapacity(RESOURCE_ENERGY) >
-      config.MAX_ENERGY_STORAGE(rcl)
-    ) {
-      return 0;
-    }
-
     const { adjacentRoomNames } = global.empire.colonies[room.name];
     let num = 0;
 
