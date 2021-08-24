@@ -178,6 +178,12 @@ export class HumanResources {
     for (const creep of colonyCreeps) {
       if (creep.spawning) continue;
       start = Game.cpu.getUsed();
+      if (!global.Creeps[creep.memory.role]) {
+        console.log(
+          `<span style="color:red">${creep} Invalid role: ${creep.memory.role}`
+        );
+        continue;
+      }
 
       global.Creeps[creep.memory.role].run(creep);
 
