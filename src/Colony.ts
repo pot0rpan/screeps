@@ -73,7 +73,6 @@ export class Colony {
     this.runTowers();
 
     // Handle construction
-    // TODO: Check if enough cpu left
     if (global.isFirstTick || isNthTick(config.ticks.PLAN_ROOMS)) {
       this.roomPlanner.run();
       this.handleExpansion();

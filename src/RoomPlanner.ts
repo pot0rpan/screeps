@@ -77,9 +77,10 @@ export class RoomPlanner {
     // Don't construct when under attack
     if (Memory.rooms[this.roomName].defcon) return;
 
-    // Only plan if no plans (usually global reset/code push)
+    // Only plan if bucket isn't empty and no plans (usually global reset/code push)
     // TODO: Polyfill Array.prototype.flat()
     if (
+      Game.cpu.bucket > 200 &&
       !this.plans.container.length &&
       !this.plans.extension.length &&
       !this.plans.road.length &&
