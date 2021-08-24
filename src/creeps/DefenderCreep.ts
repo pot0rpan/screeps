@@ -11,7 +11,7 @@ export class DefenderCreep extends CreepBase {
   role: CreepRole = 'defender';
   bodyOpts: BodySettings = {
     ordered: true,
-    pattern: [ATTACK, MOVE],
+    pattern: [ATTACK, ATTACK, MOVE],
   };
 
   targetNum(room: Room): number {
