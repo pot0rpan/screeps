@@ -91,6 +91,7 @@ export class Stats {
 
   run(empire: Empire): void {
     if (!this.show) return;
+    if (Game.cpu.bucket < 100) return;
 
     for (const roomName in empire.colonies) {
       const room = Game.rooms[roomName];
