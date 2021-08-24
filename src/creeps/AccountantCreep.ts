@@ -19,7 +19,7 @@ export class AccountantCreep extends CreepBase {
   role: CreepRole = 'accountant';
   bodyOpts: BodySettings = {
     pattern: [CARRY, CARRY, MOVE],
-    sizeLimit: 2,
+    sizeLimit: 3,
   };
 
   // Reset every tick
