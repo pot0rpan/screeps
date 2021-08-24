@@ -127,7 +127,7 @@ export default (() => {
     ignoreCreeps = []
   ) {
     const roomMem = Memory.rooms[this.roomName];
-    const cacheTicks = roomMem.defcon ? 5 : 100;
+    const cacheTicks = roomMem.defcon ? 5 : 1000;
     const key = `${this.x}${this.y}`;
 
     if (!roomMem._cwm) {
@@ -152,9 +152,8 @@ export default (() => {
               return false;
             }
 
-            // If pos is different than this, make sure no creeps there
+            // Make sure no creeps there
             if (
-              (struct.pos.x !== this.x || struct.pos.y !== this.y) &&
               struct.pos
                 .lookFor(LOOK_CREEPS)
                 .filter(crp => !ignoreCreeps.includes(crp.name)).length
@@ -177,10 +176,11 @@ export default (() => {
 
       if (!ramp) return null;
 
-      // If pos is different than this, make sure no creeps there
+      // Make sure no creeps there
       if (
-        (ramp.pos.x !== this.x || ramp.pos.y !== this.y) &&
-        ramp.pos.lookFor(LOOK_CREEPS).length
+        ramp.pos
+          .lookFor(LOOK_CREEPS)
+          .filter(crp => !ignoreCreeps.includes(crp.name)).length
       ) {
         // Remove rampart id from cache, it's no longer available
         delete roomMem._cwm[key];

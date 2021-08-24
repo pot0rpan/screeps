@@ -15,8 +15,7 @@ export class DefenderCreep extends CreepBase {
   };
 
   targetNum(room: Room): number {
-    // Base body pattern needs RCL3 extensions to spawn
-    return (room.controller?.level ?? 0) >= 3 && room.memory.defcon ? 3 : 0;
+    return room.memory.defcon ? 3 : 0;
   }
 
   findTask(creep: Creep, taskManager: TaskManager): DefenderTask | null {
@@ -47,7 +46,9 @@ export class DefenderCreep extends CreepBase {
 
     // Find closest open rampart to hostile that's walkable
     // Also avoid roads to not block other creeps
-    const closestRampart = closestHostile.pos.findClosestWalkableRampart();
+    const closestRampart = closestHostile.pos.findClosestWalkableRampart([
+      creep.name,
+    ]);
 
     // Travel to closest rampart no matter what
     if (closestRampart) {
