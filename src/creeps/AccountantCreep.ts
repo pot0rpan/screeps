@@ -19,7 +19,7 @@ export class AccountantCreep extends CreepBase {
   role: CreepRole = 'accountant';
   bodyOpts: BodySettings = {
     pattern: [CARRY, CARRY, MOVE],
-    sizeLimit: 3,
+    sizeLimit: 2,
   };
 
   // Reset every tick
@@ -163,11 +163,9 @@ export class AccountantCreep extends CreepBase {
         }
       } else {
         // Recycle quickly, probably in the way of other creeps
-        recycle(creep, 3);
+        recycle(creep, 20);
       }
       return;
-    } else {
-      delete creep.memory.recycle;
     }
 
     const from = Game.getObjectById(
