@@ -1,4 +1,3 @@
-import { maxToStoreOfResource } from 'utils/room';
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
@@ -9,6 +8,12 @@ interface SalesmanTask extends CreepTask {
   data: { to: string; resourceType: ResourceConstant };
 }
 
+type ResourceToMove = {
+  from: StructureStorage | StructureTerminal;
+  to: StructureStorage | StructureTerminal;
+  type: ResourceConstant;
+} | null;
+
 // Salesman balances resources between terminal and storage
 export class SalesmanCreep extends CreepBase {
   role: CreepRole = 'salesman';
@@ -17,11 +22,18 @@ export class SalesmanCreep extends CreepBase {
     sizeLimit: 2,
   };
 
+  // Reset every tick
+  // this method is used for checking targetNum as well so needs caching
+  private _resourceToMoveCache: { tick: number; result: ResourceToMove } = {
+    tick: Game.time,
+    result: null,
+  };
+
   // Creep carry capacity gets added to this to stop bouncing
   private threshold = 5000;
 
   private findExcessResources(
-    room: Room,
+    _room: Room,
     target: StructureStorage | StructureTerminal
   ): { [resourceType: string]: number } {
     const excessResources: { [resourceType: string]: number } = {};
@@ -31,10 +43,8 @@ export class SalesmanCreep extends CreepBase {
         const amount =
           target.store.getUsedCapacity(resType as ResourceConstant) ?? 0;
 
-        const amountExcess =
-          amount - maxToStoreOfResource(room, resType as ResourceConstant);
-        if (amountExcess > 0) {
-          excessResources[resType] = amountExcess;
+        if (amount > 0) {
+          excessResources[resType] = amount;
         }
       }
     }
@@ -42,64 +52,67 @@ export class SalesmanCreep extends CreepBase {
     return excessResources;
   }
 
-  private findResourceToMove(room: Room): {
-    from: StructureStorage | StructureTerminal;
-    to: StructureStorage | StructureTerminal;
-    type: ResourceConstant;
-  } | null {
+  private findResourceToMove(room: Room): ResourceToMove {
     if (!room.storage || !room.terminal) return null;
 
-    // Balance out storage between storage/terminal
-    // use threshold so there are no more tasks when they're close enough
-    const excessInTerminal = this.findExcessResources(room, room.terminal);
-    const excessInStorage = this.findExcessResources(room, room.storage);
+    if (this._resourceToMoveCache?.tick !== Game.time) {
+      this._resourceToMoveCache = { tick: Game.time, result: null };
 
-    // Gather excess amounts of each resource in both storage/terminal
-    const excessResources: {
-      [resourceType: string]: { terminal?: number; storage?: number };
-    } = {};
+      // Balance out storage between storage/terminal
+      // use threshold so there are no more tasks when they're close enough
+      const excessInTerminal = this.findExcessResources(room, room.terminal);
+      const excessInStorage = this.findExcessResources(room, room.storage);
 
-    for (const resType in excessInTerminal) {
-      if (!excessResources[resType]) excessResources[resType] = {};
-      excessResources[resType].terminal = excessInTerminal[resType];
-    }
+      // Gather excess amounts of each resource in both storage/terminal
+      const excessResources: {
+        [resourceType: string]: { terminal?: number; storage?: number };
+      } = {};
 
-    for (const resType in excessInStorage) {
-      if (!excessResources[resType]) excessResources[resType] = {};
-      excessResources[resType].storage = excessInStorage[resType];
-    }
+      for (const resType in excessInTerminal) {
+        if (!excessResources[resType]) excessResources[resType] = {};
+        excessResources[resType].terminal = excessInTerminal[resType];
+      }
 
-    // Check if should move
-    for (const resType in excessResources) {
-      const excessTerminal = excessResources[resType].terminal ?? 0;
-      const excessStorage = excessResources[resType].storage ?? 0;
+      for (const resType in excessInStorage) {
+        if (!excessResources[resType]) excessResources[resType] = {};
+        excessResources[resType].storage = excessInStorage[resType];
+      }
 
-      // If not close enough, transfer from fullest
-      if (
-        Math.abs(excessTerminal - excessStorage) >
-        this.threshold +
-          this.generateBody(room.energyCapacityAvailable).filter(
-            part => part === CARRY
-          ).length *
-            50
-      ) {
-        if (excessTerminal > excessStorage) {
-          return {
-            from: room.terminal,
-            to: room.storage,
-            type: resType as ResourceConstant,
-          };
-        } else {
-          return {
-            from: room.storage,
-            to: room.terminal,
-            type: resType as ResourceConstant,
-          };
+      // Check if should move
+      for (const resType in excessResources) {
+        const excessTerminal = excessResources[resType].terminal ?? 0;
+        const excessStorage = excessResources[resType].storage ?? 0;
+
+        // If not close enough, transfer from fullest
+        if (
+          Math.abs(excessTerminal - excessStorage) >
+          this.threshold +
+            this.generateBody(room.energyCapacityAvailable).filter(
+              part => part === CARRY
+            ).length *
+              50 *
+              2
+        ) {
+          if (excessTerminal > excessStorage) {
+            this._resourceToMoveCache.result = {
+              from: room.terminal,
+              to: room.storage,
+              type: resType as ResourceConstant,
+            };
+            break;
+          } else {
+            this._resourceToMoveCache.result = {
+              from: room.storage,
+              to: room.terminal,
+              type: resType as ResourceConstant,
+            };
+            break;
+          }
         }
       }
     }
 
-    return null;
+    return this._resourceToMoveCache.result;
   }
 
   // 1 if any resources are above max (with a small buffer)
@@ -167,7 +180,6 @@ export class SalesmanCreep extends CreepBase {
     if (creep.store.getFreeCapacity(task.data.resourceType)) {
       if (creep.pos.getRangeTo(from) === 1) {
         creep.withdraw(from, task.data.resourceType);
-        task.complete = true;
       } else {
         creep.travelTo(from);
       }
