@@ -3,7 +3,7 @@ import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
 // task.target is withdraw target id, to target id is in data.to
-interface SalesmanTask extends CreepTask {
+interface AccountantTask extends CreepTask {
   type: 'balance';
   data: { to: string; resourceType: ResourceConstant };
 }
@@ -14,9 +14,9 @@ type ResourceToMove = {
   type: ResourceConstant;
 } | null;
 
-// Salesman balances resources between terminal and storage
-export class SalesmanCreep extends CreepBase {
-  role: CreepRole = 'salesman';
+// Accountant balances resources between terminal and storage
+export class AccountantCreep extends CreepBase {
+  role: CreepRole = 'accountant';
   bodyOpts: BodySettings = {
     pattern: [CARRY, CARRY, MOVE],
     sizeLimit: 2,
@@ -130,17 +130,17 @@ export class SalesmanCreep extends CreepBase {
     return 0;
   }
 
-  isValidTask(creep: Creep, task: SalesmanTask): boolean {
+  isValidTask(creep: Creep, task: AccountantTask): boolean {
     return true;
   }
 
-  findTask(creep: Creep, taskManager: TaskManager): SalesmanTask | null {
+  findTask(creep: Creep, taskManager: TaskManager): AccountantTask | null {
     const resourceToMove = this.findResourceToMove(
       Game.rooms[creep.memory.homeRoom]
     );
     if (!resourceToMove) return null;
 
-    return taskManager.createTask<SalesmanTask>(
+    return taskManager.createTask<AccountantTask>(
       creep.memory.homeRoom,
       resourceToMove.from.id,
       'balance',
@@ -153,7 +153,7 @@ export class SalesmanCreep extends CreepBase {
     const storage = creep.room.storage;
     const terminal = creep.room.terminal;
 
-    const task = creep.memory.task as SalesmanTask | undefined;
+    const task = creep.memory.task as AccountantTask | undefined;
     if (!task || !storage || !terminal) {
       if (storage && creep.getCarryingResources().length) {
         if (creep.pos.getRangeTo(storage) === 1) {

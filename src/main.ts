@@ -13,21 +13,21 @@ import { Stats } from 'Stats';
 
 import { CreepBase } from 'creeps/CreepBase';
 import { PioneerCreep } from 'creeps/PioneerCreep';
-import { BuilderCreep } from 'creeps/BuilderCreep';
-import { HarvesterCreep } from 'creeps/HarvesterCreep';
-import { UpgraderCreep } from 'creeps/UpgraderCreep';
-import { MoverCreep } from 'creeps/MoverCreep';
 import { DefenderCreep } from 'creeps/DefenderCreep';
+import { HarvesterCreep } from 'creeps/HarvesterCreep';
+import { FillerCreep } from 'creeps/FillerCreep';
+import { MoverCreep } from 'creeps/MoverCreep';
+import { BuilderCreep } from 'creeps/BuilderCreep';
+import { UpgraderCreep } from 'creeps/UpgraderCreep';
 import { ScoutCreep } from 'creeps/ScoutCreep';
+import { ExterminatorCreep } from 'creeps/ExterminatorCreep';
+import { AssassinCreep } from 'creeps/AssassinCreep';
 import { ReserverCreep } from 'creeps/ReserverCreep';
 import { MinerCreep } from 'creeps/MinerCreep';
-import { ExterminatorCreep } from 'creeps/ExterminatorCreep';
 import { HaulerCreep } from 'creeps/HaulerCreep';
 import { ProspectorCreep } from 'creeps/ProspectorCreep';
-import { FillerCreep } from 'creeps/FillerCreep';
+import { AccountantCreep } from 'creeps/AccountantCreep';
 import { DrainerCreep } from 'creeps/DrainerCreep';
-import { AssassinCreep } from 'creeps/AssassinCreep';
-import { SalesmanCreep } from 'creeps/SalesmanCreep';
 
 declare global {
   /*
@@ -60,7 +60,7 @@ global.Creeps = {
   miner: new MinerCreep(),
   hauler: new HaulerCreep(),
   prospector: new ProspectorCreep(),
-  salesman: new SalesmanCreep(),
+  accountant: new AccountantCreep(),
   drainer: new DrainerCreep(),
 };
 
