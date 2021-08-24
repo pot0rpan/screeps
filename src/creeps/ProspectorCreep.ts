@@ -189,6 +189,13 @@ export class ProspectorCreep extends CreepBase {
             })[0];
             if (dropped) {
               creep.pickup(dropped);
+            } else {
+              const tombstone = creep.pos.findInRange(FIND_TOMBSTONES, 1, {
+                filter: ts => ts.store.getUsedCapacity(mineral.mineralType),
+              })[0];
+              if (tombstone) {
+                creep.withdraw(tombstone, mineral.mineralType);
+              }
             }
           }
         } else {
