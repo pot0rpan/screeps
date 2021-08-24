@@ -11,9 +11,8 @@ interface DrainerTask extends CreepTask {
 export class DrainerCreep extends CreepBase {
   role: CreepRole = 'drainer';
   bodyOpts: BodySettings = {
-    prefix: [ATTACK], // May be needed to make towers attack
     pattern: [MOVE, HEAL],
-    suffix: [MOVE],
+    suffix: [ATTACK, MOVE],
     ordered: true,
   };
 
