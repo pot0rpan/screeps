@@ -52,9 +52,13 @@ function roomNameToXY(name: string): [number, number] {
 
 export function maxToStoreOfResource(
   room: Room,
-  resourceType: ResourceConstant
+  resourceType: ResourceConstant,
+  terminal = false
 ): number {
-  return resourceType === 'energy'
-    ? config.MAX_ENERGY_STORAGE(room.controller?.level ?? 0)
-    : config.MAX_MINERAL_STORAGE;
+  if (resourceType === RESOURCE_ENERGY) {
+    return terminal
+      ? 100000
+      : config.MAX_ENERGY_STORAGE(room.controller?.level ?? 0);
+  }
+  return config.MAX_MINERAL_STORAGE;
 }

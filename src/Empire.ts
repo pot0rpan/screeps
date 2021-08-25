@@ -1,14 +1,18 @@
+import { isNthTick } from 'utils';
 import { Colony } from 'Colony';
+import { Market } from 'Market';
 
 // This is the top-level class, everything stems from here
 export class Empire {
   colonies: { [roomName: string]: Colony } = {};
+  market: Market;
 
   constructor() {
     console.log(
       '<span style="color:red">----------------------- GLOBAL RESET ----------------------</span>'
     );
-    console.log('Empire constructor()');
+
+    this.market = new Market();
 
     // Read colony room names from Memory
     if (Array.isArray(Memory.colonies)) delete Memory.colonies;
@@ -36,6 +40,10 @@ export class Empire {
 
     for (const roomName in this.colonies) {
       this.colonies[roomName].run();
+    }
+
+    if (isNthTick(100) && Game.cpu.bucket > 200) {
+      this.market.run(this);
     }
   }
 }
