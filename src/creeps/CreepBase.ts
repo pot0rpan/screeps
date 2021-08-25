@@ -37,7 +37,8 @@ declare global {
     | 'pickup'
     | 'drain'
     | 'assassinate'
-    | 'balance';
+    | 'balance'
+    | 'heal';
 
   type CreepRole =
     | 'pioneer'
@@ -56,7 +57,9 @@ declare global {
     | 'prospector'
     | 'drainer'
     | 'assassin'
-    | 'accountant';
+    | 'accountant'
+    | 'attacker'
+    | 'healer';
 }
 
 export interface BodySettings {

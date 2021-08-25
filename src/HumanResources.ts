@@ -105,6 +105,8 @@ export class HumanResources {
       'hauler',
       'prospector',
       'accountant',
+      'attacker',
+      'healer',
       'drainer',
     ];
 
