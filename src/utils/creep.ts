@@ -9,3 +9,11 @@ export function spawnTime(bodyParts: BodyPartConstant[] | number): number {
   }
   return (numParts as number) * 3;
 }
+
+export function getFatiguedInSquad(creeps: Creep[]): Creep[] {
+  const fatigued: Creep[] = [];
+  for (const creep of creeps) {
+    if (creep.fatigue > 0) fatigued.push(creep);
+  }
+  return fatigued;
+}
