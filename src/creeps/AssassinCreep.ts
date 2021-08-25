@@ -12,6 +12,8 @@ export class AssassinCreep extends CreepBase {
   role: CreepRole = 'assassin';
   bodyOpts: BodySettings = {
     pattern: [MOVE, ATTACK],
+    suffix: [MOVE],
+    ordered: true,
     sizeLimit: 5,
   };
 
