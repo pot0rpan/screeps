@@ -76,7 +76,6 @@ export class AssassinCreep extends CreepBase {
 
   run(creep: Creep): void {
     creep.notifyWhenAttacked(false);
-    Game.notify('DEBUG: assassin running');
 
     const task = creep.memory.task as AssassinTask | undefined;
 
