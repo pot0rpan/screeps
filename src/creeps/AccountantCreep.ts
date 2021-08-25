@@ -93,14 +93,24 @@ export class AccountantCreep extends CreepBase {
               50 *
               2
         ) {
-          if (excessTerminal > excessStorage) {
+          if (
+            excessTerminal > excessStorage &&
+            room.storage.store.getUsedCapacity(resType as ResourceConstant) +
+              excessTerminal <
+              room.storage.store.getFreeCapacity(resType as ResourceConstant)
+          ) {
             this._resourceToMoveCache.result = {
               from: room.terminal,
               to: room.storage,
               type: resType as ResourceConstant,
             };
             break;
-          } else {
+          } else if (
+            excessStorage > excessTerminal &&
+            room.terminal.store.getUsedCapacity(resType as ResourceConstant) +
+              excessStorage <
+              room.terminal.store.getFreeCapacity(resType as ResourceConstant)
+          ) {
             this._resourceToMoveCache.result = {
               from: room.storage,
               to: room.terminal,
@@ -162,8 +172,7 @@ export class AccountantCreep extends CreepBase {
           creep.travelTo(storage);
         }
       } else {
-        // Recycle quickly, probably in the way of other creeps
-        recycle(creep, 20);
+        recycle(creep, 200);
       }
       return;
     }
