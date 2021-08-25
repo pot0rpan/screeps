@@ -58,6 +58,7 @@ export class RoomPlanner {
       const spawn = room.findSpawns()[0];
       if (spawn) {
         this.baseCenter = new RoomPosition(spawn.pos.x, spawn.pos.y, roomName);
+        room.memory.baseCenter = { x: this.baseCenter.x, y: this.baseCenter.y };
       }
     }
   }
@@ -308,7 +309,6 @@ export class RoomPlanner {
 
     // Plan road perimeter
     const pattern = [
-      { x: -5, y: 0 },
       { x: -5, y: -1 },
       { x: -5, y: -2 },
       { x: -5, y: -3 },
