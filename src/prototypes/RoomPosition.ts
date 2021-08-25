@@ -14,6 +14,7 @@ declare global {
     findClosestWalkableRampart(
       ignoreCreeps?: string[]
     ): StructureRampart | null;
+    isDiagonalTo(pos: RoomPosition): boolean;
   }
 
   interface RoomMemory {
@@ -97,10 +98,7 @@ export default (() => {
       const adjacentPositions = this.getAdjacentPositions(length);
 
       for (const pos of adjacentPositions) {
-        if (
-          Math.abs(pos.x - this.x) === Math.abs(pos.y - this.y) &&
-          (pos.x !== this.x || pos.y !== this.y)
-        ) {
+        if (this.isDiagonalTo(pos)) {
           this._diagonalPositions[length].push(
             new RoomPosition(pos.x, pos.y, this.roomName)
           );
@@ -132,7 +130,6 @@ export default (() => {
   RoomPosition.prototype.findClosestWalkableRampart = function (
     ignoreCreeps = []
   ) {
-    const start = Game.cpu.getUsed();
     const isRampartBlockable = (struct: Structure): boolean => {
       // Make sure it's a rampart
       if (struct.structureType !== STRUCTURE_RAMPART) return false;
@@ -215,25 +212,16 @@ export default (() => {
         continue;
       }
 
-      console.log('findClosestOpenRampart CPU:', Game.cpu.getUsed() - start);
-
       return rampart;
     }
 
-    console.log('findClosestOpenRampart CPU:', Game.cpu.getUsed() - start);
-
     return null;
-    // let ramp = this.lookFor(LOOK_STRUCTURES).filter(isRampartBlockable)[0] as
-    //   | StructureRampart
-    //   | null
-    //   | undefined;
+  };
 
-    // if (!ramp) {
-    //   ramp = this.findClosestByRange<StructureRampart>(FIND_MY_STRUCTURES, {
-    //     filter: isRampartBlockable,
-    //   });
-    // }
-
-    // return ramp;
+  RoomPosition.prototype.isDiagonalTo = function (pos) {
+    return (
+      Math.abs(pos.x - this.x) === Math.abs(pos.y - this.y) &&
+      (pos.x !== this.x || pos.y !== this.y)
+    );
   };
 })();
