@@ -148,19 +148,18 @@ export default (() => {
           this.roomName
         );
 
-        // Only check for other structures (roads) if not bunker perimeter
-        if (
-          struct.pos.getRangeTo(centerPos) !== 5 &&
-          structuresAtPos.length > 1
-        ) {
+        // Allow roads if bunker perimeter, otherwise block roads
+        if (struct.pos.getRangeTo(centerPos) === 5) {
+          if (
+            structuresAtPos.filter(s => s.structureType !== STRUCTURE_ROAD)
+              .length > 1
+          ) {
+            return false;
+          }
+        } else if (structuresAtPos.length > 1) {
           return false;
         }
       } else if (structuresAtPos.length > 1) {
-        return false;
-      }
-
-      // No construction sites
-      if (struct.pos.lookFor(LOOK_CONSTRUCTION_SITES).length) {
         return false;
       }
 
@@ -211,6 +210,10 @@ export default (() => {
         continue;
       }
 
+      Game.rooms[this.roomName].visual.circle(rampart.pos.x, rampart.pos.y, {
+        radius: 0.3,
+        fill: 'green',
+      });
       return rampart;
     }
 
