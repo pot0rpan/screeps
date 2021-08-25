@@ -246,6 +246,28 @@ export class RoomPlanner {
     }
   }
 
+  private repeatPattern(
+    baseCenter: RoomPosition,
+    pattern: { x: number; y: number }[],
+    structureType: BuildableStructureConstant
+  ): BuildingPlan[] {
+    const plans: BuildingPlan[] = [];
+    for (let xF = -1; xF <= 1; xF += 2) {
+      for (let yF = -1; yF <= 1; yF += 2) {
+        for (const pos of pattern) {
+          const x = baseCenter.x + pos.x * xF;
+          const y = baseCenter.y + pos.y * yF;
+
+          plans.push({
+            pos: new RoomPosition(x, y, this.roomName),
+            structureType,
+          });
+        }
+      }
+    }
+    return plans;
+  }
+
   planBaseCenter(baseCenter: RoomPosition) {
     console.log('planning main base layout');
     const room = Game.rooms[this.roomName];
@@ -255,7 +277,7 @@ export class RoomPlanner {
       fill: 'transparent',
     });
 
-    // Plan roads around spawn, both X and + shape 3 long
+    // Plan roads around spawn, both X and + shape 4 long
     // Sort to plan farthest first (closest to sources)
     const roadPlans = baseCenter
       .getDiagonalPositions(4)
@@ -283,6 +305,23 @@ export class RoomPlanner {
 
       this.plans[PlanType.road].push({ pos, structureType: STRUCTURE_ROAD });
     }
+
+    // Plan road perimeter
+    const pattern = [
+      { x: -5, y: 0 },
+      { x: -5, y: -1 },
+      { x: -5, y: -2 },
+      { x: -5, y: -3 },
+      { x: -5, y: -4 },
+      { x: -4, y: -5 },
+      { x: -3, y: -5 },
+      { x: -2, y: -5 },
+      { x: -1, y: -5 },
+    ];
+
+    this.plans[PlanType.road] = this.plans[PlanType.road].concat(
+      this.repeatPattern(baseCenter, pattern, STRUCTURE_ROAD)
+    );
 
     // Plan tower sites on each side of center
     this.planTowers(baseCenter);
@@ -362,26 +401,9 @@ export class RoomPlanner {
       { x: -1, y: -2 },
     ];
 
-    const plans: BuildingPlan[] = [];
-
-    // Repeat pattern 4 times rotated around center
-    for (let xF = -1; xF <= 1; xF += 2) {
-      for (let yF = -1; yF <= 1; yF += 2) {
-        for (const pos of pattern) {
-          const x = baseCenter.x + pos.x * xF;
-          const y = baseCenter.y + pos.y * yF;
-
-          plans.push({
-            pos: new RoomPosition(x, y, this.roomName),
-            structureType: STRUCTURE_EXTENSION,
-          });
-        }
-      }
-    }
-
     // Build closest to spawn first
-    this.plans[PlanType.extension].push(
-      ...plans.sort(
+    this.plans[PlanType.extension] = this.plans[PlanType.extension].concat(
+      this.repeatPattern(baseCenter, pattern, STRUCTURE_EXTENSION).sort(
         (a, b) => a.pos.getRangeTo(baseCenter) - b.pos.getRangeTo(baseCenter)
       )
     );
@@ -512,6 +534,8 @@ export class RoomPlanner {
   // but some limits apply like the amount of each type at a given RCL
   placeConstructionSites(rcl: number) {
     const room = Game.rooms[this.roomName];
+    const terrain = new Room.Terrain(this.roomName);
+
     // Counter to stay under config.MAX_CONSTRUCTION_SITES
     let numConstructionSites = room.findConstructionSites().length;
 
@@ -532,6 +556,9 @@ export class RoomPlanner {
 
       for (const plan of plans) {
         if (numConstructionSites >= config.MAX_CONSTRUCTION_SITES) break;
+
+        if (terrain.get(plan.pos.x, plan.pos.y) === TERRAIN_MASK_WALL) continue;
+
         let alreadyBuilt = false;
 
         // Check existing structures at location, destroy if wrong type
