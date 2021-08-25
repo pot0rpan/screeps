@@ -210,10 +210,6 @@ export default (() => {
         continue;
       }
 
-      Game.rooms[this.roomName].visual.circle(rampart.pos.x, rampart.pos.y, {
-        radius: 0.3,
-        fill: 'green',
-      });
       return rampart;
     }
 
