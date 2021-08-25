@@ -17,7 +17,14 @@ declare global {
   }
 
   interface RoomMemory {
-    _cwm?: { [key: string]: [number, string] | [number] };
+    _ramparts: {
+      ts: number;
+      ramparts: {
+        id: string;
+        pos: { x: number; y: number };
+        blockable: boolean;
+      }[];
+    };
   }
 }
 
@@ -122,74 +129,111 @@ export default (() => {
     );
   };
 
-  // Cached in room memory for n ticks
   RoomPosition.prototype.findClosestWalkableRampart = function (
     ignoreCreeps = []
   ) {
-    const roomMem = Memory.rooms[this.roomName];
-    const cacheTicks = roomMem.defcon ? 5 : 1000;
-    const key = `${this.x}${this.y}`;
+    const start = Game.cpu.getUsed();
+    const isRampartBlockable = (struct: Structure): boolean => {
+      // Make sure it's a rampart
+      if (struct.structureType !== STRUCTURE_RAMPART) return false;
 
-    if (!roomMem._cwm) {
-      roomMem._cwm = {};
-    }
+      // Make sure rampart is the only structure here
+      // or a road on the outer edge of bunker
+      // baseCenter will only be defined in center colony rooms
+      const structuresAtPos = struct.pos.lookFor(LOOK_STRUCTURES);
+      const { baseCenter } = Memory.rooms[this.roomName];
 
-    if (!roomMem._cwm[key] || Game.time - roomMem._cwm[key][0] > cacheTicks) {
-      const ramp = this.findClosestByPath<StructureRampart>(
-        FIND_MY_STRUCTURES,
-        {
-          filter: struct => {
-            // Make sure it's a rampart
-            if (struct.structureType !== STRUCTURE_RAMPART) return false;
+      // If in main colony room, go to spots on outer edge of bunker
+      if (baseCenter) {
+        const centerPos = new RoomPosition(
+          baseCenter.x,
+          baseCenter.y,
+          this.roomName
+        );
 
-            // Make sure it's the only structure here
-            if (struct.pos.lookFor(LOOK_STRUCTURES).length > 1) {
-              return false;
-            }
-
-            // No construction sites
-            if (struct.pos.lookFor(LOOK_CONSTRUCTION_SITES).length) {
-              return false;
-            }
-
-            // Make sure no creeps there
-            if (
-              struct.pos
-                .lookFor(LOOK_CREEPS)
-                .filter(crp => !ignoreCreeps.includes(crp.name)).length
-            ) {
-              return false;
-            }
-
-            return true;
-          },
+        // Filter out roads at bunker edge
+        if (
+          struct.pos.getRangeTo(centerPos) === 5 &&
+          structuresAtPos.filter(s => s.structureType !== STRUCTURE_ROAD)
+            .length > 1
+        ) {
+          return false;
         }
-      );
+      } else if (structuresAtPos.length > 1) {
+        return false;
+      }
 
-      roomMem._cwm[key] = ramp ? [Game.time, ramp.id] : [Game.time];
+      // No construction sites
+      if (struct.pos.lookFor(LOOK_CONSTRUCTION_SITES).length) {
+        return false;
+      }
+
+      return true;
+    };
+
+    const roomMem = Memory.rooms[this.roomName];
+
+    if (
+      !roomMem._ramparts ||
+      Game.time - roomMem._ramparts.ts > (roomMem.defcon ? 5 : 300)
+    ) {
+      roomMem._ramparts = {
+        ts: Game.time,
+        ramparts: Game.rooms[this.roomName]
+          .find(FIND_MY_STRUCTURES, {
+            filter: struct => struct.structureType === STRUCTURE_RAMPART,
+          })
+          .map(struct => ({
+            id: struct.id,
+            pos: {
+              x: struct.pos.x,
+              y: struct.pos.y,
+            },
+            blockable: isRampartBlockable(struct),
+          })),
+      };
     }
 
-    if (roomMem._cwm[key].length > 1) {
-      const ramp = Game.getObjectById(
-        roomMem._cwm[key][1] as Id<StructureRampart>
+    // Get ramparts we can block
+    const walkableRamparts = roomMem._ramparts.ramparts
+      .filter(ramp => ramp.blockable)
+      .sort(
+        (a, b) =>
+          this.getRangeTo(a.pos.x, a.pos.y) - this.getRangeTo(b.pos.x, b.pos.y)
       );
 
-      if (!ramp) return null;
+    for (const rampMem of walkableRamparts) {
+      const rampart = Game.getObjectById(rampMem.id as Id<StructureRampart>);
+      if (!rampart) continue;
 
       // Make sure no creeps there
       if (
-        ramp.pos
+        rampart.pos
           .lookFor(LOOK_CREEPS)
           .filter(crp => !ignoreCreeps.includes(crp.name)).length
       ) {
-        // Remove rampart id from cache, it's no longer available
-        delete roomMem._cwm[key];
-        return null;
+        continue;
       }
 
-      return ramp;
+      console.log('findClosestOpenRampart CPU:', Game.cpu.getUsed() - start);
+
+      return rampart;
     }
 
+    console.log('findClosestOpenRampart CPU:', Game.cpu.getUsed() - start);
+
     return null;
+    // let ramp = this.lookFor(LOOK_STRUCTURES).filter(isRampartBlockable)[0] as
+    //   | StructureRampart
+    //   | null
+    //   | undefined;
+
+    // if (!ramp) {
+    //   ramp = this.findClosestByRange<StructureRampart>(FIND_MY_STRUCTURES, {
+    //     filter: isRampartBlockable,
+    //   });
+    // }
+
+    // return ramp;
   };
 })();
