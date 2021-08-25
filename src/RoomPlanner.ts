@@ -63,10 +63,32 @@ export class RoomPlanner {
     }
   }
 
+  private repeatPattern(
+    baseCenter: RoomPosition,
+    pattern: { x: number; y: number }[],
+    structureType: BuildableStructureConstant
+  ): BuildingPlan[] {
+    const plans: BuildingPlan[] = [];
+    for (let xF = -1; xF <= 1; xF += 2) {
+      for (let yF = -1; yF <= 1; yF += 2) {
+        for (const pos of pattern) {
+          const x = baseCenter.x + pos.x * xF;
+          const y = baseCenter.y + pos.y * yF;
+
+          plans.push({
+            pos: new RoomPosition(x, y, this.roomName),
+            structureType,
+          });
+        }
+      }
+    }
+    return plans;
+  }
+
   // Plan everything, no matter the RCL (unless rcl < 2)
   // Push all plans to this.plans[type]
   // Place construction sites in order of type priority and RCL limits (extensions,storage)
-  run() {
+  public run() {
     console.log(this.roomName, 'RoomPlanner run()');
     const room = Game.rooms[this.roomName];
 
@@ -103,7 +125,7 @@ export class RoomPlanner {
     this.placeConstructionSites(rcl);
   }
 
-  planRoadsAndContainers(baseCenter: RoomPosition) {
+  private planRoadsAndContainers(baseCenter: RoomPosition) {
     console.log('planning roads/containers');
 
     const containers: {
@@ -247,29 +269,7 @@ export class RoomPlanner {
     }
   }
 
-  private repeatPattern(
-    baseCenter: RoomPosition,
-    pattern: { x: number; y: number }[],
-    structureType: BuildableStructureConstant
-  ): BuildingPlan[] {
-    const plans: BuildingPlan[] = [];
-    for (let xF = -1; xF <= 1; xF += 2) {
-      for (let yF = -1; yF <= 1; yF += 2) {
-        for (const pos of pattern) {
-          const x = baseCenter.x + pos.x * xF;
-          const y = baseCenter.y + pos.y * yF;
-
-          plans.push({
-            pos: new RoomPosition(x, y, this.roomName),
-            structureType,
-          });
-        }
-      }
-    }
-    return plans;
-  }
-
-  planBaseCenter(baseCenter: RoomPosition) {
+  private planBaseCenter(baseCenter: RoomPosition) {
     console.log('planning main base layout');
     const room = Game.rooms[this.roomName];
 
@@ -333,7 +333,7 @@ export class RoomPlanner {
     this.planTerminal(baseCenter);
   }
 
-  planTowers(baseCenter: RoomPosition) {
+  private planTowers(baseCenter: RoomPosition) {
     console.log('planning towers');
 
     // TODO: Add more tower sites for higher levels
@@ -351,7 +351,7 @@ export class RoomPlanner {
   }
 
   // // Plan container if rcl < 4 or storage
-  planCenterStorage(baseCenter: RoomPosition) {
+  private planCenterStorage(baseCenter: RoomPosition) {
     console.log('planning center storage');
     const room = Game.rooms[this.roomName];
     // const rcl = this.room.controller?.level ?? 0;
@@ -376,14 +376,14 @@ export class RoomPlanner {
     });
   }
 
-  planTerminal(baseCenter: RoomPosition) {
+  private planTerminal(baseCenter: RoomPosition) {
     this.plans[PlanType.terminal].push({
       pos: new RoomPosition(baseCenter.x, baseCenter.y - 1, this.roomName),
       structureType: STRUCTURE_TERMINAL,
     });
   }
 
-  planExtensions(baseCenter: RoomPosition) {
+  private planExtensions(baseCenter: RoomPosition) {
     console.log('planning extensions');
 
     const pattern = [
@@ -409,7 +409,7 @@ export class RoomPlanner {
     );
   }
 
-  planRamparts(baseCenter: RoomPosition) {
+  private planRamparts(baseCenter: RoomPosition) {
     const room = Game.rooms[this.roomName];
 
     // Protect controller
@@ -441,7 +441,7 @@ export class RoomPlanner {
     }
   }
 
-  planMinerals(baseCenter: RoomPosition, rcl: number) {
+  private planMinerals(baseCenter: RoomPosition, rcl: number) {
     if (rcl < 6) return;
     const room = Game.rooms[this.roomName];
     const minerals = room.find(FIND_MINERALS);
@@ -532,7 +532,7 @@ export class RoomPlanner {
   // If wrong construction site or structure is in place, it gets destroyed
   // Placed in order of this.plans PlanType keys,
   // but some limits apply like the amount of each type at a given RCL
-  placeConstructionSites(rcl: number) {
+  private placeConstructionSites(rcl: number) {
     const room = Game.rooms[this.roomName];
     const terrain = new Room.Terrain(this.roomName);
 
@@ -592,7 +592,7 @@ export class RoomPlanner {
     }
   }
 
-  visualizePlans(plans: BuildingPlan[]) {
+  private visualizePlans(plans: BuildingPlan[]) {
     const room = Game.rooms[this.roomName];
 
     for (const i in plans) {
