@@ -100,7 +100,7 @@ export class ExterminatorCreep extends CreepBase {
 
   private guardController(creep: Creep): void {
     // Guard controller until recycle timer reaches 0
-    if (recycle(creep, 100) && creep.room.controller) {
+    if (recycle(creep, 100, true) && creep.room.controller) {
       creep.travelTo(creep.room.controller, { range: 5, ignoreRoads: true });
     }
   }

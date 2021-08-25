@@ -84,6 +84,7 @@ export class MinerCreep extends CreepBase {
     const task = creep.memory.task as MinerTask | undefined;
     if (!task) {
       creep.say('...');
+      creep.travelToRoom(creep.memory.homeRoom);
       return;
     }
 

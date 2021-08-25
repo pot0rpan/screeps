@@ -149,12 +149,7 @@ export class HaulerCreep extends CreepBase {
     creep.notifyWhenAttacked(false);
 
     if (!creep.memory.task) {
-      if (
-        recycle(creep, 50) &&
-        (creep.room.name !== creep.memory.homeRoom || creep.pos.isNearEdge(2))
-      ) {
-        creep.travelToRoom(creep.memory.homeRoom);
-      }
+      recycle(creep, 50);
       return;
     }
 

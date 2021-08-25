@@ -82,15 +82,7 @@ export class DrainerCreep extends CreepBase {
     }
 
     if (!task) {
-      // If in different room or home room but still near edge, travel
-      if (
-        creep.room.name !== creep.memory.homeRoom ||
-        creep.pos.isNearEdge(4)
-      ) {
-        creep.travelToRoom(creep.memory.homeRoom);
-      } else {
-        recycle(creep, 40);
-      }
+      recycle(creep, 40);
       return;
     }
 

@@ -2,7 +2,8 @@ import config from 'config';
 
 export function recycle(
   creep: Creep,
-  delayTicks = config.ticks.RECYCLE_CREEP_DELAY
+  delayTicks = config.ticks.RECYCLE_CREEP_DELAY,
+  dontMoveUntilZero = false
 ): number {
   if (creep.memory.recycle === undefined) {
     creep.memory.recycle = delayTicks;
@@ -18,8 +19,16 @@ export function recycle(
     }
     creep.say('recycle');
     return 0;
-  } else {
+  } else if (!dontMoveUntilZero) {
     creep.say('... ' + creep.memory.recycle);
-    return creep.memory.recycle;
+    if (creep.room.name !== creep.memory.homeRoom || creep.pos.isNearEdge(3)) {
+      creep.travelToRoom(creep.memory.homeRoom);
+    } else {
+      const ramp = creep.pos.findClosestWalkableRampart([creep.name]);
+      if (ramp) {
+        creep.travelTo(ramp);
+      }
+    }
   }
+  return creep.memory.recycle;
 }

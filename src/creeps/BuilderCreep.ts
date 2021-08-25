@@ -185,13 +185,8 @@ export class BuilderCreep extends CreepBase {
 
   run(creep: Creep): void {
     if (!creep.memory.task) {
-      if (recycle(creep, config.ticks.PLAN_ROOMS)) {
-        const ramp = creep.pos.findClosestWalkableRampart([creep.name]);
-        if (ramp) creep.travelTo(ramp);
-      }
+      recycle(creep, config.ticks.PLAN_ROOMS);
       return;
-    } else {
-      delete creep.memory.recycle;
     }
 
     const task = creep.memory.task;
