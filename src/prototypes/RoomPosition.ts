@@ -148,11 +148,10 @@ export default (() => {
           this.roomName
         );
 
-        // Filter out roads at bunker edge
+        // Only check for other structures (roads) if not bunker perimeter
         if (
-          struct.pos.getRangeTo(centerPos) === 5 &&
-          structuresAtPos.filter(s => s.structureType !== STRUCTURE_ROAD)
-            .length > 1
+          struct.pos.getRangeTo(centerPos) !== 5 &&
+          structuresAtPos.length > 1
         ) {
           return false;
         }
