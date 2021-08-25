@@ -69,7 +69,7 @@ export class MoverCreep extends CreepBase {
           target.pos.roomName,
           target.id,
           type,
-          target.structureType === STRUCTURE_CONTAINER ? 1 : -1
+          target.structureType === STRUCTURE_CONTAINER ? 2 : -1
         );
       } else {
         // Fill extensions, spawn, towers, center/controller storage/container

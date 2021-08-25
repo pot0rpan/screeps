@@ -1,4 +1,3 @@
-import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -46,8 +45,7 @@ export class UpgraderCreep extends CreepBase {
       if (
         controller.ticksToDowngrade > CONTROLLER_DOWNGRADE[rcl] / 2 &&
         room.storage &&
-        room.storage.store.getUsedCapacity(RESOURCE_ENERGY) <
-          config.MAX_ENERGY_STORAGE(rcl)
+        room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 10000
       ) {
         return Math.floor(targetNum / 2);
       } else {
