@@ -20,6 +20,7 @@ enum PlanType {
   rampart = 'rampart',
   extractor = 'extractor',
   terminal = 'terminal',
+  link = 'link',
 }
 
 export class RoomPlanner {
@@ -39,6 +40,7 @@ export class RoomPlanner {
     [PlanType.rampart]: [],
     [PlanType.extractor]: [],
     [PlanType.terminal]: [],
+    [PlanType.link]: [],
   };
 
   constructor(roomName: string) {
@@ -114,9 +116,9 @@ export class RoomPlanner {
       !this.plans.terminal.length
     ) {
       if (this.baseCenter) {
-        this.planExtensions(this.baseCenter);
         this.planBaseCenter(this.baseCenter);
-        this.planRoadsAndContainers(this.baseCenter);
+        this.planExtensions(this.baseCenter);
+        this.planRoadsContainersLinks(this.baseCenter);
         this.planRamparts(this.baseCenter);
         this.planMinerals(this.baseCenter, rcl);
       }
@@ -125,10 +127,18 @@ export class RoomPlanner {
     this.placeConstructionSites(rcl);
   }
 
-  private planRoadsAndContainers(baseCenter: RoomPosition) {
+  private planRoadsContainersLinks(baseCenter: RoomPosition) {
     console.log('planning roads/containers');
 
     const containers: {
+      controller: BuildingPlan;
+      sources: BuildingPlan[];
+    } = {
+      controller: null!,
+      sources: [],
+    };
+
+    const links: {
       controller: BuildingPlan;
       sources: BuildingPlan[];
     } = {
@@ -155,6 +165,15 @@ export class RoomPlanner {
       source =>
         !source.pos.findInRange(FIND_STRUCTURES, 1, {
           filter: struct => struct.structureType === STRUCTURE_CONTAINER,
+        }).length
+    );
+
+    // Probably need the same here
+    // Links are placed adjacent to container, so could be 2 away
+    const sourcesNeedingLinks = sources.filter(
+      source =>
+        !source.pos.findInRange(FIND_STRUCTURES, 2, {
+          filter: struct => struct.structureType === STRUCTURE_LINK,
         }).length
     );
 
@@ -225,6 +244,26 @@ export class RoomPlanner {
         }
       }
 
+      // Add links adjacent to containers and not on a road
+      if (sourcesNeedingLinks.includes(source)) {
+        const plan = {
+          pos: ret.path[ret.path.length - 1]
+            .getAdjacentPositions(1, true)
+            .filter(pos => pos !== ret.path[ret.path.length - 2])
+            .sort(
+              (a, b) => a.getRangeTo(baseCenter) - b.getRangeTo(baseCenter)
+            )[0],
+          structureType: STRUCTURE_LINK,
+        };
+
+        if (source instanceof StructureController) {
+          links.controller = plan;
+        } else {
+          //? Wait on this for now
+          // links.sources.push(plan);
+        }
+      }
+
       // Add road construction sites to plans,
       // ignoring last pos to leave room for container
       for (const pos of ret.path.slice(0, ret.path.length - 1)) {
@@ -266,6 +305,13 @@ export class RoomPlanner {
       );
     } else {
       this.plans[PlanType.container].unshift(...containers.sources);
+    }
+
+    if (links.controller) {
+      this.plans[PlanType.link].push(links.controller);
+    }
+    if (links.sources) {
+      this.plans[PlanType.link].push(...links.sources);
     }
   }
 
@@ -326,8 +372,11 @@ export class RoomPlanner {
     // Plan tower sites on each side of center
     this.planTowers(baseCenter);
 
-    // Plan container/storage below center
+    // Plan storage below center
     this.planCenterStorage(baseCenter);
+
+    // Plan link near center
+    this.planCenterLink(baseCenter);
 
     // Plan terminal above center
     this.planTerminal(baseCenter);
@@ -353,22 +402,9 @@ export class RoomPlanner {
   // // Plan container if rcl < 4 or storage
   private planCenterStorage(baseCenter: RoomPosition) {
     console.log('planning center storage');
-    const room = Game.rooms[this.roomName];
-    // const rcl = this.room.controller?.level ?? 0;
-
-    if (room.storage) return; // No need to plan
-
-    // const planType = rcl < 4 ? PlanType.container : PlanType.storage;
-    // const structureType =
-    //   planType === PlanType.container ? STRUCTURE_CONTAINER : STRUCTURE_STORAGE;
 
     const x = baseCenter.x;
     const y = baseCenter.y + 1;
-
-    // this.plans[planType].push({
-    //   pos: new RoomPosition(x, y, this.room.name),
-    //   structureType,
-    // });
 
     this.plans[PlanType.storage].push({
       pos: new RoomPosition(x, y, this.roomName),
@@ -380,6 +416,13 @@ export class RoomPlanner {
     this.plans[PlanType.terminal].push({
       pos: new RoomPosition(baseCenter.x, baseCenter.y - 1, this.roomName),
       structureType: STRUCTURE_TERMINAL,
+    });
+  }
+
+  private planCenterLink(baseCenter: RoomPosition) {
+    this.plans[PlanType.link].push({
+      pos: new RoomPosition(baseCenter.x - 1, baseCenter.y + 2, this.roomName),
+      structureType: STRUCTURE_LINK,
     });
   }
 
@@ -402,10 +445,13 @@ export class RoomPlanner {
     ];
 
     // Build closest to spawn first
+    // Avoid center link location
     this.plans[PlanType.extension] = this.plans[PlanType.extension].concat(
-      this.repeatPattern(baseCenter, pattern, STRUCTURE_EXTENSION).sort(
-        (a, b) => a.pos.getRangeTo(baseCenter) - b.pos.getRangeTo(baseCenter)
-      )
+      this.repeatPattern(baseCenter, pattern, STRUCTURE_EXTENSION)
+        .filter(plan => !plan.pos.isEqualTo(baseCenter.x - 1, baseCenter.y + 2))
+        .sort(
+          (a, b) => a.pos.getRangeTo(baseCenter) - b.pos.getRangeTo(baseCenter)
+        )
     );
   }
 
@@ -551,6 +597,7 @@ export class RoomPlanner {
       if (planType === PlanType.road && rcl < 3) continue;
       if (planType === PlanType.storage && rcl < 4) continue;
       if (planType === PlanType.rampart && rcl < 4) continue;
+      if (planType === PlanType.link && rcl < 5) continue;
       if (planType === PlanType.extractor && rcl < 6) continue;
       if (planType === PlanType.terminal && rcl < 6) continue;
 
@@ -605,7 +652,8 @@ export class RoomPlanner {
           plan.structureType === STRUCTURE_ROAD
             ? 'grey'
             : plan.structureType === STRUCTURE_CONTAINER ||
-              plan.structureType === STRUCTURE_STORAGE
+              plan.structureType === STRUCTURE_STORAGE ||
+              plan.structureType === STRUCTURE_LINK
             ? 'orange'
             : plan.structureType === STRUCTURE_TOWER
             ? 'red'
@@ -618,6 +666,7 @@ export class RoomPlanner {
             : plan.structureType === STRUCTURE_TERMINAL
             ? 'blue'
             : 'white',
+        opacity: plan.structureType === STRUCTURE_RAMPART ? 0.2 : undefined,
       });
       room.visual.text(i, plan.pos.x, plan.pos.y + 0.1, {
         font: 0.3,

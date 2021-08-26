@@ -44,23 +44,20 @@ export class MoverCreep extends CreepBase {
           target = storage;
         }
 
-        // Controller container
+        // Controller container only if it's almost empty, means no link or link empty
         if (!target) {
           target = creep.room
             .findUpgradeContainers()
             .filter(
               container =>
-                container.store.getFreeCapacity(RESOURCE_ENERGY) >
-                  creep.store.getUsedCapacity(RESOURCE_ENERGY) &&
+                container.store.getUsedCapacity(RESOURCE_ENERGY) < 400 &&
                 !taskManager.isTaskTaken(creep.room.name, container.id, type)
             )[0];
         }
 
         // Center storage
-        if (!target) {
-          if (storage) {
-            target = storage;
-          }
+        if (!target && storage) {
+          target = storage;
         }
 
         if (!target) return null;
@@ -143,7 +140,7 @@ export class MoverCreep extends CreepBase {
         );
       }
     } else {
-      let target: StructureContainer | null = null;
+      let target: StructureContainer | StructureStorage | null = null;
       const type: MoverTask['type'] = 'withdraw';
 
       // Gather from fullest source container
@@ -159,6 +156,17 @@ export class MoverCreep extends CreepBase {
             a.store.getFreeCapacity(RESOURCE_ENERGY) -
             b.store.getFreeCapacity(RESOURCE_ENERGY)
         )[0];
+
+      // Gather from storage
+      if (!target) {
+        if (
+          creep.room.storage &&
+          creep.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) >=
+            creep.store.getFreeCapacity(RESOURCE_ENERGY)
+        ) {
+          target = creep.room.storage;
+        }
+      }
 
       if (!target) return null;
 

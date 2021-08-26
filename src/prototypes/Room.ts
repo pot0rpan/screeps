@@ -7,6 +7,10 @@ declare global {
     _sources: Source[];
     findSourceContainers(): StructureContainer[];
     _sourceContainers: StructureContainer[];
+    findUpgradeLinks(): StructureLink[];
+    _upgradeLinks: StructureLink[];
+    findCenterLinks(): StructureLink[];
+    _centerLinks: StructureLink[];
     findUpgradeContainers(): StructureContainer[];
     _upgradeContainers: StructureContainer[];
     numSources(avoidHostiles?: boolean): number;
@@ -93,6 +97,44 @@ export default (() => {
     }
 
     return this._sourceContainers;
+  };
+
+  // Cached for tick
+  Room.prototype.findUpgradeLinks = function () {
+    if (!this.controller) return [];
+
+    if (!this._upgradeLinks) {
+      this._upgradeLinks = this.controller.pos.findInRange<StructureLink>(
+        FIND_STRUCTURES,
+        2,
+        {
+          filter: struct =>
+            struct.structureType === STRUCTURE_LINK && struct.isActive(),
+        }
+      );
+    }
+
+    return this._upgradeLinks;
+  };
+
+  // Cached for tick
+  Room.prototype.findCenterLinks = function () {
+    if (!this._centerLinks) {
+      if (!this.memory.baseCenter) return [];
+
+      const links = new RoomPosition(
+        this.memory.baseCenter.x,
+        this.memory.baseCenter.y,
+        this.name
+      ).findInRange<StructureLink>(FIND_MY_STRUCTURES, 2, {
+        filter: struct =>
+          struct.structureType === STRUCTURE_LINK && struct.isActive(),
+      });
+
+      this._centerLinks = links;
+    }
+
+    return this._centerLinks;
   };
 
   Room.prototype.findUpgradeContainers = function () {

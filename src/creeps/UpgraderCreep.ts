@@ -3,7 +3,7 @@ import { BodySettings, CreepBase } from './CreepBase';
 
 interface UpgraderTask extends CreepTask {
   type: 'upgrade' | 'withdraw';
-  data: { controller: string };
+  data: { controller: string; link?: string };
 }
 
 // Upgraders grab energy from controller container and upgrade controller
@@ -25,35 +25,42 @@ export class UpgraderCreep extends CreepBase {
     const controllerContainer =
       room.controller &&
       (room.controller.pos.findInRange(FIND_STRUCTURES, 1, {
-        filter: struct =>
-          struct.structureType === STRUCTURE_CONTAINER &&
-          struct.store[RESOURCE_ENERGY] > 500,
+        filter: struct => struct.structureType === STRUCTURE_CONTAINER,
       })[0] as StructureContainer);
 
-    if (controllerContainer) {
-      // Get number of positions around container
-      const numPositions =
-        controllerContainer.pos.getAdjacentPositions(1).length;
+    if (!controllerContainer) return 0;
 
-      // Number that seems decent for rcl
-      const idealNum = rcl < 4 ? 3 : 2;
+    const controllerLink = room.findUpgradeLinks()[0];
 
-      // Leave room for mover to fill container (num positions - 1)
-      const targetNum = Math.min(idealNum, numPositions - 1);
-
-      // If storage low and controller not half downgraded, less upgraders
-      if (
-        controller.ticksToDowngrade > CONTROLLER_DOWNGRADE[rcl] / 2 &&
-        room.storage &&
-        room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 10000
-      ) {
-        return Math.floor(targetNum / 2);
-      } else {
-        return targetNum;
-      }
+    // Check for energy levels
+    let totalUpgradeEnergy =
+      controllerContainer.store.getUsedCapacity(RESOURCE_ENERGY);
+    if (controllerLink) {
+      totalUpgradeEnergy +=
+        controllerLink.store.getUsedCapacity(RESOURCE_ENERGY);
     }
 
-    return 0;
+    if (totalUpgradeEnergy < 500) return 0;
+
+    // Get number of positions around container
+    const numPositions = controllerContainer.pos.getAdjacentPositions(1).length;
+
+    // Number that seems decent for rcl, accounting for excess energy
+    const idealNum = rcl < 4 ? 3 : 2;
+
+    // Leave room for mover to fill container (num positions - 1)
+    const targetNum = Math.min(idealNum, numPositions - 1);
+
+    // If storage low and controller not half downgraded, less upgraders
+    if (
+      controller.ticksToDowngrade > CONTROLLER_DOWNGRADE[rcl] / 2 &&
+      room.storage &&
+      room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 10000
+    ) {
+      return Math.floor(targetNum / 2);
+    } else {
+      return targetNum;
+    }
   }
 
   findTask(creep: Creep, taskManager: TaskManager) {
@@ -62,12 +69,17 @@ export class UpgraderCreep extends CreepBase {
     const container = creep.room.findUpgradeContainers()[0];
     if (!container) return null;
 
+    const link =
+      controller.level > 4
+        ? creep.room.findUpgradeLinks()[0]
+        : (undefined as StructureLink | undefined);
+
     return taskManager.createTask<UpgraderTask>(
       container.pos.roomName,
       container.id,
       'upgrade',
       -1,
-      { controller: controller.id }
+      { controller: controller.id, link: link?.id }
     );
   }
 
@@ -86,6 +98,9 @@ export class UpgraderCreep extends CreepBase {
     const controller = Game.getObjectById(
       task.data.controller as Id<StructureController>
     );
+    const link = Game.getObjectById(
+      (task.data.link || '') as Id<StructureLink>
+    );
 
     if (!container || !controller) {
       creep.memory.task.complete = true;
@@ -93,16 +108,20 @@ export class UpgraderCreep extends CreepBase {
     }
 
     // If creep is near controller and has energy, upgrade
-    if (
-      creep.store[RESOURCE_ENERGY] > 0 &&
-      creep.pos.getRangeTo(controller.pos.x, controller.pos.y) < 3
-    ) {
-      creep.upgradeController(controller);
+    if (creep.store[RESOURCE_ENERGY] > 0) {
+      if (creep.pos.getRangeTo(controller) <= 3) {
+        creep.upgradeController(controller);
+      } else {
+        creep.travelTo(controller, { range: 3 });
+      }
     } else {
-      // Otherwise withdraw from container
-      const res = creep.withdraw(container, RESOURCE_ENERGY);
+      // Withdraw from link if available, otherwise container
+      const target =
+        link && link.store.getUsedCapacity(RESOURCE_ENERGY) ? link : container;
+
+      const res = creep.withdraw(target, RESOURCE_ENERGY);
       if (res === ERR_NOT_IN_RANGE) {
-        creep.travelTo(container);
+        creep.travelTo(target);
       } else if (res !== OK) {
         creep.say('...');
       }

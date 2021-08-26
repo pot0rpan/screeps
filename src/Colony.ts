@@ -61,7 +61,7 @@ export class Colony {
       this.hr.spawnCreeps(colonyCreeps);
     }
 
-    if (isNthTick(2)) {
+    if (isNthTick(4)) {
       this.hr.recycleCreeps();
       this.hr.renewCreeps();
     }
@@ -71,6 +71,11 @@ export class Colony {
 
     // Run towers
     this.runTowers();
+
+    // Run links
+    if (isNthTick(8)) {
+      this.runLinks();
+    }
 
     // Handle construction
     if (global.isFirstTick || isNthTick(config.ticks.PLAN_ROOMS)) {
@@ -200,5 +205,40 @@ export class Colony {
     console.log('Expanding to room', bestRoom.name);
 
     bestRoom.mem.colonize = true;
+  }
+
+  private runLinks(): void {
+    const room = Game.rooms[this.roomName];
+
+    // Transfer from completely full center links to upgrade links
+    let linksFrom: StructureLink[] = [];
+
+    for (const link of room.findCenterLinks()) {
+      if (!link.cooldown && link.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+        linksFrom.push(link);
+      }
+    }
+
+    if (!linksFrom) return;
+
+    // Transfer to links less than a third full
+    const linksTo = room
+      .findUpgradeLinks()
+      .filter(
+        link =>
+          link.store.getUsedCapacity(RESOURCE_ENERGY) <
+          link.store.getCapacity(RESOURCE_ENERGY) / 3
+      )
+      .sort(
+        (a, b) =>
+          a.store.getUsedCapacity(RESOURCE_ENERGY) -
+          b.store.getUsedCapacity(RESOURCE_ENERGY)
+      );
+
+    for (const from of linksFrom) {
+      const to = linksTo.shift();
+      if (!to) break;
+      from.transferEnergy(to);
+    }
   }
 }

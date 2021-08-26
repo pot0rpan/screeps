@@ -21,8 +21,12 @@ export class FillerCreep extends CreepBase {
   findTask(creep: Creep, taskManager: TaskManager): FillerTask | null {
     if (creep.memory.working) {
       // Fill extensions, spawn, towers
-      let target: StructureSpawn | StructureExtension | StructureTower | null =
-        null;
+      let target:
+        | StructureSpawn
+        | StructureExtension
+        | StructureTower
+        | StructureLink
+        | null = null;
       const type: FillerTask['type'] = 'transfer';
 
       if (creep.room.energyAvailable < creep.room.energyCapacityAvailable) {
@@ -62,6 +66,12 @@ export class FillerCreep extends CreepBase {
           )[0];
       }
 
+      if (!target) {
+        target = creep.room
+          .findCenterLinks()
+          .filter(link => link.store.getFreeCapacity(RESOURCE_ENERGY))[0];
+      }
+
       if (!target) return null;
 
       return taskManager.createTask<FillerTask>(
@@ -95,11 +105,15 @@ export class FillerCreep extends CreepBase {
   isValidTask(creep: Creep, task: FillerTask): boolean {
     const target = Game.getObjectById(
       task.target as Id<
-        StructureSpawn | StructureExtension | StructureTower | StructureStorage
+        | StructureSpawn
+        | StructureExtension
+        | StructureTower
+        | StructureStorage
+        | StructureLink
       >
     );
 
-    if (!target) return false;
+    if (!target || !target.isActive()) return false;
 
     if (task.type === 'withdraw') {
       if (
@@ -130,7 +144,11 @@ export class FillerCreep extends CreepBase {
 
     const target = Game.getObjectById(
       task.target as Id<
-        StructureSpawn | StructureExtension | StructureTower | StructureStorage
+        | StructureSpawn
+        | StructureExtension
+        | StructureTower
+        | StructureStorage
+        | StructureLink
       >
     );
 
@@ -148,7 +166,8 @@ export class FillerCreep extends CreepBase {
             | StructureSpawn
             | StructureContainer
             | StructureStorage
-            | StructureExtension,
+            | StructureExtension
+            | StructureLink,
           RESOURCE_ENERGY
         );
 
