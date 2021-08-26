@@ -18,7 +18,7 @@ declare global {
   }
 
   interface RoomMemory {
-    _ramparts: {
+    _ramparts?: {
       ts: number;
       ramparts: {
         id: string;
