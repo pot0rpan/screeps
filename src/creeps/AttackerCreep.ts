@@ -123,6 +123,38 @@ export class AttackerCreep extends CreepBase {
       return;
     }
 
+    // If in range of hostiles on a rampart, move away
+    const closeHostilesOnRamparts = creep.pos.findInRange(
+      FIND_HOSTILE_CREEPS,
+      3,
+      {
+        filter: crp => {
+          if (
+            crp.pos
+              .lookFor(LOOK_STRUCTURES)
+              .filter(
+                struct =>
+                  struct.structureType === STRUCTURE_RAMPART &&
+                  !isFriendlyOwner((struct as StructureRampart).owner.username)
+              ).length
+          ) {
+            if (
+              crp.getActiveBodyparts(RANGED_ATTACK) ||
+              (creep.pos.getRangeTo(crp) === 1 &&
+                crp.getActiveBodyparts(ATTACK))
+            ) {
+              return true;
+            }
+          }
+          return false;
+        },
+      }
+    );
+    if (closeHostilesOnRamparts.length) {
+      creep.moveAway(closeHostilesOnRamparts[0]);
+      moved = true;
+    }
+
     // Handle combat
     let target: Creep | AnyOwnedStructure | null = null;
 
