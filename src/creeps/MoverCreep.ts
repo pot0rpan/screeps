@@ -44,13 +44,14 @@ export class MoverCreep extends CreepBase {
           target = storage;
         }
 
-        // Controller container only if it's almost empty, means no link or link empty
+        // Controller container
         if (!target) {
           target = creep.room
             .findUpgradeContainers()
             .filter(
               container =>
-                container.store.getUsedCapacity(RESOURCE_ENERGY) < 400 &&
+                container.store.getFreeCapacity(RESOURCE_ENERGY) >
+                  creep.store.getUsedCapacity(RESOURCE_ENERGY) &&
                 !taskManager.isTaskTaken(creep.room.name, container.id, type)
             )[0];
         }
