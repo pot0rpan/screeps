@@ -96,7 +96,7 @@ export class AttackerCreep extends CreepBase {
 
     // If healer is spawning move to open rampart and wait
     if (healer.spawning) {
-      const ramp = creep.pos.findClosestWalkableRampart();
+      const ramp = creep.pos.findClosestWalkableRampart([creep.name]);
       if (ramp) creep.travelTo(ramp);
       return;
     }
