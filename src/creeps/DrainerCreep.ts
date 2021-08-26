@@ -12,7 +12,7 @@ export class DrainerCreep extends CreepBase {
   role: CreepRole = 'drainer';
   bodyOpts: BodySettings = {
     pattern: [MOVE, HEAL],
-    suffix: [ATTACK, MOVE],
+    suffix: [ATTACK, ATTACK, MOVE, MOVE],
     ordered: true,
   };
 
