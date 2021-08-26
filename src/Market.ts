@@ -48,6 +48,9 @@ export class Market {
     if (terminal.cooldown) return;
 
     for (const resourceType in cache) {
+      // Energy unloaded on controller or other colonies in need
+      if (resourceType === RESOURCE_ENERGY) continue;
+
       const amount = cache[resourceType];
       const excess =
         amount -
