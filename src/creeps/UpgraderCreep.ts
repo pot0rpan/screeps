@@ -11,7 +11,8 @@ export class UpgraderCreep extends CreepBase {
   role: CreepRole = 'upgrader';
   bodyOpts: BodySettings = {
     pattern: [WORK, WORK, CARRY],
-    sizeLimit: 5,
+    ordered: true,
+    sizeLimit: 6,
     suffix: [MOVE],
   };
 
