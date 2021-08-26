@@ -17,7 +17,7 @@ export default {
         return 30000000;
     }
   },
-  MAX_ENERGY_STORAGE: (rcl: number): number => {
+  MIN_ENERGY_STORAGE: (rcl: number): number => {
     switch (rcl) {
       case 0:
       case 1:

@@ -1,5 +1,6 @@
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
+import { maxToStoreOfResource } from 'utils/room';
 import { BodySettings, CreepBase } from './CreepBase';
 
 // task.target is withdraw target id, to target id is in data.to
@@ -111,12 +112,18 @@ export class AccountantCreep extends CreepBase {
               excessStorage <
               room.terminal.store.getFreeCapacity(resType as ResourceConstant)
           ) {
-            this._resourceToMoveCache.result = {
-              from: room.storage,
-              to: room.terminal,
-              type: resType as ResourceConstant,
-            };
-            break;
+            // Keep energy lower in terminal
+            if (
+              resType !== RESOURCE_ENERGY ||
+              excessTerminal < maxToStoreOfResource(room, RESOURCE_ENERGY, true)
+            ) {
+              this._resourceToMoveCache.result = {
+                from: room.storage,
+                to: room.terminal,
+                type: resType as ResourceConstant,
+              };
+              break;
+            }
           }
         }
       }

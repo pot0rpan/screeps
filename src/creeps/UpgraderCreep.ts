@@ -1,4 +1,5 @@
 import { TaskManager } from 'TaskManager';
+import { minToStoreOfResource } from 'utils/room';
 import { BodySettings, CreepBase } from './CreepBase';
 
 interface UpgraderTask extends CreepTask {
@@ -56,7 +57,8 @@ export class UpgraderCreep extends CreepBase {
     if (
       controller.ticksToDowngrade > CONTROLLER_DOWNGRADE[rcl] / 2 &&
       room.storage &&
-      room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 10000
+      room.storage.store.getUsedCapacity(RESOURCE_ENERGY) <
+        minToStoreOfResource(room, RESOURCE_ENERGY)
     ) {
       return Math.floor(targetNum / 2);
     } else {
