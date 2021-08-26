@@ -86,8 +86,12 @@ export class HealerCreep extends CreepBase {
     // or creep is in home room and attacker isn't close
     // move to open rampart and wait
     if (attacker.spawning) {
-      const ramp = creep.pos.findClosestWalkableRampart([creep.name]);
-      if (ramp) creep.travelTo(ramp);
+      if (
+        creep.room.name !== creep.memory.homeRoom ||
+        creep.pos.isNearEdge(3)
+      ) {
+        creep.travelToRoom(creep.memory.homeRoom);
+      }
       return;
     }
 
