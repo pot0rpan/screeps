@@ -12,7 +12,7 @@ export default {
       case 5:
         return 75000;
       case 6:
-        return 200000;
+        return 300000;
       default:
         return 30000000;
     }
@@ -53,6 +53,8 @@ export default {
   },
   USERNAME: 'poot',
   FRIENDLY_NAMES: ['iiF', 'Xephael'],
+  // USERNAME: 'iiF',
+  // FRIENDLY_NAMES: ['poot', 'Xephael'],
   MAX_CONSTRUCTION_SITES: 5,
   MAX_TOWER_REFILL: 600,
   ticks: {
