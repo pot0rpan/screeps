@@ -91,11 +91,16 @@ export class Stats {
 
   run(empire: Empire): void {
     if (!this.show) return;
-    if (Game.cpu.bucket < 100) return;
 
     for (const roomName in empire.colonies) {
       const room = Game.rooms[roomName];
       if (!room) continue;
+      if (Game.cpu.bucket < 100) {
+        printText(roomName, 'Low bucket, skipping stats visuals', 0, 0.5, {
+          color: 'yellow',
+        });
+        continue;
+      }
 
       const creepStats = this.getCreepStats(empire.colonies[roomName]);
       const spawnStats = this.getSpawningStats(room);
