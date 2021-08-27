@@ -4,7 +4,7 @@ import { isNthTick } from 'utils';
 
 declare global {
   interface RoomMemory {
-    defcon?: boolean;
+    defcon?: number;
   }
 }
 
@@ -33,6 +33,8 @@ export class ColonyDefense {
   private roomName: string;
   private safeModeTimer: number | null = null;
 
+  private REMOVE_DEFCON_DELAY = 10;
+
   constructor(colony: Colony) {
     this.colony = colony;
     this.roomName = colony.roomName;
@@ -56,9 +58,12 @@ export class ColonyDefense {
     }
 
     if (mainRoom.findHostiles().length) {
-      mainRoom.memory.defcon = true;
-    } else {
-      mainRoom.memory.defcon = false;
+      mainRoom.memory.defcon = Game.time;
+    } else if (
+      mainRoom.memory.defcon &&
+      Game.time - mainRoom.memory.defcon > this.REMOVE_DEFCON_DELAY
+    ) {
+      delete mainRoom.memory.defcon;
     }
 
     if (mainRoom.memory.defcon) {
