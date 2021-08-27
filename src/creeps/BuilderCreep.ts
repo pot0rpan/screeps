@@ -78,12 +78,31 @@ export class BuilderCreep extends CreepBase {
         // Target roads at lower hits
         target = creep.room
           .find(FIND_STRUCTURES, {
-            filter: struct =>
-              isDamaged(struct) &&
-              (struct.structureType !== STRUCTURE_ROAD ||
-                (!creep.room.memory.defcon &&
-                  struct.hits < struct.hitsMax / 2)) &&
-              !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
+            filter: struct => {
+              if (!isDamaged(struct)) return false;
+
+              if (
+                creep.room.memory.defcon &&
+                struct.structureType !== STRUCTURE_RAMPART
+              ) {
+                return false;
+              }
+
+              if (
+                struct.structureType === STRUCTURE_ROAD &&
+                (creep.room.memory.defcon || struct.hits > struct.hitsMax / 2)
+              ) {
+                return false;
+              }
+
+              if (
+                taskManager.isTaskTaken(struct.pos.roomName, struct.id, type)
+              ) {
+                return false;
+              }
+
+              return true;
+            },
           })
           .sort((a, b) => a.hits - b.hits)[0];
       }
