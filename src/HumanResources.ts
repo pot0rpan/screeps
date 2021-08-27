@@ -1,3 +1,5 @@
+import config from 'config';
+
 declare global {
   interface CreepMemory {
     birth: number;
@@ -8,6 +10,7 @@ interface CreepNums {
   [role: string]: {
     target: number;
     actual: number;
+    spawning: number;
   };
 }
 
@@ -15,9 +18,74 @@ export class HumanResources {
   roomName: string;
   adjacentRoomNames: string[];
 
+  private _creepNums: CreepNums | null = null;
+  private _creepNumsCacheTimestamp: number = 0;
+
   constructor(room: string, adjacentRoomNames: string[]) {
     this.roomName = room;
     this.adjacentRoomNames = adjacentRoomNames;
+  }
+
+  // Cached for until spawning again
+  // Stats visuals get cached nums the other ticks
+  public getCreepNums(colonyCreeps: Creep[], fresh = false): CreepNums {
+    if (
+      fresh ||
+      !this._creepNums ||
+      !this._creepNumsCacheTimestamp ||
+      Game.time - this._creepNumsCacheTimestamp >= config.ticks.SPAWN_CREEPS
+    ) {
+      const room = Game.rooms[this.roomName];
+      // Listed in order of priority
+      const creepNums: CreepNums = {};
+      const roleOrder = [
+        'pioneer',
+        'ranged_defender',
+        'defender',
+        'filler',
+        'attacker',
+        'healer',
+        'exterminator',
+        'drainer',
+        'harvester',
+        'mover',
+        'builder',
+        'upgrader',
+        'assassin',
+        'reserver',
+        'prospector',
+        'miner',
+        'hauler',
+        'accountant',
+        'scout',
+      ];
+
+      for (const role of roleOrder) {
+        const start = Game.cpu.getUsed();
+        creepNums[role] = {
+          target: global.Creeps[role].targetNum(room),
+          actual: 0,
+          spawning: 0,
+        };
+        console.log(`${role} targetNum() CPU: ${Game.cpu.getUsed() - start}`);
+      }
+
+      for (const creep of colonyCreeps) {
+        // If creep is not dying, add 1 to role count
+        if (!creep.isDying() && creepNums[creep.memory.role]) {
+          if (creep.spawning) {
+            creepNums[creep.memory.role].spawning++;
+          } else {
+            creepNums[creep.memory.role].actual++;
+          }
+        }
+      }
+
+      this._creepNums = creepNums;
+      this._creepNumsCacheTimestamp = Game.time;
+    }
+
+    return this._creepNums;
   }
 
   public renewCreeps() {
@@ -87,48 +155,12 @@ export class HumanResources {
       return;
     }
 
-    // Listed in order of priority
-    const creepNums: CreepNums = {};
-    const roleOrder = [
-      'pioneer',
-      'ranged_defender',
-      'defender',
-      'filler',
-      'attacker',
-      'healer',
-      'exterminator',
-      'drainer',
-      'harvester',
-      'mover',
-      'builder',
-      'upgrader',
-      'assassin',
-      'reserver',
-      'prospector',
-      'miner',
-      'hauler',
-      'accountant',
-      'scout',
-    ];
-
-    for (const role of roleOrder) {
-      creepNums[role] = {
-        target: global.Creeps[role].targetNum(room),
-        actual: 0,
-      };
-    }
-
-    for (const creep of colonyCreeps) {
-      // If creep is not dying, add 1 to role count
-      if (!creep.isDying() && creepNums[creep.memory.role]) {
-        creepNums[creep.memory.role].actual++;
-      }
-    }
+    const creepNums = this.getCreepNums(colonyCreeps, true);
 
     for (const role in creepNums) {
       const nums = creepNums[role];
 
-      if (nums.actual < nums.target) {
+      if (nums.actual + nums.spawning < nums.target) {
         const creepClass = global.Creeps[role];
         const emergency =
           creepNums.mover.actual === 0 && creepNums.pioneer.actual === 0;

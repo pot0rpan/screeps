@@ -155,29 +155,7 @@ export class Stats {
   }
 
   getCreepStats(colony: Colony): CreepStats {
-    const mainRoom = Game.rooms[colony.roomName];
-    const creeps = colony.getColonyCreeps();
-    const nums: CreepStats = {};
-
-    // Populate target num
-    for (const [role, Creep] of Object.entries(global.Creeps)) {
-      nums[role] = {
-        target: Creep.targetNum(mainRoom),
-        actual: 0,
-        spawning: 0,
-      };
-    }
-
-    // Populate actual num
-    for (const creep of creeps) {
-      if (creep.spawning) {
-        nums[creep.memory.role].spawning++;
-      } else {
-        nums[creep.memory.role].actual++;
-      }
-    }
-
-    return nums;
+    return colony.hr.getCreepNums(colony.getColonyCreeps());
   }
 
   getSpawningStats(room: Room): SpawnStats[] {

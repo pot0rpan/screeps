@@ -24,6 +24,9 @@ export class Colony {
   readonly taskManager: TaskManager;
   readonly colonyDefense: ColonyDefense;
 
+  private _colonyCreeps: Creep[] | null = null;
+  private _colonyCreepsTimestamp = 0;
+
   constructor(roomName: string) {
     console.log('Colony constructor()', roomName);
     this.roomName = roomName;
@@ -37,12 +40,20 @@ export class Colony {
   }
 
   getColonyCreeps(): Creep[] {
-    return _.filter(
-      Game.creeps,
-      creep =>
-        creep.pos.roomName === this.roomName ||
-        this.adjacentRoomNames.includes(creep.pos.roomName)
-    );
+    if (
+      !this._colonyCreeps ||
+      !this._colonyCreepsTimestamp ||
+      Game.time !== this._colonyCreepsTimestamp
+    ) {
+      this._colonyCreeps = _.filter(
+        Game.creeps,
+        creep =>
+          creep.pos.roomName === this.roomName ||
+          this.adjacentRoomNames.includes(creep.pos.roomName)
+      );
+      this._colonyCreepsTimestamp = Game.time;
+    }
+    return this._colonyCreeps;
   }
 
   run() {
