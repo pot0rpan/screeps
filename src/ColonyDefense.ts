@@ -137,6 +137,7 @@ export class ColonyDefense {
       .sort((a, b) => a.hits - b.hits)[0];
 
     if (
+      mostInjuredHostile &&
       getMaxHeal(hostiles) < getMaxTowerDamage(towers, mostInjuredHostile.pos)
     ) {
       for (const tower of towers) {
