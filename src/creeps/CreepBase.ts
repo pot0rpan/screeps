@@ -47,6 +47,7 @@ declare global {
     | 'mover'
     | 'filler'
     | 'upgrader'
+    | 'ranged_defender'
     | 'defender'
     | 'scout'
     | 'reserver'

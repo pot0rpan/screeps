@@ -91,6 +91,7 @@ export class HumanResources {
     const creepNums: CreepNums = {};
     const roleOrder = [
       'pioneer',
+      'ranged_defender',
       'defender',
       'filler',
       'attacker',

@@ -6,7 +6,6 @@ interface DefenderTask extends CreepTask {
   type: 'attack';
 }
 
-// Defenders can't spawn until RCL 3 due to body size
 export class DefenderCreep extends CreepBase {
   role: CreepRole = 'defender';
   bodyOpts: BodySettings = {
@@ -15,7 +14,11 @@ export class DefenderCreep extends CreepBase {
   };
 
   targetNum(room: Room): number {
-    return room.memory.defcon ? 3 : 0;
+    if (!room.memory.defcon) return 0;
+
+    return room
+      .findDangerousHostiles()
+      .filter(hostile => hostile.getActiveBodyparts(ATTACK)).length;
   }
 
   findTask(creep: Creep, taskManager: TaskManager): DefenderTask | null {
@@ -50,8 +53,8 @@ export class DefenderCreep extends CreepBase {
       creep.name,
     ]);
 
-    // Travel to closest rampart no matter what
-    if (closestRampart) {
+    // Travel to closest rampart
+    if (closestRampart && !closestRampart.pos.isEqualTo(creep.pos)) {
       creep.travelTo(closestRampart);
     }
 
