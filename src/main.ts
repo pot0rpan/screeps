@@ -50,9 +50,9 @@ declare global {
 
 global.Creeps = {
   pioneer: new PioneerCreep(),
+  filler: new FillerCreep(),
   ranged_defender: new RangedDefenderCreep(),
   defender: new DefenderCreep(),
-  filler: new FillerCreep(),
   attacker: new AttackerCreep(),
   healer: new HealerCreep(),
   exterminator: new ExterminatorCreep(),
