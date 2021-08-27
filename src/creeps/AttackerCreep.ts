@@ -1,6 +1,7 @@
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { isFriendlyOwner } from 'utils';
+import { getMaxHeal, getMaxTowerDamage } from 'utils/combat';
 import { getFatiguedInSquad } from 'utils/creep';
 import { BodySettings, CreepBase } from './CreepBase';
 import { HealerTask } from './HealerCreep';
@@ -116,10 +117,26 @@ export class AttackerCreep extends CreepBase {
       moved = true;
     }
 
-    if (!moved && creep.room.name !== task.room) {
+    if (
+      !moved &&
+      creep.room.name !== task.room &&
+      creep.hits === creep.hitsMax
+    ) {
       // Travel to flag room
       creep.travelToRoom(task.room);
       creep.say(task.room);
+      return;
+    }
+
+    // Retreat if healer can't keep up
+    if (
+      creep.hits < creep.hitsMax * 0.8 ||
+      (!creep.pos.isNearEdge(3) &&
+        getMaxTowerDamage(creep.room.findTowers(), creep.pos) >
+          getMaxHeal([creep, healer]))
+    ) {
+      creep.travelToRoom(creep.memory.homeRoom);
+      creep.say('nope');
       return;
     }
 
