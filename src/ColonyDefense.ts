@@ -8,6 +8,26 @@ declare global {
   }
 }
 
+// Worry about boosts later
+function getMaxHeal(creeps: Creep[]): number {
+  return (
+    creeps.reduce((heal, creep) => heal + creep.getActiveBodyparts(HEAL), 0) *
+    HEAL_POWER
+  );
+}
+
+function getMaxTowerDamage(towers: StructureTower[], pos: RoomPosition) {
+  return towers
+    .filter(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) > 10)
+    .reduce((dmg, tower) => {
+      const range = pos.getRangeTo(tower);
+      if (range <= 5) return dmg + 600;
+      if (range >= 20) return dmg + 150;
+      // TODO: Calculate actual damage
+      return dmg + 300;
+    }, 0);
+}
+
 export class ColonyDefense {
   private colony: Colony;
   private roomName: string;
@@ -96,21 +116,42 @@ export class ColonyDefense {
   private runTowers() {
     const mainRoom = Game.rooms[this.roomName];
 
-    // Only attack if hostiles are <20 away from center
     const towers = mainRoom
       .findTowers()
       .filter(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY) >= 10);
+
+    if (!towers.length) return;
+
+    const hostiles = mainRoom.findHostiles();
+
+    if (!hostiles.length) return;
+
     const baseCenter =
       this.colony.roomPlanner.baseCenter ||
       new RoomPosition(25, 25, this.roomName);
 
-    const mostInjuredHostile = mainRoom
-      .findHostiles()
-      .filter(creep => creep.pos.getRangeTo(baseCenter) < 20)
+    // Only attack if hostile if they're close enough
+    // baseCenter is used as a rough average for all tower locations
+    const mostInjuredHostile = hostiles
+      .filter(creep => creep.pos.getRangeTo(baseCenter) <= 20)
       .sort((a, b) => a.hits - b.hits)[0];
 
-    for (const tower of towers) {
-      tower.attack(mostInjuredHostile);
+    if (
+      getMaxHeal(hostiles) < getMaxTowerDamage(towers, mostInjuredHostile.pos)
+    ) {
+      for (const tower of towers) {
+        tower.attack(mostInjuredHostile);
+      }
+    } else {
+      // Heal friendlies
+      const injuredFriendly = mainRoom
+        .find(FIND_MY_CREEPS, { filter: crp => crp.hits < crp.hitsMax })
+        .sort((a, b) => a.hits - b.hits)[0];
+      if (injuredFriendly) {
+        for (const tower of towers) {
+          tower.heal(injuredFriendly);
+        }
+      }
     }
   }
 }
