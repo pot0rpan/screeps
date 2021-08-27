@@ -81,7 +81,8 @@ export class BuilderCreep extends CreepBase {
             filter: struct =>
               isDamaged(struct) &&
               (struct.structureType !== STRUCTURE_ROAD ||
-                struct.hits < struct.hitsMax / 2) &&
+                (!creep.room.memory.defcon &&
+                  struct.hits < struct.hitsMax / 2)) &&
               !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
           })
           .sort((a, b) => a.hits - b.hits)[0];
