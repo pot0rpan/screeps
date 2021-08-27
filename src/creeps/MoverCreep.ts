@@ -10,16 +10,19 @@ export class MoverCreep extends CreepBase {
   role: CreepRole = 'mover';
   bodyOpts: BodySettings = {
     pattern: [CARRY, CARRY, MOVE],
-    sizeLimit: 4,
+    sizeLimit: 5,
   };
 
   // Number of source containers + 1
-  // Max of 3
+  // Max of 3 or 2 at higher rcl
   targetNum(room: Room): number {
     const numSourceContainers = room.findSourceContainers().length;
 
     if (numSourceContainers) {
-      return Math.min(numSourceContainers + 1, 3);
+      return Math.min(
+        numSourceContainers + 1,
+        (room.controller?.level ?? 0) > 5 ? 2 : 3
+      );
     }
 
     return 0;
