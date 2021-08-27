@@ -41,6 +41,7 @@ export class HumanResources {
       const roleOrder = [
         'pioneer',
         'filler',
+        'builder',
         'ranged_defender',
         'defender',
         'attacker',
@@ -49,7 +50,6 @@ export class HumanResources {
         'drainer',
         'harvester',
         'mover',
-        'builder',
         'upgrader',
         'assassin',
         'reserver',

@@ -51,6 +51,7 @@ declare global {
 global.Creeps = {
   pioneer: new PioneerCreep(),
   filler: new FillerCreep(),
+  builder: new BuilderCreep(),
   ranged_defender: new RangedDefenderCreep(),
   defender: new DefenderCreep(),
   attacker: new AttackerCreep(),
@@ -59,7 +60,6 @@ global.Creeps = {
   drainer: new DrainerCreep(),
   harvester: new HarvesterCreep(),
   mover: new MoverCreep(),
-  builder: new BuilderCreep(),
   upgrader: new UpgraderCreep(),
   assassin: new AssassinCreep(),
   reserver: new ReserverCreep(),
