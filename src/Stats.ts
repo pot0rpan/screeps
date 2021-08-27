@@ -89,6 +89,23 @@ export class Stats {
     this._profile = bool;
   }
 
+  public profileLog(description: any, startCpu: number) {
+    if (this.profile) {
+      const cpuUsed = Game.cpu.getUsed() - startCpu;
+      console.log(
+        `<span style="color: #4488ff">${description} CPU: <span style="color: ${
+          cpuUsed >= 0.5
+            ? 'red'
+            : cpuUsed >= 0.3
+            ? 'yellow'
+            : cpuUsed < 0.2
+            ? 'green'
+            : 'white'
+        }">${cpuUsed.toFixed(3)}</span></span>`
+      );
+    }
+  }
+
   run(empire: Empire): void {
     if (!this.show) return;
 

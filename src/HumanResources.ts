@@ -67,7 +67,7 @@ export class HumanResources {
           actual: 0,
           spawning: 0,
         };
-        console.log(`${role} targetNum() CPU: ${Game.cpu.getUsed() - start}`);
+        global.stats.profileLog(`${role} targetNum()`, start);
       }
 
       for (const creep of colonyCreeps) {
@@ -208,6 +208,7 @@ export class HumanResources {
   }
 
   public runCreeps(colonyCreeps: Creep[]) {
+    let total = Game.cpu.getUsed();
     let start = 0;
 
     for (const creep of colonyCreeps) {
@@ -221,21 +222,9 @@ export class HumanResources {
       }
 
       global.Creeps[creep.memory.role].run(creep);
-
-      if (global.stats.profile) {
-        const cpuUsed = Game.cpu.getUsed() - start;
-        console.log(
-          `<span style="color: #4488ff">${creep} CPU: <span style="color: ${
-            cpuUsed >= 0.5
-              ? 'red'
-              : cpuUsed >= 0.3
-              ? 'yellow'
-              : cpuUsed < 0.2
-              ? 'green'
-              : 'white'
-          }">${cpuUsed.toFixed(3)}</span></span>`
-        );
-      }
+      global.stats.profileLog(creep, start);
     }
+
+    global.stats.profileLog(this.roomName + ' runCreeps()', total);
   }
 }

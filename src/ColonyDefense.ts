@@ -51,11 +51,7 @@ export class ColonyDefense {
       this.defendMainRoom();
     }
 
-    console.log(
-      this.colony.roomName,
-      'ColonyDefense CPU:',
-      Game.cpu.getUsed() - start
-    );
+    global.stats.profileLog(this.colony.roomName + ' ColonyDefense', start);
   }
 
   private defendMainRoom(): void {

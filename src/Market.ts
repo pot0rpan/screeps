@@ -37,7 +37,7 @@ export class Market {
       this.handleSellingExcessResources(roomName);
     }
 
-    console.log('Market CPU:', Game.cpu.getUsed() - start);
+    global.stats.profileLog('Empire Market', start);
   }
 
   private handleSellingExcessResources(roomName: string): void {
