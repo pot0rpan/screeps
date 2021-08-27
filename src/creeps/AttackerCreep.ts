@@ -14,7 +14,7 @@ export interface AttackerTask extends CreepTask {
 export class AttackerCreep extends CreepBase {
   role: CreepRole = 'attacker';
   bodyOpts: BodySettings = {
-    pattern: [MOVE, ATTACK, ATTACK],
+    pattern: [ATTACK, MOVE, ATTACK],
     ordered: true,
     suffix: [MOVE],
   };
@@ -129,12 +129,7 @@ export class AttackerCreep extends CreepBase {
     }
 
     // Retreat if healer can't keep up
-    if (
-      creep.hits < creep.hitsMax * 0.8 ||
-      (!creep.pos.isNearEdge(3) &&
-        getMaxTowerDamage(creep.room.findTowers(), creep.pos) >
-          getMaxHeal([creep, healer]))
-    ) {
+    if (creep.hits < creep.hitsMax * 0.8) {
       creep.travelToRoom(creep.memory.homeRoom);
       creep.say('nope');
       return;
