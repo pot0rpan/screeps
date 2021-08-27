@@ -175,7 +175,7 @@ export class TaskManager {
         // Assign a new task and add it to cache
         const start = Game.cpu.getUsed();
         const newTask = creepClass.findTask(creep, this);
-        global.stats.profileLog(`${creep.memory.role} findTask()`, start);
+        global.stats.profileLog(`${creep} findTask()`, start);
 
         if (newTask) {
           this.assignTask(creep, newTask);
