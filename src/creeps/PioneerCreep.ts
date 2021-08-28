@@ -25,7 +25,9 @@ export class PioneerCreep extends CreepBase {
     if (
       !room.find(FIND_MY_CREEPS, {
         filter: creep =>
-          creep.memory.role === 'upgrader' || creep.memory.role === 'mover',
+          creep.memory.role === 'upgrader' ||
+          creep.memory.role === 'mover' ||
+          creep.memory.role === 'filler',
       }).length
     ) {
       return 2;
