@@ -55,8 +55,8 @@ export class RoomPlanner {
     const room = Game.rooms[this.roomName];
     this.rcl = room.controller?.level ?? 0;
 
-    // Nothing to build at level 1
-    // if (this.rcl < 2) return;
+    // Nothing to build until lvl 3
+    if (this.rcl < 2) return;
 
     // Don't construct when under attack
     if (Memory.rooms[this.roomName].defcon) return;
@@ -371,6 +371,7 @@ export class RoomPlanner {
         this.visualizePlans(plans);
       }
 
+      if (planType === STRUCTURE_CONTAINER && rcl < 3) continue;
       if (planType === STRUCTURE_ROAD && rcl < 3) continue;
       if (planType === STRUCTURE_STORAGE && rcl < 4) continue;
       if (planType === STRUCTURE_RAMPART && rcl < 5) continue; // Can be build earlier, but shouldn't need them
@@ -436,11 +437,17 @@ export class RoomPlanner {
         case STRUCTURE_EXTENSION:
           fill = 'yellow';
           break;
+        case STRUCTURE_SPAWN:
+          fill = 'cyan';
+          break;
         case STRUCTURE_RAMPART:
           fill = 'green';
           break;
         case STRUCTURE_TERMINAL:
           fill = 'blue';
+          break;
+        case STRUCTURE_LAB:
+          fill = 'black';
           break;
       }
 
