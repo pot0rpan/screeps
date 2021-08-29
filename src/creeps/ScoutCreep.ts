@@ -100,6 +100,8 @@ export class ScoutCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
+    creep.notifyWhenAttacked(false);
+
     if (!creep.memory.task) {
       creep.suicide();
       return;
