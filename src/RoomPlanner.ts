@@ -55,7 +55,7 @@ export class RoomPlanner {
     const room = Game.rooms[this.roomName];
     this.rcl = room.controller?.level ?? 0;
 
-    // Nothing to build until lvl 3
+    // Nothing to build at lvl 1
     if (this.rcl < 2) return;
 
     // Don't construct when under attack
