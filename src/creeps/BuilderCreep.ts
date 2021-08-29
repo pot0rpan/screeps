@@ -12,6 +12,7 @@ export class BuilderCreep extends CreepBase {
   role: CreepRole = 'builder';
   bodyOpts: BodySettings = {
     pattern: [WORK, CARRY, MOVE],
+    suffix: [MOVE],
     sizeLimit: 8,
   };
 
