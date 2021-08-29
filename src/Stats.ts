@@ -92,6 +92,7 @@ export class Stats {
   public profileLog(description: any, startCpu: number) {
     if (this.profile) {
       const cpuUsed = Game.cpu.getUsed() - startCpu;
+      if (cpuUsed <= 0) return; // Sim room
       console.log(
         `<span style="color: #4488ff">${description} CPU: <span style="color: ${
           cpuUsed >= 0.5
