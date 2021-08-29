@@ -19,7 +19,7 @@ export class PioneerCreep extends CreepBase {
   targetNum(room: Room): number {
     const controller = room.controller;
     if (!controller) return 0;
-    if (controller.level === 1) return 4;
+    if (controller.level <= 2) return 4;
 
     // If no upgraders or movers, spawn 2
     if (
@@ -116,11 +116,20 @@ export class PioneerCreep extends CreepBase {
 
       // Find nearest source
       const nearestSource = creep.pos.findClosestSource(creep);
-      if (!nearestSource) return null;
+      if (
+        !nearestSource ||
+        taskManager.isTaskTaken(
+          nearestSource.pos.roomName,
+          nearestSource.id,
+          'harvest'
+        )
+      )
+        return null;
       return taskManager.createTask(
         nearestSource.pos.roomName,
         nearestSource.id,
-        'harvest'
+        'harvest',
+        nearestSource.pos.getAdjacentPositions(1, true).length
       );
     }
   }

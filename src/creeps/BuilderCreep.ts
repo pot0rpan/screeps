@@ -150,11 +150,19 @@ export class BuilderCreep extends CreepBase {
       // Default to harvesting from source
       const nearestSource = creep.pos.findClosestSource(creep);
 
-      if (nearestSource) {
-        return taskManager.createTask(
+      if (
+        nearestSource &&
+        !taskManager.isTaskTaken(
           nearestSource.pos.roomName,
           nearestSource.id,
           'harvest'
+        )
+      ) {
+        return taskManager.createTask(
+          nearestSource.pos.roomName,
+          nearestSource.id,
+          'harvest',
+          nearestSource.pos.getAdjacentPositions(1, true).length
         );
       }
 
@@ -258,8 +266,7 @@ export class BuilderCreep extends CreepBase {
         creep.travelTo(ramp);
       } else if (res === ERR_NOT_IN_RANGE) {
         creep.travelTo(target, {
-          range:
-            task.type === 'build' || task.type === 'repair' ? 3 : undefined,
+          range: task.type === 'build' || task.type === 'repair' ? 3 : 1,
         });
       }
     } else if (res === ERR_NOT_IN_RANGE) {

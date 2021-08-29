@@ -34,10 +34,10 @@ export class MoverCreep extends CreepBase {
         creep.room.storage &&
         _.filter(
           global.empire.colonies[creep.memory.homeRoom].getColonyCreeps(),
-          crp => crp.memory.role === 'filler'
-        ).length
+          crp => crp.memory.role === 'filler' || crp.memory.role === 'operator'
+        ).length === 2
       ) {
-        // Only fill controller container and storage, filler does the rest
+        // Only fill controller container and storage, operator/filler do the rest
         let target: StructureStorage | StructureContainer | null = null;
         const type: MoverTask['type'] = 'transfer';
 
