@@ -414,7 +414,6 @@ export class RoomPlanner {
 
   private visualizePlans(plans: BuildingPlan[]): void {
     const room = Game.rooms[this.roomName];
-    console.log(JSON.stringify(plans));
 
     for (const i in plans) {
       const plan = plans[i];
