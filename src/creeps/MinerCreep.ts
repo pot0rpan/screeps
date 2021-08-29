@@ -21,6 +21,7 @@ export class MinerCreep extends CreepBase {
   // Number of sources in colonized adjacent rooms
   targetNum(room: Room): number {
     if (!room.storage) return 0;
+    if (room.memory.defcon) return 0;
 
     const rcl = room.controller?.level ?? 0;
 
