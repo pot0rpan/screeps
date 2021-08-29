@@ -19,7 +19,18 @@ export class PioneerCreep extends CreepBase {
   targetNum(room: Room): number {
     const controller = room.controller;
     if (!controller) return 0;
-    if (controller.level <= 2) return 4;
+    if (controller.level <= 2) {
+      return Math.min(
+        6,
+        room
+          .findSources()
+          .reduce(
+            (spaces, source) =>
+              spaces + source.pos.getAdjacentPositions(1, true).length,
+            0
+          )
+      );
+    }
 
     // If no upgraders or movers, spawn 2
     if (
