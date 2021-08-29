@@ -89,7 +89,7 @@ const road_perimeter: BunkerPlan[] = [
 const lab: BunkerPlan[] = [
   { dx: 1, dy: -3 },
   { dx: 2, dy: -3 },
-  { dx: 2, dy: -3 },
+  { dx: 2, dy: -2 },
 
   { dx: 2, dy: -4 },
   { dx: 3, dy: -4 },
@@ -164,7 +164,7 @@ const extension: BunkerPlan[] = [
 ];
 
 const spawn: BunkerPlan[] = [
-  { dx: 2, dy: -1 },
+  { dx: 1, dy: -1 },
   { dx: 4, dy: -1 },
   { dx: 0, dy: -4 },
 ];
