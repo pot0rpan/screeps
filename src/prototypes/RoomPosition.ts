@@ -148,8 +148,9 @@ export default (() => {
           this.roomName
         );
 
-        // Allow roads if bunker perimeter, otherwise block roads
-        if (struct.pos.getRangeTo(centerPos) === 5) {
+        // Allow roads if bunker perimeter or farther
+        // otherwise block roads in base center
+        if (struct.pos.getRangeTo(centerPos) > 3) {
           if (
             structuresAtPos.filter(s => s.structureType !== STRUCTURE_ROAD)
               .length > 1
