@@ -176,22 +176,21 @@ const rampart: BunkerPlan[] = road_perimeter.concat(
   spawn,
   extension,
   lab,
-  road_windmill.filter(plan => Math.abs(plan.dx) < 6 && Math.abs(plan.dy) < 6),
-  [{ dx: 0, dy: 0 }] // Bunker center
+  road_windmill.filter(plan => Math.abs(plan.dx) < 6 && Math.abs(plan.dy) < 6)
 );
 
 // Based off bunker center, NOT first spawn
 const bunkerPlans: { [key in BuildableStructureConstant]?: BunkerPlan[] } = {
+  [STRUCTURE_SPAWN]: spawn,
+  [STRUCTURE_EXTENSION]: extension,
   [STRUCTURE_STORAGE]: storage,
   [STRUCTURE_TERMINAL]: terminal,
   [STRUCTURE_LINK]: link,
   [STRUCTURE_NUKER]: nuker,
   [STRUCTURE_OBSERVER]: observer,
-  [STRUCTURE_TOWER]: tower,
   [STRUCTURE_ROAD]: road_windmill.concat(road_perimeter),
+  [STRUCTURE_TOWER]: tower,
   [STRUCTURE_LAB]: lab,
-  [STRUCTURE_EXTENSION]: extension,
-  [STRUCTURE_SPAWN]: spawn,
   [STRUCTURE_RAMPART]: rampart,
 };
 

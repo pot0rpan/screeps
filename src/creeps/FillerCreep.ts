@@ -1,6 +1,7 @@
 import { isNthTick } from 'utils';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
+import { recycle } from 'actions/recycle';
 
 interface FillerTask extends CreepTask {
   type: 'withdraw' | 'transfer';
@@ -11,6 +12,14 @@ function shouldIgnore(target: _HasRoomPosition): boolean {
     global.empire.colonies[target.pos.roomName].roomPlanner.baseCenter;
 
   if (!baseCenter) return false;
+
+  if (
+    !Game.rooms[target.pos.roomName].find(FIND_MY_CREEPS, {
+      filter: creep => creep.memory.role === 'operator',
+    }).length
+  ) {
+    return false;
+  }
 
   return target.pos.getRangeTo(baseCenter) <= 1;
 }
@@ -133,9 +142,7 @@ export class FillerCreep extends CreepBase {
 
   run(creep: Creep): void {
     if (!creep.memory.task) {
-      creep.say('...');
-      const ramp = creep.pos.findClosestWalkableRampart([creep.name]);
-      if (ramp) creep.travelTo(ramp);
+      recycle(creep, 1000);
       return;
     }
 

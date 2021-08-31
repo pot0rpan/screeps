@@ -17,8 +17,13 @@ export class Empire {
     // Read colony room names from Memory
     if (Array.isArray(Memory.colonies)) delete Memory.colonies;
 
-    if (Memory.colonies && Object.keys(Memory.colonies).length) {
-      for (const roomName in Memory.colonies) {
+    // Filter out rooms with no visibility, either old or lost
+    const colonyNames = Object.keys(Memory.colonies ?? {}).filter(
+      roomName => !!Game.rooms[roomName]
+    );
+
+    if (colonyNames.length) {
+      for (const roomName of colonyNames) {
         this.colonies[roomName] = new Colony(roomName);
       }
     } else {

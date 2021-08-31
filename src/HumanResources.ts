@@ -56,7 +56,8 @@ export class HumanResources {
         'prospector',
         'miner',
         'hauler',
-        'accountant',
+        // 'accountant',
+        'operator',
         'scout',
       ];
 
@@ -88,30 +89,31 @@ export class HumanResources {
     return this._creepNums;
   }
 
-  public renewCreeps() {
-    const spawns = Game.rooms[this.roomName]
-      .findSpawns()
-      .filter(spawn => !spawn.spawning);
+  //? This can mess with some roles and uses too much CPU
+  // public renewCreeps() {
+  //   const spawns = Game.rooms[this.roomName]
+  //     .findSpawns()
+  //     .filter(spawn => !spawn.spawning);
 
-    for (const spawn of spawns) {
-      // Find creeps near spawn that have tasks to do
-      const creepToRenew = spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
-        filter: creep =>
-          creep.memory.task &&
-          creep.memory.recycle === undefined &&
-          (creep.ticksToLive ?? Infinity) < 1000,
-      })[0];
+  //   for (const spawn of spawns) {
+  //     // Find creeps near spawn that have tasks to do
+  //     const creepToRenew = spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
+  //       filter: creep =>
+  //         (creep.memory.role === 'operator' ||
+  //           (creep.memory.task && creep.memory.recycle === undefined)) &&
+  //         (creep.ticksToLive ?? Infinity) < 1000,
+  //     })[0];
 
-      if (creepToRenew) {
-        console.log(
-          `Renewing creep ${creepToRenew}, been alive for ${
-            Game.time - creepToRenew.memory.birth
-          } ticks`
-        );
-        spawn.renewCreep(creepToRenew);
-      }
-    }
-  }
+  //     if (creepToRenew) {
+  //       console.log(
+  //         `Renewing creep ${creepToRenew}, been alive for ${
+  //           Game.time - creepToRenew.memory.birth
+  //         } ticks`
+  //       );
+  //       spawn.renewCreep(creepToRenew);
+  //     }
+  //   }
+  // }
 
   public recycleCreeps() {
     const spawns = Game.rooms[this.roomName].findSpawns();
@@ -127,6 +129,35 @@ export class HumanResources {
         spawn.recycleCreep(creepToRecycle);
       }
     }
+  }
+
+  private getSpawnDirections(
+    role: CreepRole,
+    spawn: StructureSpawn
+  ): DirectionConstant[] {
+    // Default directions for outer 2 spawns
+    let directions: DirectionConstant[] = [RIGHT, BOTTOM, BOTTOM_LEFT];
+
+    // Only spawn in directions that work with bunker layout
+    // if spawn is center spawn, only spawn to center if Operator
+    const baseCenter = new RoomPosition(
+      spawn.room.memory.baseCenter?.x ?? 25,
+      spawn.room.memory.baseCenter?.y ?? 25,
+      spawn.room.name
+    );
+
+    // If center spawn
+    // and if role is operator, only spawn to baseCenter
+    // otherwise AVOID spawning to baseCenter
+    if (spawn.pos.getRangeTo(baseCenter) === 1) {
+      if (role === 'operator') {
+        directions = [BOTTOM_LEFT];
+      } else {
+        directions = [TOP, RIGHT];
+      }
+    }
+
+    return directions;
   }
 
   // Will spawn 1 creep max per run from first available spawn in the room
@@ -145,13 +176,18 @@ export class HumanResources {
           b.store.getFreeCapacity(RESOURCE_ENERGY) -
           a.store.getFreeCapacity(RESOURCE_ENERGY)
       )[0];
+
     if (!spawn) {
-      console.log('no spawns available for spawning');
+      console.log(this.roomName, 'no spawns available for spawning');
       return;
     }
 
     if (room.energyAvailable < 300) {
-      console.log('skip spawning, total energy only', room.energyAvailable);
+      console.log(
+        this.roomName,
+        'skip spawning, total energy only',
+        room.energyAvailable
+      );
       return;
     }
 
@@ -162,6 +198,9 @@ export class HumanResources {
 
       if (nums.actual + nums.spawning < nums.target) {
         const creepClass = global.Creeps[role];
+
+        if (!creepClass.shouldUseSpawn(spawn)) continue;
+
         const emergency =
           creepNums.mover.actual === 0 && creepNums.pioneer.actual === 0;
         let buildData = creepClass.build(
@@ -186,12 +225,13 @@ export class HumanResources {
                 homeRoom: spawn.room.name,
                 birth: Game.time,
               },
+              directions: this.getSpawnDirections(role as CreepRole, spawn),
             });
 
             return;
           } else {
             console.log(
-              spawn.name,
+              this.roomName,
               'waiting for more energy to spawn',
               role,
               `${room.energyAvailable}/${buildData.cost}`
@@ -200,11 +240,11 @@ export class HumanResources {
           }
         } else {
           // generateBody returns [] if not enough energy
-          console.log(spawn.name, "can't yet spawn any", role);
+          console.log(this.roomName, "can't yet spawn any", role);
         }
       }
     }
-    console.log(spawn.name, 'nothing to spawn');
+    console.log(this.roomName, 'nothing to spawn');
   }
 
   public runCreeps(colonyCreeps: Creep[]) {

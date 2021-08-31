@@ -9,7 +9,6 @@ declare global {
 
 export interface BuildingPlan {
   pos: RoomPosition;
-  structureType: BuildableStructureConstant;
 }
 
 export type BuildingPlans = {
@@ -92,7 +91,6 @@ export class RoomPlanner {
     for (const pos of controller.pos.getAdjacentPositions(1, true)) {
       (this.plans[STRUCTURE_RAMPART] as BuildingPlan[]).push({
         pos,
-        structureType: STRUCTURE_RAMPART,
       });
     }
   }
@@ -110,10 +108,8 @@ export class RoomPlanner {
 
     const links: {
       controller: BuildingPlan;
-      sources: BuildingPlan[];
     } = {
       controller: null!,
-      sources: [],
     };
 
     const room = Game.rooms[this.roomName];
@@ -135,21 +131,38 @@ export class RoomPlanner {
       source =>
         !source.pos.findInRange(FIND_STRUCTURES, 2, {
           filter: struct => struct.structureType === STRUCTURE_CONTAINER,
+        }).length &&
+        !source.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2, {
+          filter: site => site.structureType === STRUCTURE_CONTAINER,
         }).length
     );
 
     // Probably need the same here
+    // Only place link at controller for now
     const sourcesNeedingLinks = sources.filter(
       source =>
+        source instanceof StructureController &&
+        source.pos.getAdjacentPositions(1, true).length > 1 &&
         !source.pos.findInRange(FIND_STRUCTURES, 1, {
           filter: struct => struct.structureType === STRUCTURE_LINK,
+        }).length &&
+        !source.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 1, {
+          filter: site => site.structureType === STRUCTURE_LINK,
         }).length
+    );
+
+    // baseCenter is only walkable by spawning there,
+    // so start pathfinding from road above first spawn
+    const startPos = new RoomPosition(
+      baseCenter.x + 1,
+      baseCenter.y - 2,
+      baseCenter.roomName
     );
 
     for (const source of sources) {
       const goal = { pos: source.pos, range: 1 };
 
-      const ret = PathFinder.search(baseCenter, goal, {
+      const ret = PathFinder.search(startPos, goal, {
         plainCost: 2,
         swampCost: 10,
         maxRooms: 1,
@@ -158,9 +171,23 @@ export class RoomPlanner {
           const room = Game.rooms[roomName];
           const costs = new PathFinder.CostMatrix();
 
-          // Add road plans
-          for (const plan of this.plans[STRUCTURE_ROAD] ?? []) {
-            costs.set(plan.pos.x, plan.pos.y, 1);
+          // Add road plans as lowest cost,
+          // and other plans as blocking
+          for (const planType in this.plans) {
+            if (
+              planType === STRUCTURE_RAMPART ||
+              planType === STRUCTURE_CONTAINER
+            ) {
+              continue;
+            }
+
+            const cost = planType === STRUCTURE_ROAD ? 1 : 0xff;
+
+            for (const plan of this.plans[
+              planType as BuildableStructureConstant
+            ] ?? []) {
+              costs.set(plan.pos.x, plan.pos.y, cost);
+            }
           }
 
           for (const struct of room.find(FIND_STRUCTURES)) {
@@ -185,17 +212,11 @@ export class RoomPlanner {
         continue;
       }
 
-      // Add link construction site at last pos
+      // Add link construction site at last pos if controller
       if (sourcesNeedingLinks.includes(source)) {
-        const plan = {
+        links.controller = {
           pos: ret.path[ret.path.length - 1],
-          structureType: STRUCTURE_LINK,
         };
-        if (source instanceof StructureController) {
-          links.controller = plan;
-        } else {
-          links.sources.push(plan);
-        }
       }
 
       // Add container at second to last pos
@@ -213,10 +234,11 @@ export class RoomPlanner {
       }
 
       // Add road construction sites to plans,
-      // ignoring last pos to leave room for link
+      // ignoring first 2 positions to clear baseCenter
+      // and last pos to leave room for link
       if (!this.plans[STRUCTURE_ROAD]) this.plans[STRUCTURE_ROAD] = [];
 
-      for (const pos of ret.path.slice(0, ret.path.length - 1)) {
+      for (const pos of ret.path.slice(2, ret.path.length - 1)) {
         let skip = false;
 
         // Don't place road on baseCenter
@@ -224,11 +246,7 @@ export class RoomPlanner {
 
         for (const plan of this.plans[STRUCTURE_ROAD] as BuildingPlan[]) {
           // Avoid duplicate road plans
-          if (
-            plan.pos.x === pos.x &&
-            plan.pos.y === pos.y &&
-            plan.structureType === STRUCTURE_ROAD
-          ) {
+          if (plan.pos.x === pos.x && plan.pos.y === pos.y) {
             skip = true;
             break;
           }
@@ -237,7 +255,6 @@ export class RoomPlanner {
         if (!skip) {
           (this.plans[STRUCTURE_ROAD] as BuildingPlan[]).push({
             pos,
-            structureType: STRUCTURE_ROAD,
           });
         }
       }
@@ -263,9 +280,6 @@ export class RoomPlanner {
     if (links.controller) {
       (this.plans[STRUCTURE_LINK] as BuildingPlan[]).push(links.controller);
     }
-    if (links.sources.length) {
-      (this.plans[STRUCTURE_LINK] as BuildingPlan[]).push(...links.sources);
-    }
   }
 
   private planMineralRoute(baseCenter: RoomPosition): void {
@@ -279,13 +293,20 @@ export class RoomPlanner {
     // Place extractor
     (this.plans[STRUCTURE_EXTRACTOR] as BuildingPlan[]).push({
       pos: mineral.pos,
-      structureType: STRUCTURE_EXTRACTOR,
     });
 
     // Place road
     const goal = { pos: mineral.pos, range: 1 };
 
-    const ret = PathFinder.search(baseCenter, goal, {
+    // baseCenter is only accessible by spawning there,
+    // so start pathfinding from road above first spawn
+    const startPos = new RoomPosition(
+      baseCenter.x + 1,
+      baseCenter.y - 2,
+      baseCenter.roomName
+    );
+
+    const ret = PathFinder.search(startPos, goal, {
       plainCost: 2,
       swampCost: 10,
       maxRooms: 1,
@@ -330,11 +351,7 @@ export class RoomPlanner {
 
       for (const plan of this.plans[STRUCTURE_ROAD] as BuildingPlan[]) {
         // Avoid duplicate road plans
-        if (
-          plan.pos.x === pos.x &&
-          plan.pos.y === pos.y &&
-          plan.structureType === STRUCTURE_ROAD
-        ) {
+        if (plan.pos.x === pos.x && plan.pos.y === pos.y) {
           skip = true;
           break;
         }
@@ -343,8 +360,20 @@ export class RoomPlanner {
       if (!skip) {
         (this.plans[STRUCTURE_ROAD] as BuildingPlan[]).push({
           pos,
-          structureType: STRUCTURE_ROAD,
         });
+      }
+    }
+
+    // Add link adjacent to last road position, but not on a road
+    // This should keep it in a good spot in range of Prospector creep
+    // Should only have to check against second-to-last road plan
+    const roadToAvoid = ret.path[ret.path.length - 2];
+    for (const pos of ret.path[ret.path.length - 1].getAdjacentPositions(1)) {
+      if (!pos.isEqualTo(roadToAvoid)) {
+        this.plans[STRUCTURE_LINK]?.push({
+          pos,
+        });
+        break;
       }
     }
   }
@@ -366,11 +395,10 @@ export class RoomPlanner {
       ] as BuildingPlan[];
       console.log(plans.length, planType, 'plans created');
 
-      // Visualize all plans on global reset/code push for sanity check
-      if (global.isFirstTick) {
-        this.visualizePlans(plans);
-      }
+      // Visualize all plans for sanity check
+      this.visualizePlans(planType as BuildableStructureConstant, plans);
 
+      if (planType === STRUCTURE_TOWER && rcl < 3) continue;
       if (planType === STRUCTURE_CONTAINER && rcl < 3) continue;
       if (planType === STRUCTURE_ROAD && rcl < 3) continue;
       if (planType === STRUCTURE_STORAGE && rcl < 4) continue;
@@ -380,7 +408,10 @@ export class RoomPlanner {
       if (planType === STRUCTURE_TERMINAL && rcl < 6) continue;
       if (planType === STRUCTURE_LAB && rcl < 6) continue;
 
-      for (const plan of plans) {
+      const maxAtThisRcl =
+        CONTROLLER_STRUCTURES[planType as BuildableStructureConstant][rcl];
+
+      for (const plan of plans.slice(0, maxAtThisRcl)) {
         if (numConstructionSites >= config.MAX_CONSTRUCTION_SITES) break;
 
         if (terrain.get(plan.pos.x, plan.pos.y) === TERRAIN_MASK_WALL) continue;
@@ -389,10 +420,10 @@ export class RoomPlanner {
 
         // Check existing structures at location, destroy if wrong type
         // If right type, plan is already constructed
-        const existingStructures = room.lookForAt(LOOK_STRUCTURES, plan.pos);
-
-        for (const struct of existingStructures) {
-          if (struct.structureType === plan.structureType) {
+        for (const struct of room.lookForAt(LOOK_STRUCTURES, plan.pos)) {
+          if (
+            struct.structureType === (planType as BuildableStructureConstant)
+          ) {
             alreadyBuilt = true;
             break;
           }
@@ -403,7 +434,10 @@ export class RoomPlanner {
         // Can only have 1 construction site per spot
         if (room.lookForAt(LOOK_CONSTRUCTION_SITES, plan.pos).length) continue;
 
-        const res = room.createConstructionSite(plan.pos, plan.structureType);
+        const res = room.createConstructionSite(
+          plan.pos,
+          planType as BuildableStructureConstant
+        );
 
         if (res === ERR_FULL) return;
         if (res === ERR_RCL_NOT_ENOUGH) continue;
@@ -412,7 +446,10 @@ export class RoomPlanner {
     }
   }
 
-  private visualizePlans(plans: BuildingPlan[]): void {
+  private visualizePlans(
+    type: BuildableStructureConstant,
+    plans: BuildingPlan[]
+  ): void {
     const room = Game.rooms[this.roomName];
 
     for (const i in plans) {
@@ -421,7 +458,7 @@ export class RoomPlanner {
 
       let fill = 'white';
 
-      switch (plan.structureType) {
+      switch (type) {
         case STRUCTURE_ROAD:
           fill = 'grey';
           break;
@@ -440,7 +477,7 @@ export class RoomPlanner {
           fill = 'cyan';
           break;
         case STRUCTURE_RAMPART:
-          fill = 'green';
+          fill = 'transparent';
           break;
         case STRUCTURE_TERMINAL:
           fill = 'blue';
@@ -450,12 +487,15 @@ export class RoomPlanner {
           break;
       }
 
+      const isRampart = type === STRUCTURE_RAMPART;
+
       room.visual.circle(plan.pos.x, plan.pos.y, {
-        radius: plan.structureType === STRUCTURE_RAMPART ? 0.45 : 0.25,
+        radius: isRampart ? 0.45 : 0.25,
         fill,
-        opacity: plan.structureType === STRUCTURE_RAMPART ? 0.1 : undefined,
+        // opacity: isRampart ? 0.2 : undefined,
+        stroke: isRampart ? 'green' : undefined,
       });
-      if (plan.structureType !== STRUCTURE_RAMPART) {
+      if (type !== STRUCTURE_RAMPART) {
         room.visual.text(i, plan.pos.x, plan.pos.y + 0.1, {
           font: 0.3,
         });

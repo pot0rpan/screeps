@@ -19,7 +19,7 @@ export class HarvesterCreep extends CreepBase {
   bodyOpts: BodySettings = {
     pattern: [WORK],
     sizeLimit: 6,
-    suffix: [MOVE, MOVE],
+    suffix: [CARRY, MOVE, MOVE],
   };
 
   // Same number as source containers built
@@ -27,20 +27,7 @@ export class HarvesterCreep extends CreepBase {
     if (room.controller && room.controller.level < 2) return 0;
     if (room.memory.defcon) return 0;
 
-    const numContainers = room.find(FIND_STRUCTURES, {
-      filter: struct =>
-        struct.structureType === STRUCTURE_CONTAINER &&
-        room.lookForAtArea(
-          LOOK_SOURCES,
-          struct.pos.y - 1,
-          struct.pos.x - 1,
-          struct.pos.y + 1,
-          struct.pos.x + 1,
-          true
-        ).length,
-    }).length;
-
-    return numContainers;
+    return room.findSourceContainers().length;
   }
 
   findTask(creep: Creep, taskManager: TaskManager): HarvesterTask | null {
@@ -55,8 +42,7 @@ export class HarvesterCreep extends CreepBase {
       const source = creep.room
         .findSources()
         .filter(
-          source =>
-            source.pos.getRangeTo(container.pos.x, container.pos.y) === 1
+          source => source.pos.getRangeTo(container.pos.x, container.pos.y) <= 2
         )[0];
 
       if (container) {
@@ -99,11 +85,22 @@ export class HarvesterCreep extends CreepBase {
       return;
     }
 
-    // If creep is on container, harvest data.source
-    if (creep.pos.x === container.pos.x && creep.pos.y === container.pos.y) {
+    // If creep is at source, harvest data.source
+    if (creep.pos.getRangeTo(source) === 1) {
       creep.harvest(source);
     } else {
-      creep.travelTo(container);
+      creep.travelTo(source);
+    }
+
+    if (
+      creep.store.getFreeCapacity(RESOURCE_ENERGY) <=
+      creep.getActiveBodyparts(WORK) * 2
+    ) {
+      if (creep.pos.getRangeTo(container) <= 1) {
+        creep.transfer(container, RESOURCE_ENERGY);
+      } else {
+        creep.travelTo(source);
+      }
     }
   }
 }

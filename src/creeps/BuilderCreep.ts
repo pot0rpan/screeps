@@ -1,4 +1,3 @@
-import config from 'config';
 import { isDamaged } from 'utils/structure';
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
@@ -149,22 +148,21 @@ export class BuilderCreep extends CreepBase {
       }
 
       // Default to harvesting from source
-      const nearestSource = creep.pos.findClosestSource(creep);
+      const nearestSources = creep.pos.findClosestOpenSources(creep);
 
-      if (
-        nearestSource &&
-        !taskManager.isTaskTaken(
-          nearestSource.pos.roomName,
-          nearestSource.id,
-          'harvest'
-        )
-      ) {
-        return taskManager.createTask(
-          nearestSource.pos.roomName,
-          nearestSource.id,
-          'harvest',
-          nearestSource.pos.getAdjacentPositions(1, true).length
-        );
+      if (!nearestSources.length) return null;
+
+      for (const source of nearestSources) {
+        if (
+          !taskManager.isTaskTaken(source.pos.roomName, source.id, 'harvest')
+        ) {
+          return taskManager.createTask(
+            source.pos.roomName,
+            source.id,
+            'harvest',
+            source.pos.getAdjacentPositions(1, true).length
+          );
+        }
       }
 
       return null;
@@ -214,7 +212,7 @@ export class BuilderCreep extends CreepBase {
 
   run(creep: Creep): void {
     if (!creep.memory.task) {
-      recycle(creep, config.ticks.PLAN_ROOMS);
+      recycle(creep, 400);
       return;
     }
 
@@ -268,10 +266,16 @@ export class BuilderCreep extends CreepBase {
       } else if (res === ERR_NOT_IN_RANGE) {
         creep.travelTo(target, {
           range: task.type === 'build' || task.type === 'repair' ? 3 : 1,
+          // No roads before rcl 3, so avoid creeps for better movement
+          ignoreCreeps: (creep.room.controller?.level ?? 0) > 2,
         });
       }
     } else if (res === ERR_NOT_IN_RANGE) {
-      creep.travelTo(target, { range: 1 });
+      creep.travelTo(target, {
+        range: 1,
+        // No roads before rcl 3, so avoid creeps for better movement
+        ignoreCreeps: (creep.room.controller?.level ?? 0) > 2,
+      });
     }
 
     // Toggle `working` boolean if working and out of energy

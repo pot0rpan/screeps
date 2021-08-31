@@ -54,8 +54,12 @@ export class DefenderCreep extends CreepBase {
     ]);
 
     // Travel to closest rampart
-    if (closestRampart && !closestRampart.pos.isEqualTo(creep.pos)) {
-      creep.travelTo(closestRampart);
+    if (closestRampart) {
+      if (!closestRampart.pos.isEqualTo(creep.pos)) {
+        creep.travelTo(closestRampart);
+      }
+    } else {
+      creep.travelTo(closestHostile);
     }
 
     if (creep.pos.getRangeTo(closestHostile) === 1) {

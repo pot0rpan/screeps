@@ -38,7 +38,7 @@ export class ColonyDefense {
       return;
     }
 
-    if (mainRoom.findHostiles().length) {
+    if (mainRoom.findHostiles().length && this.roomName !== 'sim') {
       mainRoom.memory.defcon = Game.time;
     } else if (
       mainRoom.memory.defcon &&

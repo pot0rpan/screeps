@@ -1,5 +1,6 @@
 import { isFriendlyOwner } from 'utils';
 import { spawnTime } from 'utils/creep';
+import { reverseDirection } from 'utils/position';
 
 declare global {
   interface Creep {
@@ -55,21 +56,6 @@ export default (() => {
   };
 
   Creep.prototype.moveAway = function (target) {
-    function reverseDirection(direction: DirectionConstant) {
-      const directions = [
-        TOP,
-        TOP_RIGHT,
-        RIGHT,
-        BOTTOM_RIGHT,
-        TOP_LEFT,
-        LEFT,
-        BOTTOM_LEFT,
-        BOTTOM,
-      ];
-
-      return directions[directions.length - directions.indexOf(direction) - 1];
-    }
-
     return this.move(reverseDirection(this.pos.getDirectionTo(target)));
   };
 

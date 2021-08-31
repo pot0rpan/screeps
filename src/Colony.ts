@@ -75,7 +75,6 @@ export class Colony {
 
     if (isNthTick(4)) {
       this.hr.recycleCreeps();
-      this.hr.renewCreeps();
     }
 
     // Run creeps
