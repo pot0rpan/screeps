@@ -80,7 +80,7 @@ export default (() => {
       for (const source of sources) {
         const containers = source.pos.findInRange<StructureContainer>(
           FIND_STRUCTURES,
-          1,
+          2,
           {
             filter: struct => struct.structureType === STRUCTURE_CONTAINER,
           }
@@ -106,7 +106,7 @@ export default (() => {
     if (!this._upgradeLinks) {
       this._upgradeLinks = this.controller.pos.findInRange<StructureLink>(
         FIND_STRUCTURES,
-        2,
+        1,
         {
           filter: struct =>
             struct.structureType === STRUCTURE_LINK && struct.isActive(),
@@ -143,7 +143,7 @@ export default (() => {
       const controller = this.controller;
       if (controller) {
         this._upgradeContainers =
-          controller.pos.findInRange<StructureContainer>(FIND_STRUCTURES, 1, {
+          controller.pos.findInRange<StructureContainer>(FIND_STRUCTURES, 2, {
             filter: struct => struct.structureType === STRUCTURE_CONTAINER,
           });
       }

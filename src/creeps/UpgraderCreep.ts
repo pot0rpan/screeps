@@ -26,9 +26,9 @@ export class UpgraderCreep extends CreepBase {
 
     const controllerContainer =
       room.controller &&
-      (room.controller.pos.findInRange(FIND_STRUCTURES, 1, {
+      room.controller.pos.findInRange<StructureContainer>(FIND_STRUCTURES, 2, {
         filter: struct => struct.structureType === STRUCTURE_CONTAINER,
-      })[0] as StructureContainer);
+      })[0];
 
     if (!controllerContainer) return 0;
 

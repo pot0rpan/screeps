@@ -26,11 +26,12 @@ import { ReserverCreep } from 'creeps/ReserverCreep';
 import { MinerCreep } from 'creeps/MinerCreep';
 import { HaulerCreep } from 'creeps/HaulerCreep';
 import { ProspectorCreep } from 'creeps/ProspectorCreep';
-import { AccountantCreep } from 'creeps/AccountantCreep';
+// import { AccountantCreep } from 'creeps/AccountantCreep';
 import { DrainerCreep } from 'creeps/DrainerCreep';
 import { AttackerCreep } from 'creeps/AttackerCreep';
 import { HealerCreep } from 'creeps/HealerCreep';
 import { RangedDefenderCreep } from 'creeps/RangedDefenderCreep';
+import { OperatorCreep } from 'creeps/OperatorCreep';
 
 declare global {
   /*
@@ -66,7 +67,8 @@ global.Creeps = {
   prospector: new ProspectorCreep(),
   miner: new MinerCreep(),
   hauler: new HaulerCreep(),
-  accountant: new AccountantCreep(),
+  // accountant: new AccountantCreep(),
+  operator: new OperatorCreep(),
   scout: new ScoutCreep(),
 };
 
@@ -96,7 +98,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   global.isFirstTick = false;
 
-  if (Game.cpu.bucket === 10000) {
+  if (
+    Game.cpu.bucket === 10000 &&
+    Game.cpu.getUsed() < Game.cpu.shardLimits[Game.shard.name] * 0.8
+  ) {
+    console.log('<span style="color: #ff7378">Generating pixel</span>');
     Game.cpu.generatePixel();
   }
 });

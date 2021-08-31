@@ -1,4 +1,5 @@
 import config from 'config';
+import { isNthTick } from 'utils';
 
 export function recycle(
   creep: Creep,
@@ -25,8 +26,27 @@ export function recycle(
       creep.travelToRoom(creep.memory.homeRoom);
     } else {
       const ramp = creep.pos.findClosestWalkableRampart([creep.name]);
-      if (ramp) {
+      if (ramp && !creep.pos.isEqualTo(ramp)) {
         creep.travelTo(ramp);
+      } else {
+        // Lazy "excuse me" for now
+        if (isNthTick(2)) {
+          const moveFor = _.sample(
+            creep.pos.findInRange(FIND_MY_CREEPS, 1, {
+              filter: crp =>
+                // is traveling
+                crp.memory._trav &&
+                // is stuck
+                (crp.memory._trav.state?.[2] ?? 0) > 0 &&
+                // is trying to move where this creep is
+                '' + crp.pos.getDirectionTo(creep) ===
+                  crp.memory._trav.path?.substr(0, 1),
+            })
+          );
+          if (moveFor) {
+            creep.move(creep.pos.getDirectionTo(moveFor));
+          }
+        }
       }
     }
   }

@@ -15,6 +15,7 @@ export class RangedDefenderCreep extends CreepBase {
   };
 
   targetNum(room: Room): number {
+    if ((room.controller?.level ?? 0) < 4) return 0; // Not enough energy
     if (!room.memory.defcon) return 0;
     return room
       .findDangerousHostiles()
@@ -58,8 +59,12 @@ export class RangedDefenderCreep extends CreepBase {
     ]);
 
     // Travel to closest rampart
-    if (closestRampart && !closestRampart.pos.isEqualTo(creep.pos)) {
-      creep.travelTo(closestRampart);
+    if (closestRampart) {
+      if (!closestRampart.pos.isEqualTo(creep.pos)) {
+        creep.travelTo(closestRampart);
+      }
+    } else {
+      creep.travelTo(closestHostiles[0]);
     }
 
     // Attack and heal

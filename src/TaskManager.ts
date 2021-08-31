@@ -171,6 +171,7 @@ export class TaskManager {
       // Assign new task if needed
       if (!creep.memory.task || creep.memory.task.complete) {
         this.removeTask(creep);
+        if (!isNthTick(creepClass.taskPriority)) continue;
 
         // Assign a new task and add it to cache
         const start = Game.cpu.getUsed();

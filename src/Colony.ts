@@ -30,9 +30,10 @@ export class Colony {
   constructor(roomName: string) {
     console.log('Colony constructor()', roomName);
     this.roomName = roomName;
-    this.adjacentRoomNames = Object.values(
-      Game.map.describeExits(roomName)
-    ) as string[]; // Build error if not casted
+    this.adjacentRoomNames =
+      roomName === 'sim'
+        ? []
+        : (Object.values(Game.map.describeExits(roomName)) as string[]); // Build error if not casted
     this.hr = new HumanResources(roomName, this.adjacentRoomNames);
     this.roomPlanner = new RoomPlanner(this.roomName);
     this.taskManager = new TaskManager(this);
@@ -74,7 +75,6 @@ export class Colony {
 
     if (isNthTick(4)) {
       this.hr.recycleCreeps();
-      this.hr.renewCreeps();
     }
 
     // Run creeps

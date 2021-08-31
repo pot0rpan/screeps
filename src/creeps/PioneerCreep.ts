@@ -19,9 +19,20 @@ export class PioneerCreep extends CreepBase {
   targetNum(room: Room): number {
     const controller = room.controller;
     if (!controller) return 0;
-    if (controller.level === 1) return 4;
+    if (controller.level <= 2) {
+      return Math.min(
+        6,
+        room
+          .findSources(true)
+          .reduce(
+            (spaces, source) =>
+              spaces + source.pos.getAdjacentPositions(1, true).length,
+            0
+          )
+      );
+    }
 
-    // If no upgraders or movers, spawn 2
+    // If no upgraders or movers, spawn some depending on rcl, min 2
     if (
       !room.find(FIND_MY_CREEPS, {
         filter: creep =>
@@ -30,13 +41,13 @@ export class PioneerCreep extends CreepBase {
           creep.memory.role === 'filler',
       }).length
     ) {
-      return 2;
+      return Math.max(7 - controller.level, 2);
     }
 
     return 0;
   }
 
-  findTask(creep: Creep, taskManager: TaskManager): CreepTask | null {
+  findTask(creep: Creep, taskManager: TaskManager): PioneerTask | null {
     if (creep.memory.working) {
       // Fill extensions or spawn or controller
       let target:
@@ -60,13 +71,7 @@ export class PioneerCreep extends CreepBase {
       if (!target) {
         target = creep.room
           .findSpawns()
-          .filter(
-            spawn =>
-              spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-              !taskManager.tasks[
-                taskManager.createTask(spawn.pos.roomName, spawn.id, type).id
-              ]
-          )[0];
+          .filter(spawn => spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0)[0];
       }
 
       if (!target && creep.room.controller) {
@@ -76,7 +81,7 @@ export class PioneerCreep extends CreepBase {
 
       if (!target) return null;
 
-      return taskManager.createTask(
+      return taskManager.createTask<PioneerTask>(
         target.pos.roomName,
         target.id,
         type,
@@ -90,7 +95,7 @@ export class PioneerCreep extends CreepBase {
         creep.room.storage.store[RESOURCE_ENERGY] >=
           creep.store.getFreeCapacity(RESOURCE_ENERGY)
       ) {
-        return taskManager.createTask(
+        return taskManager.createTask<PioneerTask>(
           creep.room.name,
           creep.room.storage.id,
           'withdraw'
@@ -109,7 +114,7 @@ export class PioneerCreep extends CreepBase {
           : null;
 
       if (nearestContainer) {
-        return taskManager.createTask(
+        return taskManager.createTask<PioneerTask>(
           nearestContainer.pos.roomName,
           nearestContainer.id,
           'withdraw'
@@ -117,13 +122,23 @@ export class PioneerCreep extends CreepBase {
       }
 
       // Find nearest source
-      const nearestSource = creep.pos.findClosestSource(creep);
-      if (!nearestSource) return null;
-      return taskManager.createTask(
-        nearestSource.pos.roomName,
-        nearestSource.id,
-        'harvest'
-      );
+      const nearestSources = creep.pos.findClosestOpenSources(creep);
+      if (!nearestSources.length) return null;
+
+      for (const source of nearestSources) {
+        if (
+          !taskManager.isTaskTaken(source.pos.roomName, source.id, 'harvest')
+        ) {
+          return taskManager.createTask<PioneerTask>(
+            source.pos.roomName,
+            source.id,
+            'harvest',
+            source.pos.getAdjacentPositions(1, true).length
+          );
+        }
+      }
+
+      return null;
     }
   }
 
@@ -175,9 +190,10 @@ export class PioneerCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
-    if (!creep.memory.task || creep.memory.task.complete) return;
+    const task = creep.memory.task as PioneerTask | undefined;
 
-    const task = creep.memory.task;
+    if (!task || task.complete) return;
+
     const target = Game.getObjectById(
       task.target as Id<
         | StructureSpawn
@@ -190,8 +206,20 @@ export class PioneerCreep extends CreepBase {
     );
 
     if (!target) {
-      creep.memory.task.complete = true;
+      task.complete = true;
       return;
+    }
+
+    if (task.type === 'upgrade') {
+      if (creep.pos.getRangeTo(target) > 3) {
+        creep.travelTo(target, { range: 3, ignoreCreeps: false });
+        return;
+      }
+    } else {
+      if (creep.pos.getRangeTo(target) > 1) {
+        creep.travelTo(target, { range: 1, ignoreCreeps: false });
+        return;
+      }
     }
 
     let res: ScreepsReturnCode;
@@ -220,19 +248,17 @@ export class PioneerCreep extends CreepBase {
     }
 
     if ((task.type === 'withdraw' || task.type === 'transfer') && res === OK) {
-      creep.memory.task.complete = true;
-    } else if (res === ERR_NOT_IN_RANGE) {
-      creep.travelTo(target);
+      task.complete = true;
     }
 
     // Toggle `working` boolean if working and out of energy
     // or not working and full of energy
     if (creep.memory.working && creep.isEmpty()) {
       creep.memory.working = false;
-      creep.memory.task.complete = true;
+      task.complete = true;
     } else if (!creep.memory.working && creep.isFull()) {
       creep.memory.working = true;
-      creep.memory.task.complete = true;
+      task.complete = true;
     }
   }
 }

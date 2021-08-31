@@ -60,7 +60,8 @@ declare global {
     | 'assassin'
     | 'accountant'
     | 'attacker'
-    | 'healer';
+    | 'healer'
+    | 'operator';
 }
 
 export interface BodySettings {
@@ -81,6 +82,7 @@ interface BodySettingsPopulated extends BodySettings {
 export abstract class CreepBase {
   abstract role: CreepRole;
   abstract bodyOpts: BodySettings;
+  public taskPriority = 1; // 1 will findTask every tick if no task assigned
   abstract targetNum(room: Room): number;
   abstract isValidTask(creep: Creep, task: CreepTask): boolean;
   abstract findTask(creep: Creep, taskManager: TaskManager): CreepTask | null;
@@ -88,7 +90,13 @@ export abstract class CreepBase {
 
   private bodySizeCache: Record<number, BodyPartConstant[]> = {};
 
-  generateBody(energyAvailable: number) {
+  // Override to limit spawning to certain spawn(s) by role
+  // used for Operator currently
+  public shouldUseSpawn(spawn: StructureSpawn): boolean {
+    return true;
+  }
+
+  generateBody(energyAvailable: number): BodyPartConstant[] {
     if (this.bodySizeCache[energyAvailable]) {
       return this.bodySizeCache[energyAvailable];
     }
@@ -112,6 +120,7 @@ export abstract class CreepBase {
       opts.sizeLimit,
       Math.floor((energyAvailable - prefixCost - suffixCost) / patternCost)
     );
+    if (numRepeats === 0) return [];
 
     if (opts.prefix.length) {
       for (const part of opts.prefix) {

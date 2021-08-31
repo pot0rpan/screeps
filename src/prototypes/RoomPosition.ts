@@ -1,3 +1,5 @@
+import { sortByRange } from 'utils/sort';
+
 declare global {
   interface RoomPosition {
     getAdjacentPositions(
@@ -9,7 +11,8 @@ declare global {
     _adjacentOrthogonalPositions: { [length: number]: RoomPosition[] };
     getDiagonalPositions(length?: number): RoomPosition[];
     _diagonalPositions: { [length: number]: RoomPosition[] };
-    findClosestSource(creep: Creep): Source | null;
+    findClosestOpenSources(creep: Creep): Source[];
+    _sources: { instance: Source; positions: number }[];
     isNearEdge(distance?: number): boolean;
     findClosestWalkableRampart(
       ignoreCreeps?: string[]
@@ -109,13 +112,24 @@ export default (() => {
     return this._diagonalPositions[length];
   };
 
-  RoomPosition.prototype.findClosestSource = function (creep) {
-    return this.findClosestByRange(FIND_SOURCES, {
-      filter: source =>
-        source.energy > 0 &&
-        (creep.pos.getRangeTo(source) === 1 ||
-          source.pos.getAdjacentPositions(1, false).length > 0),
-    });
+  // Cached for tick
+  RoomPosition.prototype.findClosestOpenSources = function (creep) {
+    if (!this._sources) {
+      this._sources = Game.rooms[this.roomName].findSources(true).map(src => ({
+        instance: src,
+        positions: src.pos.getAdjacentPositions(1, true).length,
+      }));
+    }
+
+    return this._sources
+      .filter(
+        source =>
+          source.instance.energy > 0 &&
+          (creep.pos.getRangeTo(source.instance) === 1 ||
+            source.instance.pos.getAdjacentPositions(1, false).length > 0)
+      )
+      .map(src => src.instance)
+      .sort((a, b) => a.pos.getRangeTo(this) - b.pos.getRangeTo(this));
   };
 
   RoomPosition.prototype.isNearEdge = function isNearEdge(distance = 6) {
@@ -148,8 +162,9 @@ export default (() => {
           this.roomName
         );
 
-        // Allow roads if bunker perimeter, otherwise block roads
-        if (struct.pos.getRangeTo(centerPos) === 5) {
+        // Allow roads if bunker perimeter or farther
+        // otherwise block roads in base center
+        if (struct.pos.getRangeTo(centerPos) > 3) {
           if (
             structuresAtPos.filter(s => s.structureType !== STRUCTURE_ROAD)
               .length > 1
