@@ -79,6 +79,7 @@ global.isFirstTick = true;
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
+  const loopCpu = Game.cpu.getUsed();
   console.log(`<span style="color:#44ff88">-- Tick ${Game.time} --</span>`);
 
   // Delete memory of missing creeps
@@ -105,4 +106,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
     console.log('<span style="color: #ff7378">Generating pixel</span>');
     Game.cpu.generatePixel();
   }
+
+  global.stats.profileLog('Main loop', loopCpu);
 });

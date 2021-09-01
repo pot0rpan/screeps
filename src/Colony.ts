@@ -58,6 +58,7 @@ export class Colony {
   }
 
   run() {
+    const colonyCpu = Game.cpu.getUsed();
     console.log('Colony run()', this.roomName);
 
     const colonyCreeps = this.getColonyCreeps();
@@ -93,6 +94,8 @@ export class Colony {
       this.roomPlanner.run();
       this.handleExpansion();
     }
+
+    global.stats.profileLog(`Colony ${this.roomName}`, colonyCpu);
   }
 
   private runTowers() {
