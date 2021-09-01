@@ -85,17 +85,9 @@ export class HarvesterCreep extends CreepBase {
       return;
     }
 
-    // If creep is at source, harvest data.source
-    if (creep.pos.getRangeTo(source) === 1) {
-      if (source.energy) {
-        creep.harvest(source);
-      } else {
-        creep.say('...');
-      }
-    } else {
-      creep.travelTo(source);
-    }
+    let moved = false;
 
+    // If too full and will drop energy next harvest, put in container
     if (
       creep.store.getFreeCapacity(RESOURCE_ENERGY) <=
       creep.getActiveBodyparts(WORK) * 2
@@ -104,7 +96,19 @@ export class HarvesterCreep extends CreepBase {
         creep.transfer(container, RESOURCE_ENERGY);
       } else {
         creep.travelTo(container);
+        moved = true;
       }
+    }
+
+    // If creep is at source, harvest data.source
+    if (creep.pos.getRangeTo(source) === 1) {
+      if (source.energy) {
+        creep.harvest(source);
+      } else {
+        creep.say('...');
+      }
+    } else if (!moved) {
+      creep.travelTo(source);
     }
   }
 }
