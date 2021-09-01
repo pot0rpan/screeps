@@ -1,5 +1,6 @@
 import config from 'config';
 import { TaskManager } from 'TaskManager';
+import { isHighway } from 'utils/room';
 import { getAllResourceAmounts } from 'utils/store';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -7,6 +8,7 @@ declare global {
   interface RoomMemory {
     colonize?: boolean;
 
+    highway?: boolean;
     owner?: string;
     reserver?: string;
     hostiles?: number;
@@ -144,6 +146,7 @@ export class ScoutCreep extends CreepBase {
           pos: [pos.x, pos.y],
           distance: creep.pos.findPathTo(pos.x, pos.y).length,
         }));
+        roomMemory.highway = isHighway(creep.room);
       }
 
       const hostiles = room.findDangerousHostiles();

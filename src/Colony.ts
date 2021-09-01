@@ -164,7 +164,7 @@ export class Colony {
 
     // Rooms we aren't colonizing and no hostiles (Source Keepers most likely)
     const availableAdjRoomMems = adjRoomMems.filter(
-      ({ mem }) => !mem.colonize && !mem.hostiles
+      ({ mem }) => !mem.colonize && !mem.hostiles && !mem.highway
     );
 
     // Rooms not owned or reserved by hostiles, 2 sources
