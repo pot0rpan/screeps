@@ -18,7 +18,7 @@ export class HarvesterCreep extends CreepBase {
   role: CreepRole = 'harvester';
   bodyOpts: BodySettings = {
     pattern: [WORK],
-    sizeLimit: 6,
+    sizeLimit: 8,
     suffix: [CARRY, MOVE, MOVE],
   };
 
@@ -87,7 +87,11 @@ export class HarvesterCreep extends CreepBase {
 
     // If creep is at source, harvest data.source
     if (creep.pos.getRangeTo(source) === 1) {
-      creep.harvest(source);
+      if (source.energy) {
+        creep.harvest(source);
+      } else {
+        creep.say('...');
+      }
     } else {
       creep.travelTo(source);
     }
