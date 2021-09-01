@@ -1,3 +1,4 @@
+import { recycle } from 'actions/recycle';
 import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
@@ -206,9 +207,7 @@ export class MoverCreep extends CreepBase {
 
   run(creep: Creep): void {
     if (!creep.memory.task) {
-      creep.say('...');
-      const ramp = creep.pos.findClosestWalkableRampart([creep.name]);
-      if (ramp) creep.travelTo(ramp);
+      recycle(creep, 1000);
       return;
     }
 

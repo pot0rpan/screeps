@@ -1,3 +1,4 @@
+import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { minToStoreOfResource } from 'utils/room';
 import { BodySettings, CreepBase } from './CreepBase';
@@ -94,7 +95,10 @@ export class UpgraderCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
-    if (!creep.memory.task || creep.memory.task.complete) return;
+    if (!creep.memory.task || creep.memory.task.complete) {
+      recycle(creep, 500);
+      return;
+    }
 
     const task = creep.memory.task as UpgraderTask;
     const container = Game.getObjectById(task.target as Id<StructureContainer>);
