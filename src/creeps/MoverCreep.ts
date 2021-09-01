@@ -1,6 +1,7 @@
 import { recycle } from 'actions/recycle';
 import config from 'config';
 import { TaskManager } from 'TaskManager';
+import { isNthTick } from 'utils';
 import { BodySettings, CreepBase } from './CreepBase';
 
 interface MoverTask extends CreepTask {
@@ -251,19 +252,21 @@ export class MoverCreep extends CreepBase {
     if (res === OK) {
       creep.memory.task.complete = true;
     } else if (res === ERR_NOT_IN_RANGE) {
-      // Find dropped resources in range
-      const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
-        filter: res => res.resourceType === RESOURCE_ENERGY,
-      })[0];
-      if (dropped) {
-        creep.pickup(dropped);
-      } else {
-        // Find tombstones with energy
-        const tombstone = creep.pos.findInRange(FIND_TOMBSTONES, 1, {
-          filter: ts => ts.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
+      if (isNthTick(2)) {
+        // Find dropped resources in range
+        const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
+          filter: res => res.resourceType === RESOURCE_ENERGY,
         })[0];
-        if (tombstone) {
-          creep.withdraw(tombstone, RESOURCE_ENERGY);
+        if (dropped) {
+          creep.pickup(dropped);
+        } else {
+          // Find tombstones with energy
+          const tombstone = creep.pos.findInRange(FIND_TOMBSTONES, 1, {
+            filter: ts => ts.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
+          })[0];
+          if (tombstone) {
+            creep.withdraw(tombstone, RESOURCE_ENERGY);
+          }
         }
       }
 
