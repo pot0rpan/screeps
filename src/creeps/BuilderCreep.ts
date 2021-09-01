@@ -15,10 +15,12 @@ export class BuilderCreep extends CreepBase {
     sizeLimit: 8,
   };
 
+  taskPriority = 5;
+
   // Only if construction sites exist
   // Or no towers and repairs needed
   targetNum(room: Room): number {
-    // If we're high rcl and have storage, building can wait
+    // If we're high rcl and low storage, building can wait
     if (
       room.storage &&
       room.storage.isActive() &&
@@ -212,7 +214,7 @@ export class BuilderCreep extends CreepBase {
 
   run(creep: Creep): void {
     if (!creep.memory.task) {
-      recycle(creep, 400);
+      recycle(creep, 600);
       return;
     }
 
