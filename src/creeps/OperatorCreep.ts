@@ -158,11 +158,7 @@ export class OperatorCreep extends CreepBase {
   }
 
   targetNum(room: Room): number {
-    if (
-      room.storage &&
-      room.storage.isActive() &&
-      global.empire.colonies[room.name].roomPlanner.baseCenter
-    ) {
+    if ((room.controller?.level ?? 0) > 4 && room.storage?.isActive()) {
       return 1;
     }
     return 0;
@@ -245,6 +241,17 @@ export class OperatorCreep extends CreepBase {
       .baseCenter as RoomPosition;
     if (creep.pos.x !== baseCenter.x || creep.pos.y !== baseCenter.y) {
       creep.travelTo(baseCenter);
+      return;
+    }
+
+    if ((creep.ticksToLive ?? Infinity) <= 3) {
+      if (!creep.isEmpty()) {
+        creep.transfer(
+          creep.room.storage as StructureStorage,
+          creep.getCarryingResources()[0]
+        );
+      }
+      creep.say('peace');
       return;
     }
 
