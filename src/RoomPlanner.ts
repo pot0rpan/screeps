@@ -132,7 +132,7 @@ export class RoomPlanner {
         !source.pos.findInRange(FIND_STRUCTURES, 2, {
           filter: struct => struct.structureType === STRUCTURE_CONTAINER,
         }).length &&
-        !source.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 2, {
+        !source.pos.findInRange(FIND_CONSTRUCTION_SITES, 2, {
           filter: site => site.structureType === STRUCTURE_CONTAINER,
         }).length
     );
@@ -146,7 +146,7 @@ export class RoomPlanner {
         !source.pos.findInRange(FIND_STRUCTURES, 1, {
           filter: struct => struct.structureType === STRUCTURE_LINK,
         }).length &&
-        !source.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 1, {
+        !source.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
           filter: site => site.structureType === STRUCTURE_LINK,
         }).length
     );
