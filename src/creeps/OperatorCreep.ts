@@ -237,13 +237,6 @@ export class OperatorCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
-    const baseCenter = global.empire.colonies[creep.memory.homeRoom].roomPlanner
-      .baseCenter as RoomPosition;
-    if (creep.pos.x !== baseCenter.x || creep.pos.y !== baseCenter.y) {
-      creep.travelTo(baseCenter);
-      return;
-    }
-
     if ((creep.ticksToLive ?? Infinity) <= 3) {
       if (!creep.isEmpty()) {
         creep.transfer(
