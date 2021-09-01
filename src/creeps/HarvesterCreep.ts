@@ -99,7 +99,7 @@ export class HarvesterCreep extends CreepBase {
       if (creep.pos.getRangeTo(container) <= 1) {
         creep.transfer(container, RESOURCE_ENERGY);
       } else {
-        creep.travelTo(source);
+        creep.travelTo(container);
       }
     }
   }
