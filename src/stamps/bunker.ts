@@ -167,14 +167,14 @@ const spawn: BunkerPlan[] = [
 
 // Ramparts just cover entire bunker
 const rampart: BunkerPlan[] = road_perimeter.concat(
+  spawn,
   tower,
   storage,
+  extension,
   terminal,
   link,
   nuker,
   observer,
-  spawn,
-  extension,
   lab,
   road_windmill.filter(plan => Math.abs(plan.dx) < 6 && Math.abs(plan.dy) < 6)
 );
