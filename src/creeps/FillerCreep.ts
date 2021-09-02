@@ -31,6 +31,7 @@ export class FillerCreep extends CreepBase {
     pattern: [CARRY, CARRY, MOVE],
     sizeLimit: 8,
   };
+  taskPriority = 3;
 
   // Only if we have center storage (RCL4+)
   targetNum(room: Room): number {

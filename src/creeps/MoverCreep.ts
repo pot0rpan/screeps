@@ -14,7 +14,7 @@ export class MoverCreep extends CreepBase {
     pattern: [CARRY, CARRY, MOVE],
     sizeLimit: 6,
   };
-  taskPriority = 2;
+  taskPriority = 3;
 
   // Number of source containers
   targetNum(room: Room): number {
