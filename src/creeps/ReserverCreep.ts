@@ -124,7 +124,7 @@ export class ReserverCreep extends CreepBase {
         creep.reserveController(controller);
         creep.room.memory.reserver = config.USERNAME;
         if (controller.sign?.username !== config.USERNAME) {
-          creep.signController(controller, '«ᴍɪɴᴇ»');
+          creep.signController(controller, config.signs.RESERVE);
         }
       }
     } else {

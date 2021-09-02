@@ -71,4 +71,8 @@ export default {
   flags: {
     COLONIZE: [COLOR_PURPLE, COLOR_PURPLE],
   },
+  signs: {
+    RESERVE: "poot's",
+    CLAIM: 'not overmind, just like the bunker',
+  },
 };

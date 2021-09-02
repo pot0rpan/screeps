@@ -101,7 +101,7 @@ export class ClaimerCreep extends CreepBase {
     } else {
       creep.claimController(controller);
       if (controller.sign?.username !== config.USERNAME) {
-        creep.signController(controller, 'poot');
+        creep.signController(controller, config.signs.CLAIM);
       }
     }
   }
