@@ -25,6 +25,8 @@ export class ColonizerCreep extends CreepBase {
   };
 
   private findFlags(room: Room): Flag[] {
+    if ((room.controller?.level ?? 0) < 4) return [];
+
     return _.filter(
       Game.flags,
       flag =>
