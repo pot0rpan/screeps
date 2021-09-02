@@ -2,6 +2,7 @@ import config from 'config';
 
 // If hits < hitsMax, and if wall or rampart hits < MAX_REPAIR_HITS
 export function isDamaged(struct: Structure, ignoreConfigMax = false) {
+  if (struct.hits === undefined) return false;
   if (struct.hits >= struct.hitsMax) return false;
   if (ignoreConfigMax) return true;
 
