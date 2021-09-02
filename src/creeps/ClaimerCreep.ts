@@ -100,7 +100,10 @@ export class ClaimerCreep extends CreepBase {
       creep.suicide();
     } else {
       creep.claimController(controller);
-      if (controller.sign?.username !== config.USERNAME) {
+      if (
+        controller.sign?.username !== config.USERNAME ||
+        controller.sign?.text !== config.signs.CLAIM
+      ) {
         creep.signController(controller, config.signs.CLAIM);
       }
     }

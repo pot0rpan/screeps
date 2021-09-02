@@ -72,7 +72,7 @@ export default {
     COLONIZE: [COLOR_PURPLE, COLOR_PURPLE],
   },
   signs: {
-    RESERVE: "poot's",
+    RESERVE: 'mining my own business',
     CLAIM: 'not overmind, just like the bunker',
   },
 };
