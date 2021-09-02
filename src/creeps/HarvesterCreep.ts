@@ -9,7 +9,14 @@ interface HarvesterTask extends CreepTask {
   type: 'harvest';
   data: {
     source: string;
+    positions: { x: number; y: number }[];
   };
+}
+
+declare global {
+  interface CreepMemory {
+    inPosition: boolean;
+  }
 }
 
 // Pioneers are unspecialized, used only for level 1
@@ -45,13 +52,20 @@ export class HarvesterCreep extends CreepBase {
           source => source.pos.getRangeTo(container.pos.x, container.pos.y) <= 2
         )[0];
 
-      if (container) {
+      if (source) {
+        // Positions where both source and container are accessible
+        // Move to one of these then set inPosition=true in memory to save CPU
+        const positions = source.pos
+          .getAdjacentPositions(1)
+          .filter(pos => pos.getRangeTo(container) === 1)
+          .map(pos => ({ x: pos.x, y: pos.y }));
+
         return taskManager.createTask<HarvesterTask>(
           container.pos.roomName,
           container.id,
           'harvest',
           1,
-          { source: source.id }
+          { source: source.id, positions }
         );
       }
     }
@@ -79,36 +93,41 @@ export class HarvesterCreep extends CreepBase {
     }
 
     // Stop mining if container full
-    // TODO: Implement movers/pioneers picking up dropped resources on container
+    // Harvester doesn't sit on it so dropped resources are wasted
     if (container.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
       creep.say('...');
       return;
     }
 
-    let moved = false;
+    if (!creep.memory.inPosition) {
+      const targetPos = new RoomPosition(
+        task.data.positions[0].x,
+        task.data.positions[0].y,
+        task.room
+      );
+
+      if (creep.pos.isEqualTo(targetPos)) {
+        creep.memory.inPosition = true;
+      } else {
+        // Move to first position
+        creep.travelTo(targetPos);
+        return;
+      }
+    }
 
     // If too full and will drop energy next harvest, put in container
     if (
       creep.store.getFreeCapacity(RESOURCE_ENERGY) <=
       creep.getActiveBodyparts(WORK) * 2
     ) {
-      if (creep.pos.getRangeTo(container) <= 1) {
-        creep.transfer(container, RESOURCE_ENERGY);
-      } else {
-        creep.travelTo(container);
-        moved = true;
-      }
+      creep.transfer(container, RESOURCE_ENERGY);
     }
 
     // If creep is at source, harvest data.source
-    if (creep.pos.getRangeTo(source) === 1) {
-      if (source.energy) {
-        creep.harvest(source);
-      } else {
-        creep.say('...');
-      }
-    } else if (!moved) {
-      creep.travelTo(source);
+    if (source.energy) {
+      creep.harvest(source);
+    } else {
+      creep.say('...');
     }
   }
 }
