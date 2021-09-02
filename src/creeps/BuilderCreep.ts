@@ -252,14 +252,14 @@ export class BuilderCreep extends CreepBase {
         break;
       case 'repair':
         res = creep.repair(target as Structure);
-        if (!isDamaged(target as Structure)) task.complete = true;
+        if (!isDamaged(target as Structure, true)) task.complete = true;
         break;
       default:
-        creep.memory.task.complete = true;
+        task.complete = true;
     }
 
     if (task.type === 'withdraw' && res === OK) {
-      creep.memory.task.complete = true;
+      task.complete = true;
     }
     if (task.type === 'build' || task.type === 'repair') {
       const ramp = target.pos.findClosestWalkableRampart([creep.name]);
@@ -285,10 +285,10 @@ export class BuilderCreep extends CreepBase {
     // Also mark task as complete so TaskManager assigns a new one
     if (creep.memory.working && creep.isEmpty()) {
       creep.memory.working = false;
-      creep.memory.task.complete = true;
+      task.complete = true;
     } else if (!creep.memory.working && creep.isFull()) {
       creep.memory.working = true;
-      creep.memory.task.complete = true;
+      task.complete = true;
     }
   }
 }
