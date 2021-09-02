@@ -252,19 +252,15 @@ export class OperatorCreep extends CreepBase {
     }
 
     if (task.type === 'transfer') {
-      // Transfer to towers
       if (creep.isEmpty()) {
         creep.withdraw(creep.room.storage as StructureStorage, RESOURCE_ENERGY);
       } else {
         creep.transfer(
-          Game.getObjectById(
-            task.target as Id<StructureTower>
-          ) as StructureTower,
+          Game.getObjectById(task.target as Id<Structure>) as Structure,
           RESOURCE_ENERGY
         );
         task.complete = true;
       }
-      creep.say('tower');
       return;
     }
 
