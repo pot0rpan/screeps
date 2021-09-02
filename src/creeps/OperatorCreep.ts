@@ -169,9 +169,6 @@ export class OperatorCreep extends CreepBase {
   }
 
   findTask(creep: Creep, taskManager: TaskManager): OperatorTask | null {
-    // Doesn't need to be quick since it never has to move
-    if (!isNthTick(3)) return null;
-
     const baseCenter = global.empire.colonies[creep.memory.homeRoom].roomPlanner
       .baseCenter as RoomPosition;
 
