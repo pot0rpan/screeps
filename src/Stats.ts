@@ -5,6 +5,7 @@ declare global {
   interface Memory {
     _showStats?: boolean;
     _profile?: boolean;
+    _showTasks?: boolean;
   }
 }
 
@@ -57,10 +58,12 @@ function printProgressBar(
 export class Stats {
   _show: boolean;
   _profile: boolean;
+  _showTasks: boolean;
 
   constructor() {
     this._show = this.show;
     this._profile = this.profile;
+    this._showTasks = this.tasks;
   }
 
   get show() {
@@ -87,6 +90,19 @@ export class Stats {
   set profile(bool: boolean) {
     Memory._profile = bool;
     this._profile = bool;
+  }
+
+  get tasks() {
+    if (typeof Memory._showTasks === 'undefined') {
+      Memory._showTasks = false;
+    }
+    this._showTasks = Memory._showTasks;
+    return this._showTasks;
+  }
+
+  set tasks(bool: boolean) {
+    Memory._showTasks = bool;
+    this._showTasks = bool;
   }
 
   public profileLog(description: any, startCpu: number) {
@@ -168,6 +184,10 @@ export class Stats {
 
       this.showEnergyStats(room);
 
+      if (this.tasks) {
+        this.showTasks(room);
+      }
+
       this.showCpuStats(roomName);
     }
   }
@@ -188,6 +208,26 @@ export class Stats {
     }
 
     return stats;
+  }
+
+  showTasks(room: Room): void {
+    const start = Game.cpu.getUsed();
+    const { tasks } = global.empire.colonies[room.name].taskManager;
+    let y = 1;
+
+    printText(room.name, 'Colony Tasks', 40, y++);
+
+    for (const id in tasks) {
+      const { task, creeps } = tasks[id];
+      printText(
+        room.name,
+        `${task.room} ${task.type} [${creeps.length}/${task.limit}]`,
+        46,
+        y++,
+        { color: '#ccc', align: 'right' }
+      );
+    }
+    console.log(room, 'Task Stats CPU:', Game.cpu.getUsed() - start);
   }
 
   showCpuStats(roomName: string) {
