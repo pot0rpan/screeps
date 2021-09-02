@@ -2,6 +2,12 @@ import config from 'config';
 import { Colony } from 'Colony';
 import { isNthTick } from 'utils';
 
+declare global {
+  interface CreepMemory {
+    noTaskSince?: number;
+  }
+}
+
 export interface TaskCache {
   [id: string]: { task: CreepTask; creeps: string[] };
 }
@@ -171,7 +177,14 @@ export class TaskManager {
       // Assign new task if needed
       if (!creep.memory.task || creep.memory.task.complete) {
         this.removeTask(creep);
-        if (!isNthTick(creepClass.taskPriority)) continue;
+
+        // If task isn't found first try, delay taskPriority ticks until checking again
+        if (
+          creep.memory.noTaskSince &&
+          (Game.time - creep.memory.noTaskSince) % creepClass.taskPriority !== 0
+        ) {
+          continue;
+        }
 
         // Assign a new task and add it to cache
         const start = Game.cpu.getUsed();
@@ -180,8 +193,10 @@ export class TaskManager {
 
         if (newTask) {
           this.assignTask(creep, newTask);
+          delete creep.memory.noTaskSince;
         } else {
           console.log(creep, 'no task to assign');
+          creep.memory.noTaskSince = Game.time;
         }
       }
     }
