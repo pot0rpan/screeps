@@ -30,6 +30,7 @@ export class ColonizerCreep extends CreepBase {
     return _.filter(
       Game.flags,
       flag =>
+        flag.pos.roomName !== room.name &&
         isFlagOfType(flag, 'COLONIZE') &&
         Game.map.getRoomLinearDistance(room.name, flag.pos.roomName) <= 5
     );

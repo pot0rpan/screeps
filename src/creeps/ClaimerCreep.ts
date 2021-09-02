@@ -21,6 +21,7 @@ export class ClaimerCreep extends CreepBase {
     return _.filter(
       Game.flags,
       flag =>
+        flag.pos.roomName !== room.name &&
         isFlagOfType(flag, 'COLONIZE') &&
         Memory.rooms[flag.pos.roomName]?.owner !== config.USERNAME &&
         Game.map.getRoomLinearDistance(room.name, flag.pos.roomName) <= 5
