@@ -15,7 +15,7 @@ interface HarvesterTask extends CreepTask {
 
 declare global {
   interface CreepMemory {
-    inPosition: boolean;
+    inPosition?: boolean;
   }
 }
 
