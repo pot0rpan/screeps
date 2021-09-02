@@ -137,7 +137,7 @@ export class MoverCreep extends CreepBase {
         );
       }
     } else {
-      let target: StructureContainer | StructureStorage | null = null;
+      let target: StructureContainer | null = null;
       const type: MoverTask['type'] = 'withdraw';
 
       // Gather from fullest source container
@@ -153,17 +153,6 @@ export class MoverCreep extends CreepBase {
             a.store.getFreeCapacity(RESOURCE_ENERGY) -
             b.store.getFreeCapacity(RESOURCE_ENERGY)
         )[0];
-
-      // Gather from storage
-      if (!target) {
-        if (
-          creep.room.storage &&
-          creep.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) >=
-            creep.store.getFreeCapacity(RESOURCE_ENERGY)
-        ) {
-          target = creep.room.storage;
-        }
-      }
 
       if (!target) return null;
 
