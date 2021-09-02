@@ -68,4 +68,7 @@ export default {
     SCOUT_ADJACENT_ROOMS: 100,
     RCL_DOWNGRADE: 3000,
   },
+  flags: {
+    COLONIZE: [COLOR_PURPLE, COLOR_PURPLE],
+  },
 };

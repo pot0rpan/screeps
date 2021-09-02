@@ -34,10 +34,17 @@ export class Empire {
         const room = Game.rooms[roomName];
         if (room.controller?.my && room.controller?.level > 0) {
           this.colonies[roomName] = new Colony(roomName);
-          Memory.colonies[roomName] = { adjacentRooms: [] };
+          Memory.colonies[roomName] = {};
         }
       }
     }
+  }
+
+  public addNewColony(roomName: string): void {
+    if (!Game.rooms[roomName]) return;
+    this.colonies[roomName] = new Colony(roomName);
+    if (!Memory.colonies) Memory.colonies = {};
+    Memory.colonies[roomName] = {};
   }
 
   run() {

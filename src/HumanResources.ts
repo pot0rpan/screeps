@@ -58,6 +58,8 @@ export class HumanResources {
         'hauler',
         // 'accountant',
         'operator',
+        'claimer',
+        'colonizer',
         'scout',
       ];
 
@@ -256,13 +258,13 @@ export class HumanResources {
       start = Game.cpu.getUsed();
       if (!global.Creeps[creep.memory.role]) {
         console.log(
-          `<span style="color:red">${creep} Invalid role: ${creep.memory.role}`
+          `<span style="color:red">${creep.room} ${creep} Invalid role: ${creep.memory.role}`
         );
         continue;
       }
 
       global.Creeps[creep.memory.role].run(creep);
-      global.stats.profileLog(creep, start);
+      global.stats.profileLog(`${creep.room} ${creep}`, start);
     }
 
     global.stats.profileLog(this.roomName + ' runCreeps()', total);
