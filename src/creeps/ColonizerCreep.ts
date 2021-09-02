@@ -118,7 +118,7 @@ export class ColonizerCreep extends CreepBase {
       // Build
       if (creep.memory.working) {
         if (creep.pos.getRangeTo(spawnConstructionSite) > 3) {
-          creep.travelTo(spawnConstructionSite);
+          creep.travelTo(spawnConstructionSite, { ignoreCreeps: false });
         } else {
           creep.build(spawnConstructionSite);
         }
@@ -133,7 +133,7 @@ export class ColonizerCreep extends CreepBase {
         }
 
         if (creep.pos.getRangeTo(source) > 1) {
-          creep.travelTo(source);
+          creep.travelTo(source, { ignoreCreeps: false });
         } else {
           creep.harvest(source);
         }
