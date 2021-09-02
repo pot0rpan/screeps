@@ -48,9 +48,7 @@ export class Colony {
     ) {
       this._colonyCreeps = _.filter(
         Game.creeps,
-        creep =>
-          creep.pos.roomName === this.roomName ||
-          this.adjacentRoomNames.includes(creep.pos.roomName)
+        creep => creep.memory.homeRoom === this.roomName
       );
       this._colonyCreepsTimestamp = Game.time;
     }
