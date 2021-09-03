@@ -183,6 +183,8 @@ export class BuilderCreep extends CreepBase {
     );
     if (!target) return false;
 
+    //? Build is already valid because target is defined
+
     if (task.type === 'harvest') {
       if ((target as Source).energy <= 0) return false;
       if (creep.pos.isNearTo(target.pos.x, target.pos.y)) return true;
@@ -199,14 +201,8 @@ export class BuilderCreep extends CreepBase {
       }
     }
 
-    if (task.type === 'build') {
-      // Already valid because target is defined
-    }
-
-    if (task.type === 'repair') {
-      if ((target as Structure).hits === (target as Structure).hitsMax) {
-        return false;
-      }
+    if (task.type === 'repair' && !isDamaged(target as Structure)) {
+      return false;
     }
 
     return true;
@@ -252,7 +248,7 @@ export class BuilderCreep extends CreepBase {
         break;
       case 'repair':
         res = creep.repair(target as Structure);
-        if (!isDamaged(target as Structure, true)) task.complete = true;
+        if (!isDamaged(target as Structure)) task.complete = true;
         break;
       default:
         task.complete = true;

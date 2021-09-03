@@ -1,22 +1,22 @@
 export default {
-  MAX_REPAIR_HITS: (rcl: number): number => {
-    switch (rcl) {
-      case 0:
-      case 1:
-      case 2:
-        return 0;
-      case 3:
-        return 10000;
-      case 4:
-        return 25000;
-      case 5:
-        return 75000;
-      case 6:
-        return 300000;
-      default:
-        return 30000000;
-    }
-  },
+  // MAX_REPAIR_HITS: (rcl: number): number => {
+  //   switch (rcl) {
+  //     case 0:
+  //     case 1:
+  //     case 2:
+  //       return 0;
+  //     case 3:
+  //       return 10000;
+  //     case 4:
+  //       return 25000;
+  //     case 5:
+  //       return 75000;
+  //     case 6:
+  //       return 300000;
+  //     default:
+  //       return 30000000;
+  //   }
+  // },
   MIN_ENERGY_STORAGE: (rcl: number): number => {
     switch (rcl) {
       case 0:
