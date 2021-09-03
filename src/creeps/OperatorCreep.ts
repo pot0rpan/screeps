@@ -187,11 +187,13 @@ export class OperatorCreep extends CreepBase {
     }
 
     // Fill the 2 towers in range
-    const tower = baseCenter.findInRange(FIND_MY_STRUCTURES, 1, {
-      filter: struct =>
-        struct.structureType === STRUCTURE_TOWER &&
-        struct.store.getFreeCapacity(RESOURCE_ENERGY) > 200,
-    })[0];
+    const tower = creep.room
+      .findTowers()
+      .find(
+        t =>
+          t.store.getFreeCapacity(RESOURCE_ENERGY) > 200 &&
+          baseCenter.getRangeTo(t) === 1
+      );
 
     if (tower) {
       return taskManager.createTask<OperatorTask>(
@@ -203,11 +205,9 @@ export class OperatorCreep extends CreepBase {
     }
 
     // Fill center link
-    const link = baseCenter.findInRange(FIND_MY_STRUCTURES, 1, {
-      filter: struct =>
-        struct.structureType === STRUCTURE_LINK &&
-        struct.store.getFreeCapacity(RESOURCE_ENERGY),
-    })[0];
+    const link = creep.room
+      .findCenterLinks()
+      .find(l => l.store.getFreeCapacity(RESOURCE_ENERGY));
 
     if (link) {
       return taskManager.createTask<OperatorTask>(
