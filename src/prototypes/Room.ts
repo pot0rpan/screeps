@@ -188,7 +188,8 @@ export default (() => {
       if (!this.memory._towerIds || isNthTick(40)) {
         // Find the towers and store their id's in memory
         this.memory._towerIds = this.find<StructureTower>(FIND_STRUCTURES, {
-          filter: struct => struct.structureType === STRUCTURE_TOWER,
+          filter: struct =>
+            struct.structureType === STRUCTURE_TOWER && struct.isActive(),
         }).map(tower => tower.id);
       }
 

@@ -72,55 +72,55 @@ export class MoverCreep extends CreepBase {
           | StructureExtension
           | StructureTower
           | StructureContainer
-          | null;
+          | undefined;
         const type: MoverTask['type'] = 'transfer';
 
         // Extensions
-        target = creep.pos.findClosestByRange<StructureExtension>(
-          FIND_STRUCTURES,
-          {
-            filter: struct =>
-              struct.structureType === STRUCTURE_EXTENSION &&
-              struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-              struct.isActive() &&
-              !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
-          }
-        );
+        target = global.empire.colonies[creep.memory.homeRoom]
+          .getExtensions()
+          .filter(
+            ext =>
+              ext.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+              ext.isActive() &&
+              !taskManager.isTaskTaken(ext.pos.roomName, ext.id, type)
+          )
+          .sort((a, b) => a.pos.getRangeTo(creep) - b.pos.getRangeTo(creep))[0];
 
         // Spawns
         if (!target) {
           target = creep.room
             .findSpawns()
-            .filter(
+            .find(
               spawn =>
                 spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
                 !taskManager.isTaskTaken(spawn.pos.roomName, spawn.id, type)
-            )[0];
+            );
         }
 
         // Towers
         if (!target) {
           // Ignore max tower refill in defcon, keep them full
-          target = creep.room.find<StructureTower>(FIND_MY_STRUCTURES, {
-            filter: struct =>
-              struct.structureType === STRUCTURE_TOWER &&
-              (struct.store.getUsedCapacity(RESOURCE_ENERGY) <
-                config.MAX_TOWER_REFILL ||
-                creep.room.memory.defcon) &&
-              !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
-          })[0];
+          target = creep.room
+            .findTowers()
+            .find(
+              tower =>
+                (tower.store.getUsedCapacity(RESOURCE_ENERGY) <
+                  config.MAX_TOWER_REFILL ||
+                  creep.room.memory.defcon) &&
+                !taskManager.isTaskTaken(tower.pos.roomName, tower.id, type)
+            );
         }
 
         // Controller container
         if (!target) {
           target = creep.room
             .findUpgradeContainers()
-            .filter(
+            .find(
               container =>
                 container.store.getFreeCapacity(RESOURCE_ENERGY) >
                   creep.store.getUsedCapacity(RESOURCE_ENERGY) &&
                 !taskManager.isTaskTaken(creep.room.name, container.id, type)
-            )[0];
+            );
         }
 
         if (!target) return null;
