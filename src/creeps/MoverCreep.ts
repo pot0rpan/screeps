@@ -16,9 +16,12 @@ export class MoverCreep extends CreepBase {
   };
   taskPriority = 3;
 
-  // Number of source containers
+  // Number of source containers, extra if low rcl
   targetNum(room: Room): number {
-    return room.findSourceContainers().length;
+    return (
+      room.findSourceContainers().length +
+      ((room.controller?.level ?? 0) < 4 ? 1 : 0)
+    );
   }
 
   findTask(creep: Creep, taskManager: TaskManager): MoverTask | null {
