@@ -70,7 +70,7 @@ export class ColonyDefense {
     // Activate safe mode if creeps made it to base center
     // Set timer to not activate too eagerly, towers may finish them off
     if (
-      this.colony.roomPlanner.baseCenter?.findInRange(FIND_HOSTILE_CREEPS, 3, {
+      this.colony.roomPlanner.baseCenter?.findInRange(FIND_HOSTILE_CREEPS, 4, {
         filter: crp => crp.isHostile(),
       }).length
     ) {
