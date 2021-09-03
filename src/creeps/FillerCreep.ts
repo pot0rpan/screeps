@@ -55,7 +55,6 @@ export class FillerCreep extends CreepBase {
         extension.store.getFreeCapacity(RESOURCE_ENERGY)
       ) {
         creep.memory._extensionIx = ix;
-        ix++;
         return extension;
       }
       ix++;
