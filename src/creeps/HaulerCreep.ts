@@ -89,15 +89,15 @@ export class HaulerCreep extends CreepBase {
         }
 
         containers = containers.concat(
-          ...room.find<StructureContainer>(FIND_STRUCTURES, {
+          room.find<StructureContainer>(FIND_STRUCTURES, {
             filter: struct => struct.structureType === STRUCTURE_CONTAINER,
           })
         );
 
         dropped = dropped.concat(
-          ...(room.find(FIND_DROPPED_RESOURCES, {
+          room.find(FIND_DROPPED_RESOURCES, {
             filter: res => res.resourceType === RESOURCE_ENERGY,
-          }) as Resource<RESOURCE_ENERGY>[])
+          }) as Resource<RESOURCE_ENERGY>[]
         );
       }
 
