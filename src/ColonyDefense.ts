@@ -68,19 +68,11 @@ export class ColonyDefense {
     }
 
     // Activate safe mode if creeps made it to base center
-    // Or any controller ramparts are destroyed
     // Set timer to not activate too eagerly, towers may finish them off
     if (
       this.colony.roomPlanner.baseCenter?.findInRange(FIND_HOSTILE_CREEPS, 3, {
         filter: crp => crp.isHostile(),
-      }).length ||
-      controller.pos
-        .getAdjacentPositions(1, true)
-        .filter(pos =>
-          pos
-            .lookFor(LOOK_STRUCTURES)
-            .filter(struct => struct.structureType === STRUCTURE_RAMPART)
-        ).length !== controller.pos.getAdjacentPositions(1, true).length
+      }).length
     ) {
       if (this.safeModeTimer === null) {
         this.safeModeTimer = config.ticks.SAFE_MODE_DELAY;
