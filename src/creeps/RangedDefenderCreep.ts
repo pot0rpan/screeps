@@ -53,7 +53,6 @@ export class RangedDefenderCreep extends CreepBase {
     }
 
     // Find closest open rampart to hostile that's walkable
-    // Also avoid roads to not block other creeps
     const closestRampart = closestHostiles[0].pos.findClosestWalkableRampart([
       creep.name,
     ]);
@@ -73,12 +72,19 @@ export class RangedDefenderCreep extends CreepBase {
     );
 
     let attacked = false;
-    if (hostilesInRange.length === 1) {
-      creep.rangedAttack(hostilesInRange[0]);
-      attacked = true;
-    } else if (hostilesInRange.length > 1) {
-      creep.rangedMassAttack();
-      attacked = true;
+
+    if (hostilesInRange.length) {
+      const hostilesInRmaRange = hostilesInRange.filter(
+        hostile => hostile.pos.getRangeTo(creep) <= 2
+      );
+
+      if (hostilesInRmaRange.length > 1) {
+        creep.rangedMassAttack();
+        attacked = true;
+      } else {
+        creep.rangedAttack(hostilesInRange[0]);
+        attacked = true;
+      }
     }
 
     if (creep.hits < creep.hitsMax) {
