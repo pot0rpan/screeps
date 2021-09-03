@@ -179,13 +179,13 @@ const rampart: BunkerPlan[] = road_perimeter.concat(
 const bunkerPlans: { [key in BuildableStructureConstant]?: BunkerPlan[] } = {
   [STRUCTURE_SPAWN]: spawn,
   [STRUCTURE_EXTENSION]: extension,
+  [STRUCTURE_TOWER]: tower,
   [STRUCTURE_STORAGE]: storage,
   [STRUCTURE_TERMINAL]: terminal,
   [STRUCTURE_LINK]: link,
   [STRUCTURE_NUKER]: nuker,
   [STRUCTURE_OBSERVER]: observer,
   [STRUCTURE_ROAD]: road_windmill.concat(road_perimeter),
-  [STRUCTURE_TOWER]: tower,
   [STRUCTURE_LAB]: lab,
   [STRUCTURE_RAMPART]: rampart,
 };
