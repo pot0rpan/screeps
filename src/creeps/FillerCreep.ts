@@ -3,6 +3,12 @@ import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 import { recycle } from 'actions/recycle';
 
+declare global {
+  interface CreepMemory {
+    _extensionIx?: number;
+  }
+}
+
 interface FillerTask extends CreepTask {
   type: 'withdraw' | 'transfer';
 }
@@ -33,6 +39,32 @@ export class FillerCreep extends CreepBase {
   };
   taskPriority = 3;
 
+  private getExtensionToFill(creep: Creep): StructureExtension | null {
+    let ix = creep.memory._extensionIx ?? Infinity;
+
+    const extensions =
+      global.empire.colonies[creep.memory.homeRoom].getExtensions();
+
+    if (ix >= extensions.length) ix = 0;
+
+    while (ix < extensions.length) {
+      const extension = extensions[ix];
+      if (
+        extension &&
+        extension.isActive() &&
+        extension.store.getFreeCapacity(RESOURCE_ENERGY)
+      ) {
+        creep.memory._extensionIx = ix;
+        ix++;
+        return extension;
+      }
+      ix++;
+    }
+
+    creep.memory._extensionIx = 0;
+    return null;
+  }
+
   // Only if we have center storage (RCL4+)
   targetNum(room: Room): number {
     return room.storage?.store.getUsedCapacity(RESOURCE_ENERGY) ? 1 : 0;
@@ -47,15 +79,7 @@ export class FillerCreep extends CreepBase {
 
       if (creep.room.energyAvailable < creep.room.energyCapacityAvailable) {
         // Extensions
-        target = creep.pos.findClosestByPath<StructureExtension>(
-          FIND_STRUCTURES,
-          {
-            filter: struct =>
-              struct.structureType === STRUCTURE_EXTENSION &&
-              struct.isActive() &&
-              struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0,
-          }
-        );
+        target = this.getExtensionToFill(creep);
 
         // Spawns
         if (!target) {
@@ -72,12 +96,12 @@ export class FillerCreep extends CreepBase {
       // Towers
       if (!target) {
         target = creep.room
-          .find<StructureTower>(FIND_MY_STRUCTURES, {
-            filter: struct =>
-              struct.structureType === STRUCTURE_TOWER &&
-              struct.store.getFreeCapacity(RESOURCE_ENERGY) > 100 &&
-              !shouldIgnore(struct),
-          })
+          .findTowers()
+          .filter(
+            tower =>
+              tower.store.getFreeCapacity(RESOURCE_ENERGY) > 100 &&
+              !shouldIgnore(tower)
+          )
           .sort(
             (a, b) =>
               a.store.getUsedCapacity(RESOURCE_ENERGY) -

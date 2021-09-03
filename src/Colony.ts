@@ -27,6 +27,12 @@ export class Colony {
   private _colonyCreeps: Creep[] | null = null;
   private _colonyCreepsTimestamp = 0;
 
+  private _extensions: StructureExtension[] = [];
+  private _extensionsTimestamp = 0;
+  private _extensionsCache: Id<StructureExtension>[] = [];
+  private _extensionsCacheTimestamp = 0;
+  private EXTENSION_CACHE_TIME = 50;
+
   constructor(roomName: string) {
     console.log('Colony constructor()', roomName);
     this.roomName = roomName;
@@ -34,10 +40,56 @@ export class Colony {
       roomName === 'sim'
         ? []
         : (Object.values(Game.map.describeExits(roomName)) as string[]); // Build error if not casted
-    this.hr = new HumanResources(roomName, this.adjacentRoomNames);
+    this.hr = new HumanResources(this);
     this.roomPlanner = new RoomPlanner(this.roomName);
     this.taskManager = new TaskManager(this);
     this.colonyDefense = new ColonyDefense(this);
+  }
+
+  getExtensions(): StructureExtension[] {
+    // Populate cache of IDs
+    if (
+      !this._extensionsCache.length ||
+      !this._extensionsCacheTimestamp ||
+      Game.time - this._extensionsCacheTimestamp > this.EXTENSION_CACHE_TIME
+    ) {
+      // Wait for room planner to plan them (probably global reset)
+      if (!this.roomPlanner.plans.extension) return [];
+
+      this._extensionsCache = [];
+      this._extensionsCacheTimestamp = Game.time;
+
+      for (const plan of this.roomPlanner.plans.extension) {
+        const ext = plan.pos
+          .lookFor(LOOK_STRUCTURES)
+          .filter(struct => struct.structureType === STRUCTURE_EXTENSION)[0] as
+          | StructureExtension
+          | undefined;
+
+        if (ext) {
+          this._extensionsCache.push(ext.id);
+        }
+      }
+    }
+
+    // Read from IDs cache and map to game objects, cache for this tick
+    if (
+      !this._extensions.length ||
+      !this._extensionsTimestamp ||
+      Game.time !== this._extensionsTimestamp
+    ) {
+      this._extensions = [];
+      this._extensionsTimestamp = Game.time;
+
+      for (const id of this._extensionsCache) {
+        const ext = Game.getObjectById(id);
+        if (ext) {
+          this._extensions.push(ext);
+        }
+      }
+    }
+
+    return this._extensions;
   }
 
   getColonyCreeps(): Creep[] {

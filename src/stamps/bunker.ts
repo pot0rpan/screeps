@@ -94,65 +94,65 @@ const lab: BunkerPlan[] = [
 ];
 
 const extension: BunkerPlan[] = [
-  // Right side by labs
-  { dx: 4, dy: 0 },
-  { dx: 5, dy: 1 },
-  { dx: 5, dy: 0 },
-  { dx: 5, dy: -1 },
-  { dx: 5, dy: -2 },
-
   // Bottom right
   { dx: 3, dy: 1 },
-  { dx: 4, dy: 2 },
   { dx: 3, dy: 2 },
-  { dx: 4, dy: 3 },
   { dx: 2, dy: 2 },
-  { dx: 3, dy: 3 },
   { dx: 2, dy: 3 },
-  { dx: 3, dy: 4 },
   { dx: 1, dy: 3 },
-  { dx: 2, dy: 4 },
   { dx: 1, dy: 4 },
-  { dx: 2, dy: 5 },
   { dx: 0, dy: 4 },
-  { dx: 1, dy: 5 },
   { dx: 0, dy: 5 },
   { dx: -1, dy: 5 },
+  { dx: 1, dy: 5 },
+  { dx: 2, dy: 5 },
+  { dx: 2, dy: 4 },
+  { dx: 3, dy: 4 },
+  { dx: 3, dy: 3 },
+  { dx: 4, dy: 3 },
+  { dx: 4, dy: 2 },
 
   // Bottom left
   { dx: -1, dy: 3 },
-  { dx: -2, dy: 4 },
   { dx: -2, dy: 3 },
-  { dx: -3, dy: 4 },
   { dx: -2, dy: 2 },
-  { dx: -3, dy: 3 },
   { dx: -3, dy: 2 },
-  { dx: -4, dy: 3 },
   { dx: -3, dy: 1 },
-  { dx: -4, dy: 2 },
   { dx: -4, dy: 1 },
-  { dx: -5, dy: 2 },
   { dx: -4, dy: 0 },
-  { dx: -5, dy: 1 },
   { dx: -5, dy: 0 },
   { dx: -5, dy: -1 },
+  { dx: -5, dy: 1 },
+  { dx: -5, dy: 2 },
+  { dx: -4, dy: 2 },
+  { dx: -4, dy: 3 },
+  { dx: -3, dy: 3 },
+  { dx: -3, dy: 4 },
+  { dx: -2, dy: 4 },
 
   // Top left
   { dx: -3, dy: -1 },
-  { dx: -4, dy: -2 },
   { dx: -3, dy: -2 },
-  { dx: -4, dy: -3 },
   { dx: -2, dy: -2 },
-  { dx: -3, dy: -3 },
   { dx: -2, dy: -3 },
-  { dx: -3, dy: -4 },
   { dx: -1, dy: -3 },
-  { dx: -2, dy: -4 },
   { dx: -1, dy: -4 },
-  { dx: -2, dy: -5 },
-  { dx: -1, dy: -5 },
-  { dx: 0, dy: -5 },
   { dx: 1, dy: -5 },
+  { dx: 0, dy: -5 },
+  { dx: -1, dy: -5 },
+  { dx: -2, dy: -5 },
+  { dx: -2, dy: -4 },
+  { dx: -3, dy: -4 },
+  { dx: -3, dy: -3 },
+  { dx: -4, dy: -3 },
+  { dx: -4, dy: -2 },
+
+  // Right side by labs
+  { dx: 4, dy: 0 },
+  { dx: 5, dy: 0 },
+  { dx: 5, dy: 1 },
+  { dx: 5, dy: -1 },
+  { dx: 5, dy: -2 },
 ];
 
 const spawn: BunkerPlan[] = [
@@ -211,7 +211,6 @@ export function generateBunkerPlans(
       bunkerPlans[structureType as BuildableStructureConstant] as BunkerPlan[]
     ).map(plan => ({
       pos: calculateRoomPosition(baseCenter, plan),
-      structureType: structureType as BuildableStructureConstant,
     }));
   }
 

@@ -1,4 +1,5 @@
 import config from 'config';
+import { Colony } from 'Colony';
 
 declare global {
   interface CreepMemory {
@@ -15,15 +16,13 @@ interface CreepNums {
 }
 
 export class HumanResources {
-  roomName: string;
-  adjacentRoomNames: string[];
+  colony: Colony;
 
   private _creepNums: CreepNums | null = null;
   private _creepNumsCacheTimestamp: number = 0;
 
-  constructor(room: string, adjacentRoomNames: string[]) {
-    this.roomName = room;
-    this.adjacentRoomNames = adjacentRoomNames;
+  constructor(colony: Colony) {
+    this.colony = colony;
   }
 
   // Cached for until spawning again
@@ -35,7 +34,7 @@ export class HumanResources {
       !this._creepNumsCacheTimestamp ||
       Game.time - this._creepNumsCacheTimestamp >= config.ticks.SPAWN_CREEPS
     ) {
-      const room = Game.rooms[this.roomName];
+      const room = Game.rooms[this.colony.roomName];
       // Listed in order of priority
       const creepNums: CreepNums = {};
       const roleOrder = [
@@ -118,7 +117,7 @@ export class HumanResources {
   // }
 
   public recycleCreeps() {
-    const spawns = Game.rooms[this.roomName].findSpawns();
+    const spawns = Game.rooms[this.colony.roomName].findSpawns();
 
     for (const spawn of spawns) {
       const creepToRecycle = spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
@@ -164,29 +163,31 @@ export class HumanResources {
 
   // Will spawn 1 creep max per run from first available spawn in the room
   public spawnCreeps(colonyCreeps: Creep[]) {
-    const room = Game.rooms[this.roomName];
+    const room = Game.rooms[this.colony.roomName];
 
     // Can't spawn if not controlling
     if (!room.controller) return;
 
     // Make sure there's a free spawn, grab fullest one
-    const spawn = room
+    const spawns = room
       .findSpawns()
       .filter(spawn => !spawn.spawning)
       .sort(
         (a, b) =>
           b.store.getFreeCapacity(RESOURCE_ENERGY) -
           a.store.getFreeCapacity(RESOURCE_ENERGY)
-      )[0];
+      );
+
+    const spawn = spawns[0];
 
     if (!spawn) {
-      console.log(this.roomName, 'no spawns available for spawning');
+      console.log(this.colony.roomName, 'no spawns available for spawning');
       return;
     }
 
     if (room.energyAvailable < 300) {
       console.log(
-        this.roomName,
+        this.colony.roomName,
         'skip spawning, total energy only',
         room.energyAvailable
       );
@@ -228,12 +229,14 @@ export class HumanResources {
                 birth: Game.time,
               },
               directions: this.getSpawnDirections(role as CreepRole, spawn),
+              // @ts-ignore
+              energyStructures: spawns.concat(this.colony.getExtensions()),
             });
 
             return;
           } else {
             console.log(
-              this.roomName,
+              this.colony.roomName,
               'waiting for more energy to spawn',
               role,
               `${room.energyAvailable}/${buildData.cost}`
@@ -242,11 +245,11 @@ export class HumanResources {
           }
         } else {
           // generateBody returns [] if not enough energy
-          console.log(this.roomName, "can't yet spawn any", role);
+          console.log(this.colony.roomName, "can't yet spawn any", role);
         }
       }
     }
-    console.log(this.roomName, 'nothing to spawn');
+    console.log(this.colony.roomName, 'nothing to spawn');
   }
 
   public runCreeps(colonyCreeps: Creep[]) {
@@ -267,6 +270,6 @@ export class HumanResources {
       global.stats.profileLog(`${creep.room} ${creep}`, start);
     }
 
-    global.stats.profileLog(this.roomName + ' runCreeps()', total);
+    global.stats.profileLog(this.colony.roomName + ' runCreeps()', total);
   }
 }
