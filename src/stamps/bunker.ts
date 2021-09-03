@@ -1,4 +1,4 @@
-// https://screeps.admon.dev/building-planner/?share=N4IgdghgtgpiBcIQBoQHcD2AnANgEwRCigxRAGcALCLAxKmvABjKwGMcEAOVAIwFcAlvkFgA5uQShyABwhowUkDIyT4AbVAAPBACYArKgCeegIwBfZNr0AWYwlNdL1+Lp4gTriwF1LFAC7YEGJw8KAqapogOq6GHnq65r6oOKIA1koRCFExugDM9q55SX6BaDBYmarZLrp28UXO0baFuhZWza66rYkduQBsPU259Z66TMMtDXUlqP4VUKIQnGHK1Rq1BdOJySBYGBB04es5U56mAJyTRa0TfQmt7bWmQ-ddrcVv+a0213Wt+j+cTGvy+g2mn1qAHZXrVwWMnp0DLc-lsxv0-kxHtdLiivsCHE4wYVTFC-u4xpCkRcfn9Rg4MfiSYy4cy6a0ibVutNOUi0XpebkCa5BXp4QLUWyvtzzizOo5YfKKWYccrXHcXAqIaraW88ljphrOvrsXqDWNei4Tdqzbqua0yV8adNAV81bo5bkYdNHZrnWNXbVzWK-i8faGSb6kcH4I4cf6HFcnSSk7U1XGvt7zlGvVKrTGDBGeTqGpdZiAYFp5mByIIMIpVlkNnyAX8ZbYi5TMYqYrjpojewmut2bc87Uj27E261PWZW18C6C-R9OyrpXjNinyT29Fm9FSBuOhfPavTXLObuG3n2QSOA6vz3e9EbcjGy18w+dU0jP8-p6Xv1yScMzHUtRXeUsczOBwoMvc5wO+SCgUjdkr1qYVdFgj0HT+cVHyZaYL2wl0-j3KdMxnbcSLdI9d1o1wh3yP5GMtalTVqRiJl2HAIF4KpInQrdiTA3ChOhEkELI99WUNUiNyRdNALo-sqLGLi-DAfg0gqfiaiRDDil2DBeHICoADcdMbE5NxU3xzHMIA
+// https://screeps.admon.dev/building-planner/?share=N4IgdghgtgpiBcIQBoQHcD2AnANgEwRCigxRAGcALCLAxKmvABjKwGMcEAOVAIwFcAlvkFgA5uQShyABwhowUkDIyT4AbVAAPBACYArKgCeegIwBfZNr0AWYwlNdL1+Lp4gTriwF1LFAC7YEGJw8KAqapogOq6GHnq65r6oOKIA1koRCFExugDM9q55SX6BaDBYmarZLrp28UXO0baFuhZWza66rYkduQBsPU259Z66TMMtDXUlqP4VUKIQnGHK1Rq1BdOJySBYGBB04es5U56mAJyTRa0TfQmt7bWmQ-ddrcVv+a0213Wt+j+cTGvy+g2mn1qAHZXrVwWMnp0DLc-lsxv0-kxHtdLiivsCHE4wYVTFC-u4xpCkRcfn9Rg4MfiSYy4cy6a0ibVutNOUi0XpebkCa5BXp4QLUWyvtzzizOo5YfKKWYccrXHcXAqIaraW88ljphrOvrsXqDWNei4Tdqzbqua0yV8adNAV81bo5bkYdNHZrnWNXbVzWK-i8faGSb6kcH4I4cf6HFcnSSk7U1XGvt7zmTdjAtPMwORBBhFKsshs+QC-jLbBGbUHFTFcdNEU2E11MR86yDq1Xpa1PWY+w3pqC-V2vmGEb3DZKGpdyY29Fm9FSBnakcKDOzpoObuG3s2e18Y9vJwPO7OTynu4nb+qZ+dU0ia7HRV4Se-dK-STvs3Pzi-flYyjIVIz-ZcgQdP5xVcUCxQvJldxg4ckRXWI-nQj1FxdHDj2hDdcnbfI-mIy1qVNWpiImXYcAgXgqkiWphQXYl5y-WDWII9jMJvNixiNL08TTPjuOnN0UV2MB+DSCpGJqTcu12DBeHICoADc5LLE5NmxXxzHMIA
 
 import { BuildingPlans } from 'RoomPlanner';
 
@@ -26,25 +26,21 @@ const road_windmill: BunkerPlan[] = [
   { dx: 3, dy: 0 },
   { dx: 4, dy: 1 },
   { dx: 5, dy: 2 },
-  { dx: 6, dy: 3 },
   { dx: 2, dy: 1 },
   { dx: 1, dy: 2 },
   { dx: 0, dy: 3 },
   { dx: -1, dy: 4 },
   { dx: -2, dy: 5 },
-  { dx: -3, dy: 6 },
   { dx: -1, dy: 2 },
   { dx: -2, dy: 1 },
   { dx: -3, dy: 0 },
   { dx: -4, dy: -1 },
   { dx: -5, dy: -2 },
-  { dx: -6, dy: -3 },
   { dx: -2, dy: -1 },
   { dx: -2, dy: -1 },
   { dx: -1, dy: -2 },
   { dx: 1, dy: -4 },
   { dx: 2, dy: -5 },
-  { dx: 3, dy: -6 },
 ];
 
 const road_perimeter: BunkerPlan[] = [
