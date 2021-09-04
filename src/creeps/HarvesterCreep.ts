@@ -2,13 +2,14 @@ import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
 // Type is harvest just like when other creeps go to sources
-// So the container is stored as the target instead of the source
+// So the container/link is stored as the target instead of the source
 // This helps avoid task id conflicts with different roles
 // Should only really matter at early rcl when Pioneers still exist
 interface HarvesterTask extends CreepTask {
   type: 'harvest';
+  target: Id<StructureContainer | StructureLink>;
   data: {
-    source: string;
+    source: Id<Source>;
     positions: { x: number; y: number }[];
   };
 }
@@ -30,14 +31,15 @@ export class HarvesterCreep extends CreepBase {
   };
 
   // Same number as source containers built
+  // Containers stay even if links exist, so no need to check both
   targetNum(room: Room): number {
     if (room.controller && room.controller.level < 2) return 0;
     if (room.memory.defcon) return 0;
 
-    return room
-      .findSourceContainers()
-      .filter(container => container.store.getFreeCapacity(RESOURCE_ENERGY))
-      .length;
+    return (
+      // .filter(container => container.store.getFreeCapacity(RESOURCE_ENERGY))
+      room.findSourceContainers().length
+    );
   }
 
   findTask(creep: Creep, taskManager: TaskManager): HarvesterTask | null {
@@ -56,16 +58,24 @@ export class HarvesterCreep extends CreepBase {
         )[0];
 
       if (source) {
-        // Positions where both source and container are accessible
+        let transferTarget: StructureContainer | StructureLink = container;
+
+        // Check if we have a link to use instead of container
+        if ((creep.room.controller?.level ?? 0) > 4) {
+          const link = creep.room.findSourceLink(source);
+          if (link) transferTarget = link;
+        }
+
+        // Positions where both source and container/link are accessible
         // Move to one of these then set inPosition=true in memory to save CPU
         const positions = source.pos
           .getAdjacentPositions(1)
-          .filter(pos => pos.getRangeTo(container) === 1)
+          .filter(pos => pos.getRangeTo(transferTarget) === 1)
           .map(pos => ({ x: pos.x, y: pos.y }));
 
         return taskManager.createTask<HarvesterTask>(
-          container.pos.roomName,
-          container.id,
+          transferTarget.pos.roomName,
+          transferTarget.id,
           'harvest',
           1,
           { source: source.id, positions }
@@ -78,8 +88,9 @@ export class HarvesterCreep extends CreepBase {
 
   isValidTask(creep: Creep, task: HarvesterTask): boolean {
     return (
-      !!Game.getObjectById(task.target as Id<StructureContainer>) &&
-      !!Game.getObjectById(task.data.source as Id<Source>)
+      !!Game.getObjectById(
+        task.target as Id<StructureContainer | StructureLink>
+      ) && !!Game.getObjectById(task.data.source as Id<Source>)
     );
   }
 
@@ -87,18 +98,30 @@ export class HarvesterCreep extends CreepBase {
     if (!creep.memory.task || creep.memory.task.complete) return;
 
     const task = creep.memory.task as HarvesterTask;
-    const container = Game.getObjectById(task.target as Id<StructureContainer>);
+    const transferTarget = Game.getObjectById(task.target);
     const source = Game.getObjectById(task.data.source as Id<Source>);
 
-    if (!container || !source) {
+    if (!transferTarget || !source) {
       creep.memory.task.complete = true;
       return;
     }
 
-    // Stop mining if container full
-    // Harvester doesn't sit on it so dropped resources are wasted
-    if (container.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+    // Stop mining if container/link full
+    // If using a link, queue transfer request to center if center not full
+    // @ts-ignore Not sure why needed
+    if (transferTarget.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
       creep.say('...');
+      if (transferTarget instanceof StructureLink) {
+        const centerLink = creep.room
+          .findCenterLinks()
+          .find(link => link.store.getFreeCapacity(RESOURCE_ENERGY));
+        if (centerLink) {
+          global.empire.colonies[creep.memory.homeRoom].queueLinkTransfer(
+            transferTarget.id,
+            centerLink.id
+          );
+        }
+      }
       return;
     }
 
@@ -118,12 +141,12 @@ export class HarvesterCreep extends CreepBase {
       }
     }
 
-    // If too full and will drop energy next harvest, put in container
+    // If too full and will drop energy next harvest, put in container/link
     if (
       creep.store.getFreeCapacity(RESOURCE_ENERGY) <=
       creep.getActiveBodyparts(WORK) * 2
     ) {
-      creep.transfer(container, RESOURCE_ENERGY);
+      creep.transfer(transferTarget, RESOURCE_ENERGY);
     }
 
     // If creep is at source, harvest data.source

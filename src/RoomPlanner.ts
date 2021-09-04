@@ -108,8 +108,10 @@ export class RoomPlanner {
 
     const links: {
       controller: BuildingPlan;
+      sources: BuildingPlan[];
     } = {
       controller: null!,
+      sources: [],
     };
 
     const room = Game.rooms[this.roomName];
@@ -138,10 +140,8 @@ export class RoomPlanner {
     );
 
     // Probably need the same here
-    // Only place link at controller for now
     const sourcesNeedingLinks = sources.filter(
       source =>
-        source instanceof StructureController &&
         source.pos.getAdjacentPositions(1, true).length > 1 &&
         !source.pos.findInRange(FIND_STRUCTURES, 1, {
           filter: struct => struct.structureType === STRUCTURE_LINK,
@@ -214,9 +214,15 @@ export class RoomPlanner {
 
       // Add link construction site at last pos if controller
       if (sourcesNeedingLinks.includes(source)) {
-        links.controller = {
+        const plan = {
           pos: ret.path[ret.path.length - 1],
         };
+
+        if (source instanceof StructureController) {
+          links.controller = plan;
+        } else {
+          links.sources.push(plan);
+        }
       }
 
       // Add container at second to last pos
@@ -278,7 +284,12 @@ export class RoomPlanner {
     }
 
     if (links.controller) {
-      (this.plans[STRUCTURE_LINK] as BuildingPlan[]).push(links.controller);
+      (this.plans[STRUCTURE_LINK] as BuildingPlan[]).push(
+        links.controller,
+        ...links.sources
+      );
+    } else if (links.sources.length) {
+      (this.plans[STRUCTURE_LINK] as BuildingPlan[]).push(...links.sources);
     }
   }
 
