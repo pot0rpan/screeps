@@ -229,8 +229,10 @@ export class HumanResources {
                 birth: Game.time,
               },
               directions: this.getSpawnDirections(role as CreepRole, spawn),
-              // @ts-ignore
-              energyStructures: spawns.concat(this.colony.getExtensions()),
+              // Empty array is needed otherwise concat has weird type error
+              energyStructures: (
+                [] as (StructureSpawn | StructureExtension)[]
+              ).concat(spawns, spawn.room.findExtensions()),
             });
 
             return;

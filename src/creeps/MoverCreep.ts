@@ -16,21 +16,27 @@ export class MoverCreep extends CreepBase {
   };
   taskPriority = 10; // TODO: findTask is EXPENSIVE
 
-  // Number of source containers, extra if low rcl or containers full
+  // Number of full source containers, extra if low rcl
+  // When links are in place, containers should always be empty so no movers needed
   targetNum(room: Room): number {
-    const containers = room.findSourceContainers();
-    const numContainers = containers.length;
+    // Containers half full
+    const halfFullContainers = room
+      .findSourceContainers()
+      .filter(cont => cont.store.getUsedCapacity(RESOURCE_ENERGY) > 1000);
+
+    const numContainers = halfFullContainers.length;
     if (!numContainers) return 0;
+
     const rcl = room.controller?.level ?? 0;
 
     // Spawn extra mover if any source containers are completely full
-    const extraNeeded = containers.filter(
+    const extraNeeded = halfFullContainers.filter(
       cont => cont.store.getFreeCapacity(RESOURCE_ENERGY) === 0
     ).length
       ? 1
       : 0;
 
-    if (rcl < 4) return numContainers + extraNeeded + 1;
+    if (rcl < 4) return numContainers + extraNeeded + 1; // Extra for low rcl
     if (rcl > 5) return extraNeeded + 1;
     return extraNeeded + numContainers;
   }
@@ -94,12 +100,11 @@ export class MoverCreep extends CreepBase {
         const type: MoverTask['type'] = 'transfer';
 
         // Extensions
-        target = global.empire.colonies[creep.memory.homeRoom]
-          .getExtensions()
+        target = creep.room
+          .findExtensions()
           .filter(
             ext =>
               ext.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-              ext.isActive() &&
               !taskManager.isTaskTaken(ext.pos.roomName, ext.id, type)
           )
           .sort((a, b) => a.pos.getRangeTo(creep) - b.pos.getRangeTo(creep))[0];

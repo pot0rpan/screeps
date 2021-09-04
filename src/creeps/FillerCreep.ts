@@ -42,8 +42,7 @@ export class FillerCreep extends CreepBase {
   private getExtensionToFill(creep: Creep): StructureExtension | null {
     let ix = creep.memory._extensionIx ?? Infinity;
 
-    const extensions =
-      global.empire.colonies[creep.memory.homeRoom].getExtensions();
+    const extensions = creep.room.findExtensions();
 
     if (ix >= extensions.length) ix = 0;
 

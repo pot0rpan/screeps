@@ -7,6 +7,8 @@ declare global {
     _sources: Source[];
     findSourceContainers(): StructureContainer[];
     _sourceContainers: StructureContainer[];
+    findSourceLink(source: Source): StructureLink | undefined;
+    _sourceLinks: { [source: string]: StructureLink };
     findUpgradeLinks(): StructureLink[];
     _upgradeLinks: StructureLink[];
     findCenterLinks(): StructureLink[];
@@ -28,12 +30,16 @@ declare global {
     _hostiles: Creep[];
     findDangerousHostiles(): Creep[];
     _dangerousHostiles: Creep[];
+    findExtensions(): StructureExtension[];
+    _extensions?: StructureExtension[];
   }
 
   interface RoomMemory {
     _sourceIds?: Id<Source>[];
     _towerIds?: Id<StructureTower>[];
     _hostileIds?: Id<Creep>[];
+    _extensions?: Id<StructureExtension>[];
+    _extensionsTs?: number;
   }
 }
 
@@ -97,6 +103,24 @@ export default (() => {
     }
 
     return this._sourceContainers;
+  };
+
+  // Cached for tick
+  Room.prototype.findSourceLink = function (source: Source) {
+    if ((this.controller?.level ?? 0) < 5) return;
+
+    if (!this._sourceLinks) {
+      this._sourceLinks = {};
+    }
+    if (!this._sourceLinks[source.id]) {
+      this._sourceLinks[source.id] = source.pos.findInRange<StructureLink>(
+        FIND_STRUCTURES,
+        1,
+        { filter: struct => struct.structureType === STRUCTURE_LINK }
+      )[0];
+    }
+
+    return this._sourceLinks[source.id];
   };
 
   // Cached for tick
@@ -224,5 +248,49 @@ export default (() => {
     }
 
     return this._dangerousHostiles;
+  };
+
+  Room.prototype.findExtensions = function () {
+    // Populate cache of IDs if not already in room memory or stale
+    if (
+      !this.memory._extensions?.length ||
+      !this.memory._extensionsTs ||
+      Game.time - this.memory._extensionsTs > 50
+    ) {
+      const plans =
+        global.empire.colonies[this.name].roomPlanner.plans.extension ?? [];
+
+      // Wait for room planner to plan them (probably was global reset this tick)
+      if (!plans.length) return [];
+
+      this.memory._extensions = [];
+      this.memory._extensionsTs = Game.time;
+
+      for (const plan of plans) {
+        const ext = plan.pos
+          .lookFor(LOOK_STRUCTURES)
+          .filter(
+            struct =>
+              struct.structureType === STRUCTURE_EXTENSION && struct.isActive()
+          )[0] as StructureExtension | undefined;
+
+        if (ext) {
+          this.memory._extensions.push(ext.id);
+        }
+      }
+    }
+
+    // Read from IDs memory and map to game objects, cache for this tick
+    if (!this._extensions) {
+      this._extensions = [];
+      for (const id of this.memory._extensions) {
+        const ext = Game.getObjectById(id);
+        if (ext) {
+          this._extensions.push(ext);
+        }
+      }
+    }
+
+    return this._extensions;
   };
 })();
