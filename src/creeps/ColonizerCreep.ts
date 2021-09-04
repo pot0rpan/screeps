@@ -123,10 +123,9 @@ export class ColonizerCreep extends CreepBase {
           creep.build(spawnConstructionSite);
         }
       } else {
-        const source = creep.room
-          .findSources()
-          .filter(source => source.energy)
-          .sort((a, b) => a.pos.getRangeTo(creep) - b.pos.getRangeTo(creep))[0];
+        const source = creep.pos
+          .findClosestOpenSources(creep)
+          .filter(source => source.energy)[0];
         if (!source) {
           creep.say('...');
           return;
