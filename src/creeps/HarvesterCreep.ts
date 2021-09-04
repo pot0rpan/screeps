@@ -34,7 +34,10 @@ export class HarvesterCreep extends CreepBase {
     if (room.controller && room.controller.level < 2) return 0;
     if (room.memory.defcon) return 0;
 
-    return room.findSourceContainers().length;
+    return room
+      .findSourceContainers()
+      .filter(container => container.store.getFreeCapacity(RESOURCE_ENERGY))
+      .length;
   }
 
   findTask(creep: Creep, taskManager: TaskManager): HarvesterTask | null {
