@@ -51,6 +51,10 @@ export class Empire {
     console.log('Empire run()');
 
     for (const roomName in this.colonies) {
+      if (!Game.rooms[roomName]) {
+        delete this.colonies[roomName];
+        delete Memory.colonies?.[roomName];
+      }
       this.colonies[roomName].run();
     }
 
