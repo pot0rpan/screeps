@@ -158,7 +158,7 @@ export class OperatorCreep extends CreepBase {
   }
 
   targetNum(room: Room): number {
-    if ((room.controller?.level ?? 0) > 4 && room.storage?.isActive()) {
+    if (room.storage?.isActive()) {
       return 1;
     }
     return 0;
@@ -204,18 +204,35 @@ export class OperatorCreep extends CreepBase {
       );
     }
 
-    // Fill center link
-    const link = creep.room
-      .findCenterLinks()
-      .find(l => l.store.getFreeCapacity(RESOURCE_ENERGY));
+    // Fill center link and send to controller if needed
+    const upgradeLink = creep.room
+      .findUpgradeLinks()
+      .filter(link => link.store.getUsedCapacity(RESOURCE_ENERGY) < 200)[0];
 
-    if (link) {
-      return taskManager.createTask<OperatorTask>(
-        creep.room.name,
-        link.id,
-        'transfer',
-        1
-      );
+    if (upgradeLink) {
+      const centerLink = creep.room.findCenterLinks()[0];
+
+      // If we have an empty upgrade link and center link needs energy
+      if (centerLink) {
+        if (
+          centerLink.store.getUsedCapacity(RESOURCE_ENERGY) <
+          upgradeLink.store.getFreeCapacity(RESOURCE_ENERGY)
+        ) {
+          return taskManager.createTask<OperatorTask>(
+            creep.room.name,
+            centerLink.id,
+            'transfer',
+            1,
+            { to: upgradeLink.id, resourceType: RESOURCE_ENERGY }
+          );
+        } else {
+          // Center link is already full enough, just put in a transfer request
+          global.empire.colonies[creep.room.name].queueLinkTransfer(
+            centerLink.id,
+            upgradeLink.id
+          );
+        }
+      }
     }
 
     const resourceToMove = this.findResourceToBalance(
@@ -252,14 +269,22 @@ export class OperatorCreep extends CreepBase {
     }
 
     if (task.type === 'transfer') {
-      if (creep.isEmpty()) {
+      if (!creep.isFull()) {
         creep.withdraw(creep.room.storage as StructureStorage, RESOURCE_ENERGY);
       } else {
-        creep.transfer(
-          Game.getObjectById(task.target as Id<Structure>) as Structure,
-          RESOURCE_ENERGY
-        );
+        const target = Game.getObjectById(
+          task.target as Id<Structure>
+        ) as Structure;
+        creep.transfer(target, RESOURCE_ENERGY);
         task.complete = true;
+
+        // Make a link transfer request
+        if (target instanceof StructureLink && task.data) {
+          global.empire.colonies[creep.memory.homeRoom].queueLinkTransfer(
+            target.id,
+            task.data.to as Id<StructureLink>
+          );
+        }
       }
       return;
     }
@@ -269,6 +294,7 @@ export class OperatorCreep extends CreepBase {
       return;
     }
 
+    // Balance task
     const from = Game.getObjectById(
       task.target as Id<StructureStorage | StructureTerminal>
     ) as StructureStorage | StructureTerminal;

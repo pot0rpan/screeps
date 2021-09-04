@@ -14,6 +14,12 @@ declare global {
   }
 }
 
+type LinkTransferRequest = {
+  from: Id<StructureLink>;
+  to: Id<StructureLink>;
+  ts: number;
+};
+
 // A Colony is a block of 9 rooms, with `room` in the center
 // All functionality of a colony stems from here
 export class Colony {
@@ -32,6 +38,8 @@ export class Colony {
   private _extensionsCache: Id<StructureExtension>[] = [];
   private _extensionsCacheTimestamp = 0;
   private EXTENSION_CACHE_TIME = 50;
+
+  private linkTransferQueue: LinkTransferRequest[] = [];
 
   constructor(roomName: string) {
     console.log('Colony constructor()', roomName);
@@ -128,16 +136,16 @@ export class Colony {
       this.hr.recycleCreeps();
     }
 
+    // Run links
+    if (isNthTick(8)) {
+      this.runLinks();
+    }
+
     // Run creeps
     this.hr.runCreeps(colonyCreeps);
 
     // Run towers
     this.runTowers();
-
-    // Run links
-    if (isNthTick(8)) {
-      this.runLinks();
-    }
 
     // Handle construction
     if (global.isFirstTick || isNthTick(config.ticks.PLAN_ROOMS)) {
@@ -195,6 +203,8 @@ export class Colony {
   }
 
   private handleExpansion(): void {
+    if (!Game.rooms[this.roomName].storage) return;
+
     // Get rooms we have scouted and aren't colonizing yet
     const adjRoomMems = this.adjacentRoomNames
       .filter(roomName => !!Memory.rooms[roomName])
@@ -271,38 +281,35 @@ export class Colony {
     bestRoom.mem.colonize = true;
   }
 
+  public queueLinkTransfer(
+    from: LinkTransferRequest['from'],
+    to: LinkTransferRequest['to']
+  ): void {
+    if (
+      !this.linkTransferQueue.find(req => req.from === from && req.to === to)
+    ) {
+      this.linkTransferQueue.push({ from, to, ts: Game.time });
+    }
+  }
+
   private runLinks(): void {
-    const room = Game.rooms[this.roomName];
+    const request = this.linkTransferQueue[0];
+    if (!request) return;
 
-    // Transfer from completely full center links to upgrade links
-    let linksFrom: StructureLink[] = [];
+    const from = Game.getObjectById(request.from);
+    if (!from || from.cooldown) return;
 
-    for (const link of room.findCenterLinks()) {
-      if (!link.cooldown && link.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
-        linksFrom.push(link);
-      }
+    const to = Game.getObjectById(request.to);
+
+    if (
+      !to ||
+      from.store.getUsedCapacity(RESOURCE_ENERGY) <
+        to.store.getFreeCapacity(RESOURCE_ENERGY)
+    ) {
+      return;
     }
 
-    if (!linksFrom) return;
-
-    // Transfer to links less than a third full
-    const linksTo = room
-      .findUpgradeLinks()
-      .filter(
-        link =>
-          link.store.getUsedCapacity(RESOURCE_ENERGY) <
-          link.store.getCapacity(RESOURCE_ENERGY) / 3
-      )
-      .sort(
-        (a, b) =>
-          a.store.getUsedCapacity(RESOURCE_ENERGY) -
-          b.store.getUsedCapacity(RESOURCE_ENERGY)
-      );
-
-    for (const from of linksFrom) {
-      const to = linksTo.shift();
-      if (!to) break;
-      from.transferEnergy(to);
-    }
+    from.transferEnergy(to);
+    this.linkTransferQueue.shift();
   }
 }
