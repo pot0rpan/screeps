@@ -5,7 +5,7 @@ import { isNthTick } from 'utils';
 import { BodySettings, CreepBase } from './CreepBase';
 
 interface MoverTask extends CreepTask {
-  type: 'withdraw' | 'transfer';
+  type: 'withdraw' | 'transfer' | 'pickup';
 }
 
 export class MoverCreep extends CreepBase {
@@ -16,14 +16,23 @@ export class MoverCreep extends CreepBase {
   };
   taskPriority = 10; // TODO: findTask is EXPENSIVE
 
-  // Number of source containers, extra if low rcl
+  // Number of source containers, extra if low rcl or containers full
   targetNum(room: Room): number {
-    const numContainers = room.findSourceContainers().length;
+    const containers = room.findSourceContainers();
+    const numContainers = containers.length;
     if (!numContainers) return 0;
     const rcl = room.controller?.level ?? 0;
-    if (rcl < 4) return numContainers + 1;
-    if (rcl > 5) return 1;
-    return numContainers;
+
+    // Spawn extra mover if any source containers are completely full
+    const extraNeeded = containers.filter(
+      cont => cont.store.getFreeCapacity(RESOURCE_ENERGY) === 0
+    ).length
+      ? 1
+      : 0;
+
+    if (rcl < 4) return numContainers + extraNeeded + 1;
+    if (rcl > 5) return extraNeeded + 1;
+    return extraNeeded + numContainers;
   }
 
   findTask(creep: Creep, taskManager: TaskManager): MoverTask | null {
@@ -41,7 +50,11 @@ export class MoverCreep extends CreepBase {
 
         const storage = creep.room.storage;
 
-        if (storage && storage.store.getUsedCapacity(RESOURCE_ENERGY) < 10000) {
+        if (
+          storage &&
+          (storage.store.getUsedCapacity(RESOURCE_ENERGY) < 10000 ||
+            creep.getCarryingResources()[0] !== RESOURCE_ENERGY)
+        ) {
           target = storage;
         }
 
@@ -142,29 +155,55 @@ export class MoverCreep extends CreepBase {
         );
       }
     } else {
-      let target: StructureContainer | null = null;
-      const type: MoverTask['type'] = 'withdraw';
+      let target: StructureContainer | Resource | undefined = undefined;
+      let type: MoverTask['type'] = 'pickup';
+
+      // Look for dropped resources, get largest amounts first
+      // Get other resources first if we aren't low on energy
+      const dropped = creep.room
+        .find(
+          FIND_DROPPED_RESOURCES,
+          creep.room.storage?.isActive() &&
+            creep.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 10000
+            ? undefined
+            : { filter: res => res.resourceType === RESOURCE_ENERGY }
+        )
+        .filter(res => res.amount > 100)
+        .sort((a, b) => b.amount - a.amount);
+
+      if (dropped.length) {
+        target = dropped.find(res => res.resourceType !== RESOURCE_ENERGY);
+
+        if (!target) target = dropped[0];
+      }
 
       // Gather from fullest source container
-      target = creep.room
-        .findSourceContainers()
-        .filter(
-          container =>
-            container.store[RESOURCE_ENERGY] >=
-            creep.store.getFreeCapacity(RESOURCE_ENERGY)
-        )
-        .sort(
-          (a, b) =>
-            a.store.getFreeCapacity(RESOURCE_ENERGY) -
-            b.store.getFreeCapacity(RESOURCE_ENERGY)
-        )[0];
+      if (!target) {
+        type = 'withdraw';
+        target = creep.room
+          .findSourceContainers()
+          .filter(
+            container =>
+              container.store[RESOURCE_ENERGY] >=
+              creep.store.getFreeCapacity(RESOURCE_ENERGY)
+          )
+          .sort(
+            (a, b) =>
+              a.store.getFreeCapacity(RESOURCE_ENERGY) -
+              b.store.getFreeCapacity(RESOURCE_ENERGY)
+          )[0];
+      }
 
       if (!target) return null;
 
       return taskManager.createTask<MoverTask>(
         target.pos.roomName,
         target.id,
-        type
+        type,
+        target instanceof Resource &&
+          target.amount > creep.store.getFreeCapacity(target.resourceType)
+          ? -1
+          : 1
       );
     }
   }
@@ -177,6 +216,7 @@ export class MoverCreep extends CreepBase {
         | StructureTower
         | StructureStorage
         | StructureContainer
+        | Resource
       >
     );
     if (!target) return false;
@@ -193,10 +233,12 @@ export class MoverCreep extends CreepBase {
 
     if (task.type === 'transfer') {
       // @ts-ignore-next-line idk why this is needed
-      if (target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+      if (target.store.getFreeCapacity() === 0) {
         return false;
       }
     }
+
+    // Pickup should be valid if target is defined
 
     return true;
   }
@@ -215,6 +257,7 @@ export class MoverCreep extends CreepBase {
         | Source
         | StructureContainer
         | StructureStorage
+        | Resource
       >
     );
 
@@ -233,11 +276,14 @@ export class MoverCreep extends CreepBase {
             | StructureContainer
             | StructureStorage
             | StructureExtension,
-          RESOURCE_ENERGY
+          creep.getCarryingResources()[0]
         );
         break;
       case 'withdraw':
         res = creep.withdraw(target as StructureContainer, RESOURCE_ENERGY);
+        break;
+      case 'pickup':
+        res = creep.pickup(target as Resource);
         break;
       default:
         creep.memory.task.complete = true;
@@ -246,24 +292,6 @@ export class MoverCreep extends CreepBase {
     if (res === OK) {
       creep.memory.task.complete = true;
     } else if (res === ERR_NOT_IN_RANGE) {
-      if (isNthTick(2)) {
-        // Find tombstones with energy
-        const tombstone = creep.pos.findInRange(FIND_TOMBSTONES, 1, {
-          filter: ts => ts.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
-        })[0];
-        if (tombstone) {
-          creep.withdraw(tombstone, RESOURCE_ENERGY);
-        } else {
-          // Find dropped resources in range
-          const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
-            filter: res => res.resourceType === RESOURCE_ENERGY,
-          })[0];
-          if (dropped) {
-            creep.pickup(dropped);
-          }
-        }
-      }
-
       creep.travelTo(target);
     }
 
