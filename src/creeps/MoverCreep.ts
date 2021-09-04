@@ -14,7 +14,7 @@ export class MoverCreep extends CreepBase {
     pattern: [CARRY, CARRY, MOVE],
     sizeLimit: 6,
   };
-  taskPriority = 3;
+  taskPriority = 10; // TODO: findTask is EXPENSIVE
 
   // Number of source containers, extra if low rcl
   targetNum(room: Room): number {
