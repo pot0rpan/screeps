@@ -33,3 +33,13 @@ export function isHighway(room: Room): boolean {
   const [, y, x] = match;
   return parseInt(x) % 10 === 0 || parseInt(y) % 10 === 0;
 }
+
+export function isInColonyHelpRange(
+  colonyRoom: string,
+  targetRoom: string
+): boolean {
+  return (
+    Game.map.getRoomLinearDistance(colonyRoom, targetRoom) <=
+    config.COLONY_HELP_DISTANCE
+  );
+}

@@ -2,6 +2,7 @@ import { recycle } from 'actions/recycle';
 import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { isFlagOfType } from 'utils/flag';
+import { isInColonyHelpRange } from 'utils/room';
 import { BodySettings, CreepBase } from './CreepBase';
 
 interface ColonizerTask extends CreepTask {
@@ -32,7 +33,7 @@ export class ColonizerCreep extends CreepBase {
       flag =>
         flag.pos.roomName !== room.name &&
         isFlagOfType(flag, 'COLONIZE') &&
-        Game.map.getRoomLinearDistance(room.name, flag.pos.roomName) <= 5
+        isInColonyHelpRange(room.name, flag.pos.roomName)
     );
   }
 

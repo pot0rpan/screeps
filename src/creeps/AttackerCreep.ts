@@ -1,8 +1,8 @@
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { isFriendlyOwner } from 'utils';
-import { getMaxHeal, getMaxTowerDamage } from 'utils/combat';
 import { getFatiguedInSquad } from 'utils/creep';
+import { isInColonyHelpRange } from 'utils/room';
 import { BodySettings, CreepBase } from './CreepBase';
 import { HealerTask } from './HealerCreep';
 
@@ -20,13 +20,15 @@ export class AttackerCreep extends CreepBase {
   };
 
   public static findPairAttackFlags(roomName: string): Flag[] {
-    const { adjacentRoomNames } = global.empire.colonies[roomName];
+    // Make sure colony is strong enough to help attack
+    if ((Game.rooms[roomName].controller?.level ?? 0) < 4) return [];
+
     return _.filter(
       Game.flags,
       flag =>
         flag.color === COLOR_RED &&
         flag.secondaryColor === COLOR_GREEN &&
-        adjacentRoomNames.includes(flag.pos.roomName)
+        isInColonyHelpRange(roomName, flag.pos.roomName)
     );
   }
 

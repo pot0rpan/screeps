@@ -57,6 +57,7 @@ export default {
   // FRIENDLY_NAMES: ['poot', 'Xephael'],
   MAX_CONSTRUCTION_SITES: 5,
   MAX_TOWER_REFILL: 600,
+  COLONY_HELP_DISTANCE: 5,
   ticks: {
     SPAWN_CREEPS: 10,
     RECHECK_TASK_VALIDITY: 5,
