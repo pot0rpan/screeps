@@ -14,21 +14,18 @@ export class PioneerCreep extends CreepBase {
     sizeLimit: 2,
   };
 
-  // If controller is level 1, spawn 4
-  // If there aren't enough other roles, spawn 2
   targetNum(room: Room): number {
     const controller = room.controller;
     if (!controller) return 0;
+
     if (controller.level <= 2) {
       return Math.min(
         6,
-        room
-          .findSources(true)
-          .reduce(
-            (spaces, source) =>
-              spaces + source.pos.getAdjacentPositions(1, true).length,
-            0
-          )
+        room.findSources(true).reduce(
+          (spaces, source) =>
+            spaces + source.pos.getAdjacentPositions(1, true).length,
+          1 // Extra since they won't all always be harvesting at the same time
+        )
       );
     }
 
