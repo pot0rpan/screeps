@@ -12,7 +12,7 @@ export class MoverCreep extends CreepBase {
   role: CreepRole = 'mover';
   bodyOpts: BodySettings = {
     pattern: [CARRY, CARRY, MOVE],
-    sizeLimit: 6,
+    sizeLimit: 10,
   };
   taskPriority = 10; // TODO: findTask is EXPENSIVE
 
@@ -20,7 +20,9 @@ export class MoverCreep extends CreepBase {
   targetNum(room: Room): number {
     const numContainers = room.findSourceContainers().length;
     if (!numContainers) return 0;
-    if ((room.controller?.level ?? 0) < 4) return numContainers + 1;
+    const rcl = room.controller?.level ?? 0;
+    if (rcl < 4) return numContainers + 1;
+    if (rcl > 5) return 1;
     return numContainers;
   }
 

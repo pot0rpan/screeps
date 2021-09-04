@@ -13,20 +13,22 @@ export class HaulerCreep extends CreepBase {
     ordered: true,
   };
 
-  // Adjacent rooms only get expanded to if 2 sources
-  // Only send 1 hauler per room
   targetNum(room: Room): number {
     if (!room.storage) return 0;
 
-    return Math.floor(
-      _.filter(
-        Game.creeps,
-        creep =>
-          !creep.spawning &&
-          creep.memory.homeRoom === room.name &&
-          creep.memory.role === 'miner'
-      ).length
-    );
+    const rcl = room.controller?.level ?? 0;
+
+    const numMiners = _.filter(
+      Game.creeps,
+      creep =>
+        !creep.spawning &&
+        creep.memory.homeRoom === room.name &&
+        creep.memory.role === 'miner'
+    ).length;
+
+    if (rcl < 6) return numMiners;
+
+    return Math.min(1, Math.floor(numMiners / 2));
   }
 
   isValidTask(creep: Creep, task: HaulerTask): boolean {
