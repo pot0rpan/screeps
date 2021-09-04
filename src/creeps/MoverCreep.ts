@@ -18,10 +18,10 @@ export class MoverCreep extends CreepBase {
 
   // Number of source containers, extra if low rcl
   targetNum(room: Room): number {
-    return (
-      room.findSourceContainers().length +
-      ((room.controller?.level ?? 0) < 4 ? 1 : 0)
-    );
+    const numContainers = room.findSourceContainers().length;
+    if (!numContainers) return 0;
+    if ((room.controller?.level ?? 0) < 4) return numContainers + 1;
+    return numContainers;
   }
 
   findTask(creep: Creep, taskManager: TaskManager): MoverTask | null {
