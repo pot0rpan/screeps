@@ -1,4 +1,5 @@
 import config from 'config';
+import { isNthTick } from 'utils';
 import { generateBunkerPlans } from 'stamps/bunker';
 
 declare global {
@@ -45,37 +46,66 @@ export class RoomPlanner {
     }
   }
 
-  // Plan everything, no matter the RCL (unless rcl < 2)
+  // Plan on global reset or rcl change
   // Push all plans to this.plans[type]
+  // Construct on global reset, rcl change, or N ticks
   public run() {
-    console.log('RoomPlanner run()');
+    const start = Game.cpu.getUsed();
 
     if (!this.baseCenter) return;
-    const room = Game.rooms[this.roomName];
-    this.rcl = room.controller?.level ?? 0;
 
+    const rcl = Game.rooms[this.roomName].controller?.level ?? 0;
+    const newRcl = rcl !== this.rcl;
+    this.rcl = rcl; // Update here, used in both plan() and construct()
+
+    // Plan on global reset or rcl change only
+    if (global.isFirstTick || newRcl) {
+      const planStart = Game.cpu.getUsed();
+      this.plan();
+      global.stats.profileLog(`${this.roomName} plan()`, planStart, [
+        this.roomName,
+      ]);
+    }
+
+    // Construct same times + every N ticks
+    if (
+      global.isFirstTick ||
+      newRcl ||
+      isNthTick(config.ticks.PLACE_CONSTRUCTION_SITES)
+    ) {
+      const constructionStart = Game.cpu.getUsed();
+      this.construct();
+      global.stats.profileLog(
+        `${this.roomName} construct()`,
+        constructionStart,
+        [this.roomName]
+      );
+    }
+
+    global.stats.profileLog(`${this.roomName} RoomPlanner`, start, [
+      this.roomName,
+    ]);
+  }
+
+  private plan() {
     // Nothing to build at lvl 1
     if (this.rcl < 2) return;
 
     // Don't construct when under attack
     if (Memory.rooms[this.roomName].defcon) return;
 
-    // Only plan if bucket isn't empty and no plans exist (global reset)
-    if (
-      (this.roomName === 'sim' || Game.cpu.bucket > 200) &&
-      !Object.keys(this.plans).length
-    ) {
-      if (this.baseCenter) {
-        this.planBunker(this.baseCenter);
-        this.planSourceRoutes(this.baseCenter);
-        this.planControllerProtection();
-        if (this.rcl >= 6) {
-          this.planMineralRoute(this.baseCenter);
-        }
+    // Only plan if bucket isn't empty (or no bucket like in sim)
+    if (this.baseCenter && (this.roomName === 'sim' || Game.cpu.bucket > 200)) {
+      this.plans = {};
+
+      this.planBunker(this.baseCenter);
+      this.planSourceRoutes(this.baseCenter);
+      this.planControllerProtection();
+
+      if (this.rcl >= 6) {
+        this.planMineralRoute(this.baseCenter);
       }
     }
-
-    this.placeConstructionSites(this.rcl);
   }
 
   private planBunker(baseCenter: RoomPosition): void {
@@ -393,7 +423,7 @@ export class RoomPlanner {
   // If wrong construction site or structure is in place, it gets destroyed
   // Placed in order of this.plans PlanType keys,
   // but some limits apply like the amount of each type at a given RCL
-  private placeConstructionSites(rcl: number): void {
+  private construct(): void {
     const room = Game.rooms[this.roomName];
     const terrain = new Room.Terrain(this.roomName);
 
@@ -404,23 +434,23 @@ export class RoomPlanner {
       const plans = this.plans[
         planType as BuildableStructureConstant
       ] as BuildingPlan[];
-      console.log(plans.length, planType, 'plans created');
 
       // Visualize all plans for sanity check
       this.visualizePlans(planType as BuildableStructureConstant, plans);
 
-      if (planType === STRUCTURE_TOWER && rcl < 3) continue;
-      if (planType === STRUCTURE_CONTAINER && rcl < 3) continue;
-      if (planType === STRUCTURE_ROAD && rcl < 3) continue;
-      if (planType === STRUCTURE_STORAGE && rcl < 4) continue;
-      if (planType === STRUCTURE_RAMPART && rcl < 5) continue; // Can be build earlier, but shouldn't need them
-      if (planType === STRUCTURE_LINK && rcl < 5) continue;
-      if (planType === STRUCTURE_EXTRACTOR && rcl < 6) continue;
-      if (planType === STRUCTURE_TERMINAL && rcl < 6) continue;
-      if (planType === STRUCTURE_LAB && rcl < 6) continue;
+      if (planType === STRUCTURE_TOWER && this.rcl < 3) continue;
+      if (planType === STRUCTURE_CONTAINER && this.rcl < 3) continue;
+      if (planType === STRUCTURE_ROAD && this.rcl < 3) continue;
+      if (planType === STRUCTURE_STORAGE && this.rcl < 4) continue;
+      if (planType === STRUCTURE_RAMPART && this.rcl < 5) continue;
+      if (planType === STRUCTURE_LINK && this.rcl < 5) continue;
+      if (planType === STRUCTURE_EXTRACTOR && this.rcl < 6) continue;
+      if (planType === STRUCTURE_TERMINAL && this.rcl < 6) continue;
+      if (planType === STRUCTURE_LAB && this.rcl < 6) continue;
+      if (planType === STRUCTURE_OBSERVER && this.rcl < 8) continue;
 
       const maxAtThisRcl =
-        CONTROLLER_STRUCTURES[planType as BuildableStructureConstant][rcl];
+        CONTROLLER_STRUCTURES[planType as BuildableStructureConstant][this.rcl];
 
       for (const plan of plans.slice(0, maxAtThisRcl)) {
         if (numConstructionSites >= config.MAX_CONSTRUCTION_SITES) break;

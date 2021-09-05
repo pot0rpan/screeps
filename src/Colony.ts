@@ -23,6 +23,7 @@ type LinkTransferRequest = {
 // A Colony is a block of 9 rooms, with `room` in the center
 // All functionality of a colony stems from here
 export class Colony {
+  private rcl: number;
   readonly roomName: string;
   readonly adjacentRoomNames: string[];
   readonly hr: HumanResources;
@@ -46,6 +47,7 @@ export class Colony {
     this.roomPlanner = new RoomPlanner(this.roomName);
     this.taskManager = new TaskManager(this);
     this.colonyDefense = new ColonyDefense(this);
+    this.rcl = Game.rooms[this.roomName].controller?.level ?? 0;
   }
 
   getColonyCreeps(): Creep[] {
@@ -66,6 +68,10 @@ export class Colony {
   run() {
     const colonyCpu = Game.cpu.getUsed();
     console.log('Colony run()', this.roomName);
+
+    const rcl = Game.rooms[this.roomName].controller?.level ?? 0;
+    const newRcl = rcl !== this.rcl;
+    this.rcl = rcl;
 
     const colonyCreeps = this.getColonyCreeps();
 
@@ -95,9 +101,16 @@ export class Colony {
     // Run towers
     this.runTowers();
 
-    // Handle construction
-    if (global.isFirstTick || isNthTick(config.ticks.PLAN_ROOMS)) {
-      this.roomPlanner.run();
+    // Plan main room and place construction sites
+    // handles timing on its own
+    this.roomPlanner.run();
+
+    // Handle expansion to adjacent mining rooms
+    if (
+      global.isFirstTick ||
+      newRcl ||
+      isNthTick(config.ticks.PLAN_EXPANSION)
+    ) {
       this.handleExpansion();
     }
 
