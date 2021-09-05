@@ -126,7 +126,7 @@ export class ColonizerCreep extends CreepBase {
       } else {
         const source = creep.pos
           .findClosestOpenSources(creep)
-          .filter(source => source.energy)[0];
+          .find(source => source.energy);
         if (!source) {
           creep.say('...');
           return;

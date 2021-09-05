@@ -170,37 +170,27 @@ export class HaulerCreep extends CreepBase {
     if (!target) {
       // Assume room just has no visibility
       creep.travelTo(new RoomPosition(25, 25, task.room), { range: 10 });
-
       return;
     }
 
-    let res: ScreepsReturnCode = ERR_NOT_FOUND;
-
-    switch (task.type) {
-      case 'transfer':
-        res = creep.transfer(
-          target as StructureStorage,
-          creep.getCarryingResources()[0]
-        );
-        break;
-      case 'withdraw':
-        res = creep.withdraw(target as StructureContainer, RESOURCE_ENERGY);
-        break;
-      case 'pickup':
-        res = creep.pickup(target as Resource);
-        break;
-      default:
-        creep.memory.task.complete = true;
-    }
-
-    if (res === OK) {
-      creep.memory.task.complete = true;
-    } else if (res === ERR_NOT_IN_RANGE) {
-      // Find dropped resources in range
-      const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1)[0];
-      if (dropped) creep.pickup(dropped);
-
+    if (creep.pos.getRangeTo(target) > 1) {
       creep.travelTo(target);
+    } else {
+      switch (task.type) {
+        case 'transfer':
+          creep.transfer(
+            target as StructureStorage,
+            creep.getCarryingResources()[0]
+          );
+          break;
+        case 'withdraw':
+          creep.withdraw(target as StructureContainer, RESOURCE_ENERGY);
+          break;
+        case 'pickup':
+          creep.pickup(target as Resource);
+          break;
+      }
+      creep.memory.task.complete = true;
     }
 
     // Toggle `working` boolean if working and out of energy
