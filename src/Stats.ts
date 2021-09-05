@@ -260,7 +260,7 @@ export class Stats {
     printProgressBar(roomName, Game.cpu.bucket / 10000, 10, 1);
 
     printText(roomName, 'CPU:', 9.5, 2.5, { align: 'right' });
-    printProgressBar(roomName, Game.cpu.getUsed() / 20, 10, 2.5);
+    printProgressBar(roomName, Game.cpu.getUsed() / Game.cpu.limit, 10, 2.5);
   }
 
   showEnergyStats(room: Room) {
