@@ -46,12 +46,14 @@ export class PioneerCreep extends CreepBase {
 
   findTask(creep: Creep, taskManager: TaskManager): PioneerTask | null {
     if (creep.memory.working) {
-      // Fill extensions or spawn or controller
+      // Fill extensions or spawn or tower or controller
       let target:
-        | StructureSpawn
-        | StructureController
         | StructureExtension
-        | null;
+        | StructureSpawn
+        | StructureTower
+        | StructureController
+        | null
+        | undefined;
       let type: PioneerTask['type'] = 'transfer';
 
       target = creep.pos.findClosestByRange<StructureExtension>(
@@ -68,7 +70,13 @@ export class PioneerCreep extends CreepBase {
       if (!target) {
         target = creep.room
           .findSpawns()
-          .filter(spawn => spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0)[0];
+          .find(spawn => spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
+      }
+
+      if (!target) {
+        target = creep.room
+          .findTowers()
+          .find(tower => tower.store.getFreeCapacity(RESOURCE_ENERGY) > 200);
       }
 
       if (!target && creep.room.controller) {
