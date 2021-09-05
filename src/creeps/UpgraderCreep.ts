@@ -122,10 +122,12 @@ export class UpgraderCreep extends CreepBase {
       const target =
         link && link.store.getUsedCapacity(RESOURCE_ENERGY) ? link : container;
 
-      const res = creep.withdraw(target, RESOURCE_ENERGY);
-      if (res === ERR_NOT_IN_RANGE) {
-        creep.travelTo(target);
-      } else if (res !== OK) {
+      if (creep.pos.getRangeTo(target) > 1) {
+        creep.travelTo(target, { range: 1 });
+      } else if (
+        !target.store[RESOURCE_ENERGY] ||
+        creep.withdraw(target, RESOURCE_ENERGY) !== OK
+      ) {
         creep.say('...');
       }
     }
