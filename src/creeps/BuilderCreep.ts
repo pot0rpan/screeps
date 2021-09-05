@@ -35,11 +35,11 @@ export class BuilderCreep extends CreepBase {
     if (sites.length) {
       // If only rampart/wall construction sites, only spawn 1
       if (
-        !sites.filter(
-          sites =>
-            sites.structureType !== STRUCTURE_RAMPART &&
-            sites.structureType !== STRUCTURE_WALL
-        ).length
+        !sites.find(
+          site =>
+            site.structureType !== STRUCTURE_RAMPART &&
+            site.structureType !== STRUCTURE_WALL
+        )
       ) {
         return 1;
       }
@@ -47,9 +47,7 @@ export class BuilderCreep extends CreepBase {
       return Math.min(sites.length * 2, rcl > 3 ? 2 : 4);
     }
 
-    if (
-      room.find(FIND_STRUCTURES, { filter: struct => isDamaged(struct) }).length
-    ) {
+    if (room.find(FIND_STRUCTURES).find(struct => isDamaged(struct))) {
       return room.memory.defcon ? 2 : 1;
     }
 
