@@ -105,6 +105,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   if (
     Game.cpu.bucket === 10000 &&
+    Game.cpu.shardLimits && // Private server may not have this
     Game.cpu.getUsed() < Game.cpu.shardLimits[Game.shard.name] * 0.8
   ) {
     console.log('<span style="color: #ff7378">Generating pixel</span>');
