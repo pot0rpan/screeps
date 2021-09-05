@@ -51,7 +51,9 @@ export class ColonyDefense {
       this.defendMainRoom();
     }
 
-    global.stats.profileLog(this.colony.roomName + ' ColonyDefense', start);
+    global.stats.profileLog(this.colony.roomName + ' ColonyDefense', start, [
+      this.roomName,
+    ]);
   }
 
   private defendMainRoom(): void {

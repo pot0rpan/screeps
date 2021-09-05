@@ -58,6 +58,7 @@ function printProgressBar(
 export class Stats {
   _show: boolean;
   _profile: boolean;
+  _profileFilter: { [category: string]: boolean } = {};
   _showTasks: boolean;
 
   constructor() {
@@ -105,8 +106,32 @@ export class Stats {
     this._showTasks = bool;
   }
 
-  public profileLog(description: any, startCpu: number) {
-    if (this.profile) {
+  public filter(...categories: string[]): string {
+    this._profileFilter = {};
+    for (const category of categories) {
+      this._profileFilter[category] = true;
+    }
+    return categories.toString();
+  }
+
+  private filterLog(categories: string[]): boolean {
+    if (!Object.keys(this._profileFilter).length || !categories.length) {
+      return true;
+    }
+
+    for (const category of categories) {
+      if (this._profileFilter[category]) return true;
+    }
+
+    return false;
+  }
+
+  public profileLog(
+    description: any,
+    startCpu: number,
+    categories: string[] = []
+  ) {
+    if (this.profile && this.filterLog(categories)) {
       const cpuUsed = Game.cpu.getUsed() - startCpu;
       if (cpuUsed <= 0) return; // Sim room
       console.log(

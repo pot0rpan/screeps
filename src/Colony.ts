@@ -101,7 +101,9 @@ export class Colony {
       this.handleExpansion();
     }
 
-    global.stats.profileLog(`Colony ${this.roomName}`, colonyCpu);
+    global.stats.profileLog(`Colony ${this.roomName}`, colonyCpu, [
+      this.roomName,
+    ]);
   }
 
   private runTowers() {

@@ -69,7 +69,10 @@ export class HumanResources {
           actual: 0,
           spawning: 0,
         };
-        global.stats.profileLog(`${role} targetNum()`, start);
+        global.stats.profileLog(`${role} targetNum()`, start, [
+          this.colony.roomName,
+          role,
+        ]);
       }
 
       for (const creep of colonyCreeps) {
@@ -269,9 +272,15 @@ export class HumanResources {
       }
 
       global.Creeps[creep.memory.role].run(creep);
-      global.stats.profileLog(`${creep.room} ${creep}`, start);
+      global.stats.profileLog(`${creep.room} ${creep}`, start, [
+        this.colony.roomName,
+        creep.name,
+        creep.memory.role,
+      ]);
     }
 
-    global.stats.profileLog(this.colony.roomName + ' runCreeps()', total);
+    global.stats.profileLog(this.colony.roomName + ' runCreeps()', total, [
+      this.colony.roomName,
+    ]);
   }
 }
