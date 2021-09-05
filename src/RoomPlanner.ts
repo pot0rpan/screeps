@@ -169,10 +169,12 @@ export class RoomPlanner {
         }).length
     );
 
-    // Probably need the same here
+    // Also don't double place here,
+    // Only need 1 adjacent position for controller link
     const sourcesNeedingLinks = sources.filter(
       source =>
-        source.pos.getAdjacentPositions(1, true).length > 1 &&
+        (source instanceof StructureController ||
+          source.pos.getAdjacentPositions(1, true).length > 1) &&
         !source.pos.findInRange(FIND_STRUCTURES, 1, {
           filter: struct => struct.structureType === STRUCTURE_LINK,
         }).length &&
