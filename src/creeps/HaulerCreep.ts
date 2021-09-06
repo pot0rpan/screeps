@@ -26,9 +26,9 @@ export class HaulerCreep extends CreepBase {
         creep.memory.role === 'miner'
     ).length;
 
-    if (rcl < 6) return numMiners + 1;
+    if (rcl < 6) return Math.min(4, numMiners + 1);
 
-    return Math.min(1, Math.floor(numMiners / 2));
+    return Math.max(1, Math.ceil(numMiners / 2));
   }
 
   isValidTask(creep: Creep, task: HaulerTask): boolean {
