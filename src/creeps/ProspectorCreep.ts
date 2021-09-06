@@ -1,12 +1,10 @@
-import config from 'config';
-import { isNthTick } from 'utils';
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
-// Target is the mineral id
 interface ProspectorTask extends CreepTask {
   type: 'harvest';
+  target: Id<Mineral>;
   data: { type: MineralConstant };
 }
 
@@ -20,57 +18,21 @@ export class ProspectorCreep extends CreepBase {
   targetNum(room: Room): number {
     if ((room.controller?.level ?? 0) < 6) return 0;
     if (!room.storage) return 0;
+    if (room.memory.defcon) return 0;
 
-    let num = 0;
-
-    const { adjacentRoomNames } = global.empire.colonies[room.name];
-
-    // Home room
-    if (
-      room.find<StructureExtractor>(FIND_STRUCTURES, {
-        filter: struct => {
-          if (struct.structureType !== STRUCTURE_EXTRACTOR) return false;
-          const mineral = struct.pos.lookFor(LOOK_MINERALS)[0];
-          if (!mineral || !mineral.mineralAmount) return false;
-          return true;
-        },
-      }).length
-    ) {
-      num++;
-    }
-
-    // Adjacent rooms
-    for (const roomName of adjacentRoomNames) {
-      const mem = Memory.rooms[roomName];
-      if (
-        mem &&
-        mem.colonize &&
-        !mem.hostiles &&
-        mem.mineral &&
-        mem.mineral.extractor &&
-        mem.mineral.amount
-      ) {
-        num++;
-      }
-    }
-
-    return num;
+    return room.find<StructureExtractor>(FIND_STRUCTURES, {
+      filter: struct => {
+        if (struct.structureType !== STRUCTURE_EXTRACTOR) return false;
+        const mineral = struct.pos.lookFor(LOOK_MINERALS)[0];
+        if (!mineral || !mineral.mineralAmount) return false;
+        return true;
+      },
+    }).length;
   }
 
   isValidTask(creep: Creep, task: ProspectorTask): boolean {
-    if (task.room === creep.memory.homeRoom) {
-      const mineral = Game.getObjectById(task.target as Id<Mineral>);
-
-      if (mineral && mineral.mineralAmount) {
-        return true;
-      }
-    } else {
-      const roomMem = Memory.rooms[task.room];
-
-      if (roomMem.mineral && roomMem.mineral.amount) return true;
-    }
-
-    return false;
+    const mineral = Game.getObjectById(task.target as Id<Mineral>);
+    return !!mineral && !!mineral.mineralAmount;
   }
 
   findTask(creep: Creep, taskManager: TaskManager): ProspectorTask | null {
@@ -79,9 +41,9 @@ export class ProspectorCreep extends CreepBase {
     if (!homeRoom.storage) return null;
 
     // Home room
-    const extractor = homeRoom.find<StructureExtractor>(FIND_STRUCTURES, {
-      filter: struct => struct.structureType === STRUCTURE_EXTRACTOR,
-    })[0];
+    const extractor = homeRoom
+      .find<StructureExtractor>(FIND_STRUCTURES)
+      .find(struct => struct.structureType === STRUCTURE_EXTRACTOR);
 
     if (extractor) {
       const mineral = extractor.pos.lookFor(LOOK_MINERALS)[0];
@@ -96,30 +58,6 @@ export class ProspectorCreep extends CreepBase {
           'harvest',
           1,
           { type: mineral.mineralType }
-        );
-      }
-    }
-
-    const { adjacentRoomNames } = global.empire.colonies[creep.memory.homeRoom];
-
-    // Adjacent rooms
-    for (const roomName of adjacentRoomNames) {
-      const mem = Memory.rooms[roomName];
-      if (
-        mem &&
-        mem.colonize &&
-        !mem.hostiles &&
-        mem.mineral &&
-        mem.mineral.extractor &&
-        mem.mineral.amount &&
-        !taskManager.isTaskTaken(roomName, mem.mineral.extractor, 'harvest')
-      ) {
-        return taskManager.createTask<ProspectorTask>(
-          homeRoom.name,
-          mem.mineral.id,
-          'harvest',
-          1,
-          { type: mem.mineral.type }
         );
       }
     }
@@ -140,74 +78,60 @@ export class ProspectorCreep extends CreepBase {
       return;
     }
 
-    // Retreat if hostiles
-    if (
-      task.room !== creep.memory.homeRoom &&
-      Memory.rooms[task.room].hostiles
-    ) {
-      creep.travelToRoom(creep.memory.homeRoom);
-      return;
-    }
-
-    if (creep.memory.working) {
-      // Take to storage
-      if (creep.room.name !== creep.memory.homeRoom) {
-        creep.travelToRoom(creep.memory.homeRoom);
-      } else {
-        const storage = creep.room.storage;
-        if (!storage) {
-          creep.say('...');
-          task.complete = true;
-          return;
-        }
-        if (creep.pos.getRangeTo(storage) > 1) {
-          creep.travelTo(storage);
-        } else {
-          creep.transfer(storage, task.data.type);
-        }
-      }
-    } else {
-      // Mine
-      if (creep.room.name !== task.room) {
-        creep.travelToRoom(task.room);
-      } else {
-        const mineral = Game.getObjectById(task.target as Id<Mineral>);
-        if (!mineral) {
-          creep.say('...');
-          task.complete = true;
-          return;
-        }
-
-        if (creep.pos.getRangeTo(mineral) > 1) {
-          creep.travelTo(mineral);
-
-          // Check for dropped resources when empty
-          if (!creep.store.getUsedCapacity(mineral.mineralType)) {
-            const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
-              filter: drop =>
-                drop.amount && drop.resourceType === mineral.mineralType,
-            })[0];
-            if (dropped) {
-              creep.pickup(dropped);
-            } else {
-              const tombstone = creep.pos.findInRange(FIND_TOMBSTONES, 1, {
-                filter: ts => ts.store.getUsedCapacity(mineral.mineralType),
-              })[0];
-              if (tombstone) {
-                creep.withdraw(tombstone, mineral.mineralType);
-              }
-            }
-          }
-        } else {
-          creep.harvest(mineral);
-        }
-      }
-    }
-
     if (creep.memory.working && creep.store.getUsedCapacity() === 0) {
       creep.memory.working = false;
     } else if (!creep.memory.working && creep.store.getFreeCapacity() === 0) {
       creep.memory.working = true;
+    }
+
+    if (creep.memory.working) {
+      // Take to storage
+      const storage = creep.room.storage;
+
+      if (!storage) {
+        creep.say('...');
+        task.complete = true;
+        return;
+      }
+      if (creep.pos.getRangeTo(storage) > 1) {
+        creep.travelTo(storage, { range: 1 });
+      } else {
+        creep.transfer(storage, task.data.type);
+      }
+    } else {
+      // Mine
+      const mineral = Game.getObjectById(task.target);
+
+      if (!mineral) {
+        creep.say('...');
+        task.complete = true;
+        return;
+      }
+
+      if (creep.pos.getRangeTo(mineral) > 1) {
+        creep.travelTo(mineral, { range: 1 });
+
+        // Check for dropped resources when empty
+        if (!creep.store.getUsedCapacity(mineral.mineralType)) {
+          const dropped = creep.pos
+            .findInRange(FIND_DROPPED_RESOURCES, 1)
+            .find(
+              drop => drop.amount && drop.resourceType === mineral.mineralType
+            );
+          if (dropped) {
+            creep.pickup(dropped);
+          } else {
+            const tombstone = creep.pos
+              .findInRange(FIND_TOMBSTONES, 1)
+              .find(ts => ts.store.getUsedCapacity(mineral.mineralType));
+            if (tombstone) {
+              creep.withdraw(tombstone, mineral.mineralType);
+            }
+          }
+        }
+      } else {
+        creep.harvest(mineral);
+      }
     }
   }
 }
