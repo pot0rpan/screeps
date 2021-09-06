@@ -147,6 +147,8 @@ export class Colony {
       }
     } else if (
       fullTowers.length &&
+      // Don't block spawning!
+      room.energyAvailable === room.energyCapacityAvailable &&
       !room.find(FIND_MY_CREEPS, {
         filter: crp => crp.memory.role === 'builder',
       }).length
