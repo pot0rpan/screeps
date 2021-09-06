@@ -1,5 +1,6 @@
 import { Colony } from 'Colony';
 import { Empire } from 'Empire';
+import { CreepNums } from 'HumanResources';
 
 declare global {
   interface Memory {
@@ -8,10 +9,6 @@ declare global {
     _showTasks?: boolean;
   }
 }
-
-type CreepStats = {
-  [role: string]: { target: number; actual: number; spawning: number };
-};
 
 type SpawnStats = {
   name: string;
@@ -176,6 +173,8 @@ export class Stats {
             ? '#ff4488'
             : stats.actual > stats.target
             ? '#44ff88'
+            : stats.dying > 0
+            ? '#ff8844'
             : undefined;
         printText(
           roomName,
@@ -217,7 +216,7 @@ export class Stats {
     }
   }
 
-  getCreepStats(colony: Colony): CreepStats {
+  getCreepStats(colony: Colony): CreepNums {
     return colony.hr.getCreepNums(colony.getColonyCreeps());
   }
 

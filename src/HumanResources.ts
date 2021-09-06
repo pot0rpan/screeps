@@ -7,11 +7,12 @@ declare global {
   }
 }
 
-interface CreepNums {
+export interface CreepNums {
   [role: string]: {
     target: number;
     actual: number;
     spawning: number;
+    dying: number;
   };
 }
 
@@ -68,6 +69,7 @@ export class HumanResources {
           target: global.Creeps[role].targetNum(room),
           actual: 0,
           spawning: 0,
+          dying: 0,
         };
         global.stats.profileLog(`${role} targetNum()`, start, [
           this.colony.roomName,
@@ -77,11 +79,14 @@ export class HumanResources {
 
       for (const creep of colonyCreeps) {
         // If creep is not dying, add 1 to role count
-        if (!creep.isDying() && creepNums[creep.memory.role]) {
-          if (creep.spawning) {
-            creepNums[creep.memory.role].spawning++;
-          } else {
-            creepNums[creep.memory.role].actual++;
+        if (!creepNums[creep.memory.role]) continue;
+
+        if (creep.spawning) {
+          creepNums[creep.memory.role].spawning++;
+        } else {
+          creepNums[creep.memory.role].actual++;
+          if (creep.isDying()) {
+            creepNums[creep.memory.role].dying++;
           }
         }
       }
@@ -202,7 +207,7 @@ export class HumanResources {
     for (const role in creepNums) {
       const nums = creepNums[role];
 
-      if (nums.actual + nums.spawning < nums.target) {
+      if (nums.actual - nums.dying + nums.spawning < nums.target) {
         const creepClass = global.Creeps[role];
 
         if (!creepClass.shouldUseSpawn(spawn)) continue;
