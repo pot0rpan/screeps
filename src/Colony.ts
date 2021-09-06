@@ -135,9 +135,7 @@ export class Colony {
 
     const needsHealing = room
       .find(FIND_MY_CREEPS, {
-        filter: crp =>
-          crp.hits < crp.hitsMax &&
-          (room.memory.defcon || !crp.getActiveBodyparts(HEAL)),
+        filter: crp => crp.hits < crp.hitsMax && !crp.getActiveBodyparts(HEAL),
       })
       .sort((a, b) => a.hits - b.hits)[0];
 
@@ -146,6 +144,8 @@ export class Colony {
         tower.heal(needsHealing);
       }
     } else if (
+      // Uses almost 0.1 CPU even with no repair intents, so space it out a bit
+      isNthTick(10) &&
       fullTowers.length &&
       // Don't block spawning!
       room.energyAvailable === room.energyCapacityAvailable &&
@@ -153,9 +153,11 @@ export class Colony {
         filter: crp => crp.memory.role === 'builder',
       }).length
     ) {
+      // If we don't have builders, it's probably because we're very low on energy
+      // So don't waste too much energy on repairs, just make sure nothing fully decays
       const damagedStructure = room
         .find(FIND_STRUCTURES, {
-          filter: isDamaged,
+          filter: struct => struct.hits < 5000,
         })
         .sort((a, b) => a.hits - b.hits)[0];
 
