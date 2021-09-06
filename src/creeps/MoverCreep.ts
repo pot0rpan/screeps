@@ -17,7 +17,7 @@ export class MoverCreep extends CreepBase {
   taskPriority = 10; // TODO: findTask is EXPENSIVE
 
   // Number of full source containers, extra if low rcl
-  // When links are in place, containers should always be empty so no movers needed
+  // When links are in place, containers should usually be full so no movers needed
   targetNum(room: Room): number {
     // Containers half full
     const halfFullContainers = room
@@ -293,7 +293,7 @@ export class MoverCreep extends CreepBase {
         creep.memory.task.complete = true;
     }
 
-    if (res === OK) {
+    if (res === OK || res === ERR_FULL) {
       creep.memory.task.complete = true;
     } else if (res === ERR_NOT_IN_RANGE) {
       creep.travelTo(target);

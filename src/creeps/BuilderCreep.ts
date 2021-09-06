@@ -33,16 +33,16 @@ export class BuilderCreep extends CreepBase {
     const sites = room.findConstructionSites();
 
     if (sites.length) {
-      // If only rampart/wall construction sites, only spawn 1
-      if (
-        !sites.find(
-          site =>
-            site.structureType !== STRUCTURE_RAMPART &&
-            site.structureType !== STRUCTURE_WALL
-        )
-      ) {
-        return 1;
-      }
+      // // If only rampart/wall construction sites, only spawn 1
+      // if (
+      //   !sites.find(
+      //     site =>
+      //       site.structureType !== STRUCTURE_RAMPART &&
+      //       site.structureType !== STRUCTURE_WALL
+      //   )
+      // ) {
+      //   return 1;
+      // }
 
       return Math.min(sites.length * 2, rcl > 3 ? 2 : 4);
     }

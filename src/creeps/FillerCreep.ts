@@ -35,7 +35,7 @@ export class FillerCreep extends CreepBase {
   role: CreepRole = 'filler';
   bodyOpts: BodySettings = {
     pattern: [CARRY, CARRY, MOVE],
-    sizeLimit: 8,
+    sizeLimit: 10,
   };
   taskPriority = 3;
 
