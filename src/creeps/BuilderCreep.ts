@@ -256,7 +256,11 @@ export class BuilderCreep extends CreepBase {
       task.complete = true;
     }
     if (task.type === 'build' || task.type === 'repair') {
-      const ramp = target.pos.findClosestWalkableRampart([creep.name]);
+      const ramp = target.pos.findClosestWalkableRampart(
+        // If defcon, don't hog the most damaged rampart
+        // It may be a better spot for a defender creep
+        creep.room.memory.defcon ? [] : [creep.name]
+      );
       if (ramp && target.pos.getRangeTo(ramp) <= 3) {
         creep.travelTo(ramp);
       } else if (res === ERR_NOT_IN_RANGE) {
