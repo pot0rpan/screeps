@@ -174,7 +174,8 @@ export class HaulerCreep extends CreepBase {
     }
 
     if (creep.pos.getRangeTo(target) > 1) {
-      creep.travelTo(target);
+      // Ignore roads for now since move/carry is 1:1
+      creep.travelTo(target, { ignoreRoads: true });
     } else {
       switch (task.type) {
         case 'transfer':
