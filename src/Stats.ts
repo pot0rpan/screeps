@@ -55,7 +55,7 @@ function printProgressBar(
 export class Stats {
   _show: boolean;
   _profile: boolean;
-  _profileFilter: { [category: string]: boolean } = {};
+  _profileFilter: string[] = [];
   _showTasks: boolean;
 
   constructor() {
@@ -104,23 +104,20 @@ export class Stats {
   }
 
   public filter(...categories: string[]): string {
-    this._profileFilter = {};
-    for (const category of categories) {
-      this._profileFilter[category] = true;
-    }
+    this._profileFilter = categories;
     return categories.toString();
   }
 
   private filterLog(categories: string[]): boolean {
-    if (!Object.keys(this._profileFilter).length || !categories.length) {
+    if (!this._profileFilter.length || !categories.length) {
       return true;
     }
 
-    for (const category of categories) {
-      if (this._profileFilter[category]) return true;
+    for (const mustMatch of this._profileFilter) {
+      if (!categories.includes(mustMatch)) return false;
     }
 
-    return false;
+    return true;
   }
 
   public profileLog(
