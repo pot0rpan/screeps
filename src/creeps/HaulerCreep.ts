@@ -26,7 +26,7 @@ export class HaulerCreep extends CreepBase {
         creep.memory.role === 'miner'
     ).length;
 
-    if (rcl < 6) return numMiners;
+    if (rcl < 6) return numMiners + 1;
 
     return Math.min(1, Math.floor(numMiners / 2));
   }
