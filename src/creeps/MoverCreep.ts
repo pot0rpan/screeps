@@ -47,7 +47,7 @@ export class MoverCreep extends CreepBase {
         creep.room.storage &&
         global.empire.colonies[creep.memory.homeRoom]
           .getColonyCreeps()
-          .find(crp => crp.memory.role === 'filler')
+          .find(crp => crp.memory.role === 'filler' && !creep.spawning)
       ) {
         // Only fill controller container and storage, operator/filler do the rest
         let target: StructureStorage | StructureContainer | null = null;

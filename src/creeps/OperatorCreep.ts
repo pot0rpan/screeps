@@ -229,7 +229,7 @@ export class OperatorCreep extends CreepBase {
     const centerLink = creep.room.findCenterLinks()[0];
     if (centerLink) {
       // If link is full, send to controller or storage
-      if (centerLink.store.getFreeCapacity(RESOURCE_ENERGY) < 100) {
+      if (!centerLink.store.getFreeCapacity(RESOURCE_ENERGY)) {
         const emptyUpgradeLink = creep.room
           .findUpgradeLinks()
           .find(link => link.store.getUsedCapacity(RESOURCE_ENERGY) < 200);
@@ -270,37 +270,6 @@ export class OperatorCreep extends CreepBase {
         }
       }
     }
-
-    // // Fill center link and send to controller if needed
-    // const upgradeLink = creep.room
-    //   .findUpgradeLinks()
-    //   .filter(link => link.store.getUsedCapacity(RESOURCE_ENERGY) < 200)[0];
-
-    // if (upgradeLink) {
-    //   const centerLink = creep.room.findCenterLinks()[0];
-
-    //   // If we have an empty upgrade link and center link needs energy
-    //   if (centerLink) {
-    //     if (
-    //       centerLink.store.getUsedCapacity(RESOURCE_ENERGY) <
-    //       upgradeLink.store.getFreeCapacity(RESOURCE_ENERGY)
-    //     ) {
-    //       return taskManager.createTask<OperatorTask>(
-    //         creep.room.name,
-    //         centerLink.id,
-    //         'transfer',
-    //         1,
-    //         { to: upgradeLink.id, resourceType: RESOURCE_ENERGY }
-    //       );
-    //     } else {
-    //       // Center link is already full enough, just put in a transfer request
-    //       global.empire.colonies[creep.room.name].queueLinkTransfer(
-    //         centerLink.id,
-    //         upgradeLink.id
-    //       );
-    //     }
-    //   }
-    // }
 
     const resourceToMove = this.findResourceToBalance(
       Game.rooms[creep.memory.homeRoom]
