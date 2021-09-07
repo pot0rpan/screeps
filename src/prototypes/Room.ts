@@ -7,8 +7,6 @@ declare global {
     _sources: Source[];
     findSourceContainers(): StructureContainer[];
     _sourceContainers: StructureContainer[];
-    findSourceLink(source: Source): StructureLink | undefined;
-    _sourceLinks: { [source: string]: StructureLink };
     findUpgradeLinks(): StructureLink[];
     _upgradeLinks: StructureLink[];
     findCenterLinks(): StructureLink[];
@@ -103,24 +101,6 @@ export default (() => {
     }
 
     return this._sourceContainers;
-  };
-
-  // Cached for tick
-  Room.prototype.findSourceLink = function (source: Source) {
-    if ((this.controller?.level ?? 0) < 5) return;
-
-    if (!this._sourceLinks) {
-      this._sourceLinks = {};
-    }
-    if (!this._sourceLinks[source.id]) {
-      this._sourceLinks[source.id] = source.pos.findInRange<StructureLink>(
-        FIND_STRUCTURES,
-        1,
-        { filter: struct => struct.structureType === STRUCTURE_LINK }
-      )[0];
-    }
-
-    return this._sourceLinks[source.id];
   };
 
   // Cached for tick

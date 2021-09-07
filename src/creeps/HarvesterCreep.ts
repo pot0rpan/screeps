@@ -1,15 +1,13 @@
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
-// Type is harvest just like when other creeps go to sources
-// So the container/link is stored as the target instead of the source
-// This helps avoid task id conflicts with different roles
-// Should only really matter at early rcl when Pioneers still exist
 interface HarvesterTask extends CreepTask {
-  type: 'harvest';
-  target: Id<StructureContainer | StructureLink>;
+  type: 'harvest_static';
+  target: Id<Source>;
   data: {
-    source: Id<Source>;
+    container?: Id<StructureContainer>;
+    link?: Id<StructureLink>;
+    // Positions where source and link (preferred) or container is accessible
     positions: { x: number; y: number }[];
   };
 }
@@ -20,8 +18,6 @@ declare global {
   }
 }
 
-// Pioneers are unspecialized, used only for level 1
-// They mine from source and transfer to spawn or upgrade controller
 export class HarvesterCreep extends CreepBase {
   role: CreepRole = 'harvester';
   bodyOpts: BodySettings = {
@@ -30,53 +26,42 @@ export class HarvesterCreep extends CreepBase {
     suffix: [CARRY, MOVE, MOVE],
   };
 
-  // Same number as source containers built
-  // Containers stay even if links exist, so no need to check both
+  // Same number as sources with either container or link (or both)
   targetNum(room: Room): number {
     if (room.controller && room.controller.level < 2) return 0;
     if (room.memory.defcon) return 0;
 
-    return room.findSourceContainers().length;
+    return room
+      .findSources()
+      .filter(source => source.findContainer() || source.findLink()).length;
   }
 
   findTask(creep: Creep, taskManager: TaskManager): HarvesterTask | null {
-    const container = creep.room
-      .findSourceContainers()
-      .filter(
-        container =>
-          !taskManager.isTaskTaken(creep.pos.roomName, container.id, 'harvest')
-      )[0];
+    for (const source of creep.room.findSources()) {
+      if (
+        !taskManager.isTaskTaken(creep.room.name, source.id, 'harvest_static')
+      ) {
+        const container = source.findContainer();
+        const link = source.findLink();
 
-    if (container) {
-      const source = creep.room
-        .findSources()
-        .filter(
-          source => source.pos.getRangeTo(container.pos.x, container.pos.y) <= 2
-        )[0];
+        if (container || link) {
+          const positions = source.pos
+            .getAdjacentPositions(1)
+            .filter(pos => pos.getRangeTo(link || container!) === 1)
+            .map(pos => ({ x: pos.x, y: pos.y }));
 
-      if (source) {
-        let transferTarget: StructureContainer | StructureLink = container;
-
-        // Check if we have a link to use instead of container
-        if ((creep.room.controller?.level ?? 0) > 4) {
-          const link = creep.room.findSourceLink(source);
-          if (link) transferTarget = link;
+          return taskManager.createTask<HarvesterTask>(
+            creep.room.name,
+            source.id,
+            'harvest_static',
+            1,
+            {
+              container: container?.id,
+              link: link?.id,
+              positions,
+            }
+          );
         }
-
-        // Positions where both source and container/link are accessible
-        // Move to one of these then set inPosition=true in memory to save CPU
-        const positions = source.pos
-          .getAdjacentPositions(1)
-          .filter(pos => pos.getRangeTo(transferTarget) === 1)
-          .map(pos => ({ x: pos.x, y: pos.y }));
-
-        return taskManager.createTask<HarvesterTask>(
-          transferTarget.pos.roomName,
-          transferTarget.id,
-          'harvest',
-          1,
-          { source: source.id, positions }
-        );
       }
     }
 
@@ -84,19 +69,24 @@ export class HarvesterCreep extends CreepBase {
   }
 
   isValidTask(creep: Creep, task: HarvesterTask): boolean {
-    return (
-      !!Game.getObjectById(
-        task.target as Id<StructureContainer | StructureLink>
-      ) && !!Game.getObjectById(task.data.source as Id<Source>)
-    );
+    if (task.data.link) {
+      return !!Game.getObjectById(task.data.link);
+    } else if (task.data.container) {
+      return !!Game.getObjectById(task.data.container);
+    }
+    return false;
   }
 
   run(creep: Creep): void {
     if (!creep.memory.task || creep.memory.task.complete) return;
 
     const task = creep.memory.task as HarvesterTask;
-    const transferTarget = Game.getObjectById(task.target);
-    const source = Game.getObjectById(task.data.source as Id<Source>);
+    const source = Game.getObjectById(task.target);
+    const transferTarget = task.data.link
+      ? Game.getObjectById(task.data.link)
+      : task.data.container
+      ? Game.getObjectById(task.data.container)
+      : null;
 
     if (!transferTarget || !source) {
       creep.memory.task.complete = true;
