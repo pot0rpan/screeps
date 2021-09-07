@@ -14,7 +14,7 @@ export class MinerCreep extends CreepBase {
   bodyOpts: BodySettings = {
     prefix: [CARRY],
     pattern: [MOVE, WORK, WORK],
-    sizeLimit: 3,
+    sizeLimit: 4,
     ordered: true,
   };
 
