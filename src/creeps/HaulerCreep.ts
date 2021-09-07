@@ -174,9 +174,22 @@ export class HaulerCreep extends CreepBase {
 
     const task = creep.memory.task as HaulerTask;
 
+    // Toggle `working` boolean if working and out of energy
+    // or not working and full of energy
+    // Also mark task as complete so TaskManager assigns a new one
+    if (creep.memory.working && creep.isEmpty()) {
+      creep.memory.working = false;
+      task.complete = true;
+    } else if (!creep.memory.working && creep.isFull()) {
+      creep.memory.working = true;
+      task.complete = true;
+    }
+
+    if (task.complete) return;
+
     // Retreat if hostiles
     if (Memory.rooms[task.room].hostiles) {
-      creep.travelToRoom(creep.memory.homeRoom);
+      creep.travelToRoom(creep.memory.homeRoom, { ignoreRoads: true });
       return;
     }
 
@@ -186,7 +199,10 @@ export class HaulerCreep extends CreepBase {
 
     if (!target) {
       // Assume room just has no visibility
-      creep.travelTo(new RoomPosition(25, 25, task.room), { range: 10 });
+      creep.travelTo(new RoomPosition(25, 25, task.room), {
+        range: 10,
+        ignoreRoads: true,
+      });
       return;
     }
 
@@ -208,18 +224,7 @@ export class HaulerCreep extends CreepBase {
           creep.pickup(target as Resource);
           break;
       }
-      creep.memory.task.complete = true;
-    }
-
-    // Toggle `working` boolean if working and out of energy
-    // or not working and full of energy
-    // Also mark task as complete so TaskManager assigns a new one
-    if (creep.memory.working && creep.isEmpty()) {
-      creep.memory.working = false;
-      creep.memory.task.complete = true;
-    } else if (!creep.memory.working && creep.isFull()) {
-      creep.memory.working = true;
-      creep.memory.task.complete = true;
+      task.complete = true;
     }
   }
 }

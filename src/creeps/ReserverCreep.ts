@@ -133,7 +133,7 @@ export class ReserverCreep extends CreepBase {
         }
       }
     } else {
-      creep.travelTo(controller, { range: 1 });
+      creep.travelTo(controller, { range: 1, maxRooms: 1 });
     }
   }
 }

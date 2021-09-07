@@ -188,7 +188,7 @@ export class ScoutCreep extends CreepBase {
       creep.memory.task.complete = true;
       console.log(creep, 'scouted room:', creep.memory.task.room);
     } else {
-      creep.travelToRoom(targetRoomName);
+      creep.travelToRoom(targetRoomName, { ignoreRoads: true });
       creep.say(targetRoomName);
     }
   }
