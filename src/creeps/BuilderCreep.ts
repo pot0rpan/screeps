@@ -212,7 +212,21 @@ export class BuilderCreep extends CreepBase {
       return;
     }
 
+    // Toggle `working` boolean if working and out of energy
+    // or not working and full of energy
+    // Also mark task as complete so TaskManager assigns a new one
+    if (creep.memory.working && creep.isEmpty()) {
+      creep.memory.working = false;
+      creep.memory.task.complete = true;
+    } else if (!creep.memory.working && creep.isFull()) {
+      creep.memory.working = true;
+      creep.memory.task.complete = true;
+    }
+
+    if (creep.memory.task.complete) return;
+
     const task = creep.memory.task;
+
     const target = Game.getObjectById(
       task.target as Id<
         | StructureSpawn
@@ -246,7 +260,6 @@ export class BuilderCreep extends CreepBase {
         break;
       case 'repair':
         res = creep.repair(target as Structure);
-        if (!isDamaged(target as Structure)) task.complete = true;
         break;
       default:
         task.complete = true;
@@ -276,17 +289,6 @@ export class BuilderCreep extends CreepBase {
         // No roads before rcl 3, so avoid creeps for better movement
         ignoreCreeps: (creep.room.controller?.level ?? 0) > 2,
       });
-    }
-
-    // Toggle `working` boolean if working and out of energy
-    // or not working and full of energy
-    // Also mark task as complete so TaskManager assigns a new one
-    if (creep.memory.working && creep.isEmpty()) {
-      creep.memory.working = false;
-      task.complete = true;
-    } else if (!creep.memory.working && creep.isFull()) {
-      creep.memory.working = true;
-      task.complete = true;
     }
   }
 }

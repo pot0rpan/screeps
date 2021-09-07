@@ -253,7 +253,24 @@ export class MoverCreep extends CreepBase {
       return;
     }
 
+    // Toggle `working` boolean if working and out of energy
+    // or not working and full of energy
+    // Also mark task as complete so TaskManager assigns a new one
+    if (creep.memory.working && creep.isEmpty()) {
+      creep.memory.working = false;
+      creep.memory.task.complete = true;
+    } else if (!creep.memory.working && creep.isFull()) {
+      creep.memory.working = true;
+      creep.memory.task.complete = true;
+    }
+
+    if (creep.memory.task.complete) {
+      creep.say('...');
+      return;
+    }
+
     const task = creep.memory.task as MoverTask;
+
     const target = Game.getObjectById(
       task.target as Id<
         | StructureSpawn
@@ -296,18 +313,7 @@ export class MoverCreep extends CreepBase {
     if (res === OK || res === ERR_FULL) {
       creep.memory.task.complete = true;
     } else if (res === ERR_NOT_IN_RANGE) {
-      creep.travelTo(target);
-    }
-
-    // Toggle `working` boolean if working and out of energy
-    // or not working and full of energy
-    // Also mark task as complete so TaskManager assigns a new one
-    if (creep.memory.working && creep.isEmpty()) {
-      creep.memory.working = false;
-      creep.memory.task.complete = true;
-    } else if (!creep.memory.working && creep.isFull()) {
-      creep.memory.working = true;
-      creep.memory.task.complete = true;
+      creep.travelTo(target, { range: 1, ignoreRoads: creep.isEmpty() });
     }
   }
 }

@@ -130,7 +130,7 @@ export class MinerCreep extends CreepBase {
     if (container && creep.pos.getRangeTo(container) > 0) {
       creep.travelTo(container);
     } else if (creep.pos.getRangeTo(source) > 1) {
-      creep.travelTo(source);
+      creep.travelTo(source, { range: 1 });
     } else {
       // If creep is full,
       // do some work if needed, otherwise drop energy on ground/container
