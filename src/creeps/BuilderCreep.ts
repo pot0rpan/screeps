@@ -1,4 +1,5 @@
 import { isDamaged } from 'utils/structure';
+import { minToStoreOfResource } from 'utils/room';
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
@@ -24,7 +25,8 @@ export class BuilderCreep extends CreepBase {
     if (
       room.storage &&
       room.storage.isActive() &&
-      room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 10000
+      room.storage.store.getUsedCapacity(RESOURCE_ENERGY) <
+        minToStoreOfResource(room, RESOURCE_ENERGY)
     ) {
       return 0;
     }
