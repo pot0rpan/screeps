@@ -30,6 +30,7 @@ export class HaulerCreep extends CreepBase {
     ).length;
 
     if (rcl < 6) return Math.min(4, numMiners + 1);
+    if (rcl === 6) return Math.min(3, numMiners);
 
     return Math.max(1, Math.ceil(numMiners / 2));
   }
