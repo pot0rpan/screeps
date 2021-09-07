@@ -212,8 +212,11 @@ export class HumanResources {
 
         if (!creepClass.shouldUseSpawn(spawn)) continue;
 
+        // Check if no creeps who fill spawn/extensions
         const emergency =
-          creepNums.mover.actual === 0 && creepNums.pioneer.actual === 0;
+          creepNums.mover.actual === 0 &&
+          creepNums.filler.actual === 0 &&
+          creepNums.pioneer.actual === 0;
         let buildData = creepClass.build(
           emergency ? room.energyAvailable : room.energyCapacityAvailable
         );
