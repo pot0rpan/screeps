@@ -261,7 +261,6 @@ export class RoomPlanner {
       if (sourcesNeedingContainers.includes(source)) {
         const plan = {
           pos: ret.path[ret.path.length - 2],
-          structureType: STRUCTURE_CONTAINER,
         };
 
         if (source instanceof StructureController) {
@@ -302,26 +301,25 @@ export class RoomPlanner {
     if (!this.plans[STRUCTURE_LINK]) this.plans[STRUCTURE_LINK] = [];
 
     if (containers.controller) {
-      // Add container plans in order of priority
-      // Add closest source container first, then controller, then other sources
-      (this.plans[STRUCTURE_CONTAINER] as BuildingPlan[]).unshift(
-        containers.sources[0],
-        containers.controller,
-        ...containers.sources.slice(1)
-      );
+      if (containers.sources.length) {
+        // Add container plans in order of priority
+        // Add closest source container first, then controller, then other sources
+        this.plans[STRUCTURE_CONTAINER]!.unshift(
+          containers.sources[0],
+          containers.controller,
+          ...containers.sources.slice(1)
+        );
+      } else {
+        this.plans[STRUCTURE_CONTAINER]!.push(containers.controller);
+      }
     } else if (containers.sources.length) {
-      (this.plans[STRUCTURE_CONTAINER] as BuildingPlan[]).unshift(
-        ...containers.sources
-      );
+      this.plans[STRUCTURE_CONTAINER]!.unshift(...containers.sources);
     }
 
     if (links.controller) {
-      (this.plans[STRUCTURE_LINK] as BuildingPlan[]).push(
-        links.controller,
-        ...links.sources
-      );
+      this.plans[STRUCTURE_LINK]!.push(links.controller, ...links.sources);
     } else if (links.sources.length) {
-      (this.plans[STRUCTURE_LINK] as BuildingPlan[]).push(...links.sources);
+      this.plans[STRUCTURE_LINK]!.push(...links.sources);
     }
   }
 
