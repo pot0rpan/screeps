@@ -12,7 +12,7 @@ export class AssassinCreep extends CreepBase {
   role: CreepRole = 'assassin';
   bodyOpts: BodySettings = {
     pattern: [MOVE, ATTACK],
-    suffix: [MOVE],
+    suffix: [RANGED_ATTACK, MOVE],
     ordered: true,
     sizeLimit: 5,
   };
@@ -90,7 +90,12 @@ export class AssassinCreep extends CreepBase {
 
       if (invader) {
         creep.travelTo(invader);
-        creep.attack(invader);
+        const range = creep.pos.getRangeTo(invader);
+        if (range === 1 && creep.getActiveBodyparts(ATTACK)) {
+          creep.attack(invader);
+        } else if (range <= 3 && creep.getActiveBodyparts(RANGED_ATTACK)) {
+          creep.rangedAttack(invader);
+        }
       } else {
         if (task) task.complete = true;
         recycle(creep, 10);
