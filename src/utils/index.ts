@@ -9,3 +9,8 @@ export function isFriendlyOwner(username: string): boolean {
     config.USERNAME === username || config.FRIENDLY_NAMES.includes(username)
   );
 }
+
+export function average(...numbers: number[]): number {
+  if (!numbers.length) return 0;
+  return numbers.reduce((total, num) => total + num, 0) / numbers.length;
+}

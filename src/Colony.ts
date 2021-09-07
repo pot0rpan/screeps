@@ -1,10 +1,9 @@
-import { ColonyDefense } from 'ColonyDefense';
 import config from 'config';
+import { average, isFriendlyOwner, isNthTick } from 'utils';
+import { ColonyDefense } from 'ColonyDefense';
 import { HumanResources } from 'HumanResources';
 import { RoomPlanner } from 'RoomPlanner';
 import { TaskManager } from 'TaskManager';
-import { isFriendlyOwner, isNthTick } from 'utils';
-import { isDamaged } from 'utils/structure';
 
 declare global {
   interface Memory {
@@ -224,16 +223,12 @@ export class Colony {
       return;
     }
 
-    // Sort rooms by total distance to sources
+    // Sort rooms by average distance to sources
     const sortedRooms = possibleRooms.sort((a, b) => {
-      const totalA = a.mem.sources
-        ?.map(src => src.distance)
-        .reduce((prev, curr) => prev + curr, 0) as number;
-      const totalB = b.mem.sources
-        ?.map(src => src.distance)
-        .reduce((prev, curr) => prev + curr, 0) as number;
+      const distancesA = a.mem.sources!.map(src => src.distance);
+      const distancesB = b.mem.sources!.map(src => src.distance);
 
-      return totalA - totalB;
+      return average(...distancesA) - average(...distancesB);
     });
 
     const bestRoom = sortedRooms[0];
