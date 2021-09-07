@@ -120,8 +120,9 @@ export class HaulerCreep extends CreepBase {
           dropped[0].pos.roomName,
           dropped[0].id,
           'pickup',
-          dropped[0].amount >
-            creep.store.getFreeCapacity(dropped[0].resourceType)
+          dropped[0].amount -
+            creep.store.getFreeCapacity(dropped[0].resourceType) >
+            this.MIN_RESOURCE_AMOUNT
             ? 2
             : 1
         );
@@ -146,7 +147,11 @@ export class HaulerCreep extends CreepBase {
               container.room.name,
               container.id,
               'withdraw',
-              2 //1
+              container.store.getUsedCapacity(RESOURCE_ENERGY) -
+                creep.store.getFreeCapacity(RESOURCE_ENERGY) >
+                this.MIN_RESOURCE_AMOUNT
+                ? 2
+                : 1
             );
           }
         }
