@@ -91,9 +91,7 @@ export class Colony {
     }
 
     // Run links
-    if (isNthTick(8)) {
-      this.runLinks();
-    }
+    this.runLinks();
 
     // Run creeps
     this.hr.runCreeps(colonyCreeps);
@@ -271,17 +269,16 @@ export class Colony {
     if (!from || from.cooldown) return;
 
     const to = Game.getObjectById(request.to);
+    if (!to) return;
 
     // Make sure `to` isn't full, and `from` can fully fill `to`
     if (
-      !to?.store.getFreeCapacity(RESOURCE_ENERGY) ||
-      from.store.getUsedCapacity(RESOURCE_ENERGY) <
+      to.store.getFreeCapacity(RESOURCE_ENERGY) &&
+      from.store.getUsedCapacity(RESOURCE_ENERGY) >=
         to.store.getFreeCapacity(RESOURCE_ENERGY)
     ) {
-      return;
+      from.transferEnergy(to);
+      this.linkTransferQueue.shift();
     }
-
-    from.transferEnergy(to);
-    this.linkTransferQueue.shift();
   }
 }

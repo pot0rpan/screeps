@@ -25,6 +25,7 @@ declare global {
   type TaskType =
     | 'transfer'
     | 'harvest'
+    | 'harvest_static'
     | 'withdraw'
     | 'upgrade'
     | 'build'

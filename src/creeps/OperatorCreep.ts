@@ -336,7 +336,7 @@ export class OperatorCreep extends CreepBase {
     }
 
     if (task.type === 'transfer') {
-      if (!creep.isFull()) {
+      if (creep.isEmpty()) {
         creep.withdraw(
           Game.getObjectById(task.target) as Structure,
           task.data.resourceType
