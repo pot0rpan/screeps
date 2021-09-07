@@ -1,3 +1,4 @@
+import { recycle } from 'actions/recycle';
 import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { isFriendlyOwner } from 'utils';
@@ -90,7 +91,7 @@ export class ReserverCreep extends CreepBase {
 
     if (!task) {
       // Recycle
-      creep.say('recycle');
+      recycle(creep, 20);
       return;
     }
 
