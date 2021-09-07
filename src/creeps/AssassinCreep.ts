@@ -98,6 +98,11 @@ export class AssassinCreep extends CreepBase {
         }
       } else {
         if (task) task.complete = true;
+        creep.room.memory.invaders = 0;
+        creep.room.memory.hostiles = Math.max(
+          0,
+          creep.room.memory.hostiles! - 1
+        );
         recycle(creep, 10);
       }
     }
