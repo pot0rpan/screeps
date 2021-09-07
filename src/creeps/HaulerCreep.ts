@@ -4,6 +4,7 @@ import { BodySettings, CreepBase } from './CreepBase';
 
 interface HaulerTask extends CreepTask {
   type: 'withdraw' | 'transfer' | 'pickup';
+  target: Id<Resource | StructureContainer | StructureStorage>;
 }
 
 export class HaulerCreep extends CreepBase {
@@ -12,6 +13,8 @@ export class HaulerCreep extends CreepBase {
     pattern: [CARRY, MOVE],
     ordered: true,
   };
+
+  private MIN_RESOURCE_AMOUNT = 200;
 
   targetNum(room: Room): number {
     if (!room.storage) return 0;
@@ -38,18 +41,23 @@ export class HaulerCreep extends CreepBase {
 
     switch (task.type) {
       case 'pickup':
-        return !!Game.getObjectById(task.target as Id<Resource>);
+        return (
+          (Game.getObjectById(task.target as Id<Resource>)?.amount ?? 0) >
+          this.MIN_RESOURCE_AMOUNT
+        );
       case 'withdraw':
         return (
           (Game.getObjectById(
             task.target as Id<StructureContainer>
-          )?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0) > 0
+          )?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0) >
+          this.MIN_RESOURCE_AMOUNT
         );
       case 'transfer':
         return (
           (Game.getObjectById(
             task.target as Id<StructureStorage>
-          )?.store.getFreeCapacity(RESOURCE_ENERGY) ?? 0) > 0
+          )?.store.getFreeCapacity(RESOURCE_ENERGY) ?? 0) >
+          this.MIN_RESOURCE_AMOUNT
         );
       default:
         return false;
@@ -78,7 +86,7 @@ export class HaulerCreep extends CreepBase {
       const { adjacentRoomNames } =
         global.empire.colonies[creep.memory.homeRoom];
       let containers: StructureContainer[] = [];
-      let dropped: Resource<RESOURCE_ENERGY>[] = [];
+      let dropped: Resource[] = [];
 
       for (const roomName of adjacentRoomNames) {
         if (!Memory.rooms[roomName]?.colonize) continue;
@@ -92,14 +100,17 @@ export class HaulerCreep extends CreepBase {
 
         containers = containers.concat(
           room.find<StructureContainer>(FIND_STRUCTURES, {
-            filter: struct => struct.structureType === STRUCTURE_CONTAINER,
+            filter: struct =>
+              struct.structureType === STRUCTURE_CONTAINER &&
+              struct.store.getUsedCapacity(RESOURCE_ENERGY) >
+                this.MIN_RESOURCE_AMOUNT,
           })
         );
 
         dropped = dropped.concat(
           room.find(FIND_DROPPED_RESOURCES, {
-            filter: res => res.resourceType === RESOURCE_ENERGY,
-          }) as Resource<RESOURCE_ENERGY>[]
+            filter: res => res.amount > this.MIN_RESOURCE_AMOUNT,
+          }) as Resource[]
         );
       }
 
@@ -151,7 +162,7 @@ export class HaulerCreep extends CreepBase {
     creep.notifyWhenAttacked(false);
 
     if (!creep.memory.task) {
-      recycle(creep, 50);
+      recycle(creep, 300);
       return;
     }
 
