@@ -39,7 +39,7 @@ export class OperatorCreep extends CreepBase {
   role: CreepRole = 'operator';
   bodyOpts: BodySettings = {
     pattern: [CARRY],
-    sizeLimit: 20,
+    sizeLimit: 16,
   };
   taskPriority = 5;
 
