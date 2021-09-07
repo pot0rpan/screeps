@@ -156,10 +156,8 @@ export class Colony {
       // If we don't have builders, it's probably because we're very low on energy
       // So don't waste too much energy on repairs, just make sure nothing fully decays
       const damagedStructure = room
-        .find(FIND_STRUCTURES, {
-          filter: struct => struct.hits < 5000,
-        })
-        .sort((a, b) => a.hits - b.hits)[0];
+        .find(FIND_STRUCTURES)
+        .find(struct => struct.hits < struct.hitsMax && struct.hits < 5000);
 
       if (damagedStructure) {
         for (const tower of fullTowers) {
