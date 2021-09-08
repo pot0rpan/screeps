@@ -455,7 +455,12 @@ export class RoomPlanner {
       for (const plan of plans.slice(0, maxAtThisRcl)) {
         if (numConstructionSites >= config.MAX_CONSTRUCTION_SITES) break;
 
-        if (terrain.get(plan.pos.x, plan.pos.y) === TERRAIN_MASK_WALL) continue;
+        if (
+          planType !== STRUCTURE_EXTRACTOR &&
+          terrain.get(plan.pos.x, plan.pos.y) === TERRAIN_MASK_WALL
+        ) {
+          continue;
+        }
 
         let alreadyBuilt = false;
 
