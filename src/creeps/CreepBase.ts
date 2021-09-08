@@ -123,7 +123,10 @@ export abstract class CreepBase {
     const patternCost = bodyCost(opts.pattern);
     const numRepeats = Math.min(
       opts.sizeLimit,
-      Math.floor((energyAvailable - prefixCost - suffixCost) / patternCost)
+      Math.floor((energyAvailable - prefixCost - suffixCost) / patternCost),
+      Math.floor(
+        (50 - opts.prefix.length - opts.suffix.length) / opts.pattern.length
+      )
     );
     if (numRepeats === 0) return [];
 
