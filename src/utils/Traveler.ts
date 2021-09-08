@@ -641,8 +641,8 @@ export class Traveler {
     matrix: CostMatrix,
     roadCost: number
   ): CostMatrix {
-    let impassibleStructures: Structure[] = [];
-    for (let structure of room.find<Structure>(FIND_STRUCTURES)) {
+    let impassibleStructures: AnyStructure[] = [];
+    for (let structure of room.find(FIND_STRUCTURES)) {
       if (structure instanceof StructureRampart) {
         if (!structure.my && !structure.isPublic) {
           impassibleStructures.push(structure);
