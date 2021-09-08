@@ -1,5 +1,6 @@
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
+import { sortByRange } from 'utils/sort';
 import { BodySettings, CreepBase } from './CreepBase';
 
 interface HaulerTask extends CreepTask {
@@ -116,7 +117,7 @@ export class HaulerCreep extends CreepBase {
       }
 
       if (dropped.length) {
-        dropped = dropped.sort((a, b) => b.amount - a.amount);
+        dropped = dropped.sort(sortByRange(creep));
         return taskManager.createTask<HaulerTask>(
           dropped[0].pos.roomName,
           dropped[0].id,
