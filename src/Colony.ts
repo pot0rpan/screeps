@@ -142,7 +142,7 @@ export class Colony {
       }
     } else if (
       // Uses almost 0.1 CPU even with no repair intents, so space it out a bit
-      isNthTick(10) &&
+      isNthTick(5) &&
       fullTowers.length &&
       // Don't block spawning!
       room.energyAvailable === room.energyCapacityAvailable &&
@@ -154,7 +154,8 @@ export class Colony {
       // So don't waste too much energy on repairs, just make sure nothing fully decays
       const damagedStructure = room
         .find(FIND_STRUCTURES)
-        .find(struct => struct.hits < struct.hitsMax && struct.hits < 5000);
+        .filter(struct => struct.hits < struct.hitsMax && struct.hits < 5000)
+        .sort((a, b) => a.hits - b.hits)[0];
 
       if (damagedStructure) {
         for (const tower of fullTowers) {
