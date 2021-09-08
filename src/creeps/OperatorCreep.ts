@@ -229,7 +229,7 @@ export class OperatorCreep extends CreepBase {
     const centerLink = creep.room.findCenterLinks()[0];
     if (centerLink) {
       // If link is full, send to controller or storage
-      if (!centerLink.store.getFreeCapacity(RESOURCE_ENERGY)) {
+      if (centerLink.store.getFreeCapacity(RESOURCE_ENERGY) < 100) {
         const emptyUpgradeLink = creep.room
           .findUpgradeLinks()
           .find(link => link.store.getUsedCapacity(RESOURCE_ENERGY) < 200);
