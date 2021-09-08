@@ -261,19 +261,36 @@ export class Colony {
     }
 
     const from = Game.getObjectById(request.from);
-    if (!from || from.cooldown) return;
+
+    // Make sure `from` is valid
+    if (!from) {
+      this.linkTransferQueue.shift();
+      return;
+    }
+
+    if (from.cooldown) return; // Still valid most likely, just need to wait
 
     const to = Game.getObjectById(request.to);
-    if (!to) return;
 
-    // Make sure we can actually transfer
-    if (
-      to.store.getFreeCapacity(RESOURCE_ENERGY) &&
-      from.store.getUsedCapacity(RESOURCE_ENERGY)
-    ) {
+    // Make sure `to` is valid
+    if (!to) {
+      this.linkTransferQueue.shift();
+      return;
+    }
+
+    if (!to.store.getFreeCapacity(RESOURCE_ENERGY)) {
+      // Still valid most likely,
+      // just need to wait for `to` to get emptied by Operator
+      return;
+    }
+
+    // Make sure from actually has energy to send
+    if (from.store.getUsedCapacity(RESOURCE_ENERGY)) {
       from.transferEnergy(to);
     }
 
+    // If it makes it this far, we either fulfilled the request,
+    // or it's invalid due to `from` being empty
     this.linkTransferQueue.shift();
   }
 }
