@@ -72,7 +72,9 @@ export default {
     RCL_DOWNGRADE: 3000,
   },
   flags: {
-    COLONIZE: [COLOR_PURPLE, COLOR_PURPLE],
+    COLONIZE: [COLOR_PURPLE, COLOR_PURPLE], // For claiming a new colony
+    DRAIN: [COLOR_CYAN, COLOR_CYAN], // For draining an enemy's towers/energy
+    PAIR_ATTACK: [COLOR_RED, COLOR_GREEN], // For Attacker/Healer pair
   },
   signs: {
     RESERVE: 'mining my own business',

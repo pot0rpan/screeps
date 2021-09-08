@@ -1,8 +1,9 @@
-import { recycle } from 'actions/recycle';
-import { TaskManager } from 'TaskManager';
 import { isFriendlyOwner } from 'utils';
 import { getFatiguedInSquad } from 'utils/creep';
+import { isFlagOfType } from 'utils/flag';
 import { isInColonyHelpRange } from 'utils/room';
+import { recycle } from 'actions/recycle';
+import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 import { HealerTask } from './HealerCreep';
 
@@ -26,8 +27,7 @@ export class AttackerCreep extends CreepBase {
     return _.filter(
       Game.flags,
       flag =>
-        flag.color === COLOR_RED &&
-        flag.secondaryColor === COLOR_GREEN &&
+        isFlagOfType(flag, 'PAIR_ATTACK') &&
         isInColonyHelpRange(roomName, flag.pos.roomName)
     );
   }

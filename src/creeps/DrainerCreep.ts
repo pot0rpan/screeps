@@ -1,6 +1,7 @@
+import { isFlagOfType } from 'utils/flag';
+import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
-import { recycle } from 'actions/recycle';
 
 interface DrainerTask extends CreepTask {
   type: 'drain';
@@ -25,7 +26,7 @@ export class DrainerCreep extends CreepBase {
     return _.filter(
       Game.flags,
       flag =>
-        flag.color === COLOR_CYAN &&
+        isFlagOfType(flag, 'DRAIN') &&
         adjacentRoomNames.includes(flag.pos.roomName)
     );
   }
