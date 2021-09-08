@@ -266,14 +266,14 @@ export class Colony {
     const to = Game.getObjectById(request.to);
     if (!to) return;
 
-    // Make sure `to` isn't full, and `from` can fully fill `to`
+    // Make sure we can actually transfer
     if (
       to.store.getFreeCapacity(RESOURCE_ENERGY) &&
-      from.store.getUsedCapacity(RESOURCE_ENERGY) >=
-        to.store.getFreeCapacity(RESOURCE_ENERGY)
+      from.store.getUsedCapacity(RESOURCE_ENERGY)
     ) {
       from.transferEnergy(to);
-      this.linkTransferQueue.shift();
     }
+
+    this.linkTransferQueue.shift();
   }
 }
