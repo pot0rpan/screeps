@@ -1,6 +1,7 @@
 import { isDamaged } from 'utils/structure';
 import { minToStoreOfResource } from 'utils/room';
 import { recycle } from 'actions/recycle';
+import { excuse } from 'actions/excuse';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -269,15 +270,18 @@ export class BuilderCreep extends CreepBase {
 
     if (task.type === 'withdraw' && res === OK) {
       task.complete = true;
-    }
-    if (task.type === 'build' || task.type === 'repair') {
+    } else if (task.type === 'build' || task.type === 'repair') {
       const ramp = target.pos.findClosestWalkableRampart(
         // If defcon, don't hog the most damaged rampart
         // It may be a better spot for a defender creep
         creep.room.memory.defcon ? [] : [creep.name]
       );
       if (ramp && target.pos.getRangeTo(ramp) <= 3) {
-        creep.travelTo(ramp);
+        if (creep.pos.getRangeTo(ramp) > 1) {
+          creep.travelTo(ramp);
+        } else {
+          excuse(creep);
+        }
       } else if (res === ERR_NOT_IN_RANGE) {
         creep.travelTo(target, {
           range: task.type === 'build' || task.type === 'repair' ? 3 : 1,
