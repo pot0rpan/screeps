@@ -7,7 +7,8 @@ interface AssassinTask extends CreepTask {
   type: 'assassinate';
 }
 
-// Assassin creeps take out invaders in adjacent colonized rooms
+// Assassin creeps take out invaders in adjacent colonized rooms,
+// Or invader cores in adjacent rooms reserved by Invader so we _can_ colonize
 export class AssassinCreep extends CreepBase {
   role: CreepRole = 'assassin';
   bodyOpts: BodySettings = {
@@ -17,15 +18,16 @@ export class AssassinCreep extends CreepBase {
     sizeLimit: 5,
   };
 
+  // If colonized (remote mining) and there's an invader,
+  // Or reserved by invader - take out Invader Core
   private targetNumPerRoom(roomName: string): number {
     const mem = Memory.rooms[roomName];
     if (
       mem &&
-      mem.colonize &&
-      mem.invaders &&
-      (!mem.reserver || mem.reserver === config.USERNAME)
+      ((mem.colonize && mem.invaders && mem.reserver === config.USERNAME) ||
+        (mem.reserver === 'Invader' && (mem.reservationTicks ?? 0) >= 4990))
     ) {
-      return mem.invaders;
+      return mem.invaders || 1;
     }
     return 0;
   }
@@ -52,21 +54,21 @@ export class AssassinCreep extends CreepBase {
       if (!this.targetNumPerRoom(roomName)) continue;
       const mem = Memory.rooms[roomName];
 
-      // Take out invaders
+      // Take out invaders/invader core
       if (
-        mem.invaders &&
+        (mem.invaders || mem.reserver === 'Invader') &&
         !taskManager.isTaskTaken(
           roomName,
           roomName,
           'assassinate',
-          mem.invaders
+          mem.invaders || 1
         )
       ) {
         return taskManager.createTask<AssassinTask>(
           roomName,
           roomName,
           'assassinate',
-          mem.invaders
+          mem.invaders || 1
         );
       }
     }
@@ -84,17 +86,26 @@ export class AssassinCreep extends CreepBase {
       creep.travelToRoom(task.room);
       creep.say(task.room);
     } else {
-      const invader = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
-        filter: hostile => hostile.owner.username === 'Invader',
-      });
+      // Target either
+      let target: Creep | AnyOwnedStructure | null =
+        creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
+          filter: hostile => hostile.owner.username === 'Invader',
+        });
 
-      if (invader) {
-        creep.travelTo(invader);
-        const range = creep.pos.getRangeTo(invader);
+      if (!target) {
+        target = creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES);
+      }
+
+      if (target) {
+        creep.travelTo(target, {
+          range: target instanceof Creep ? undefined : 1,
+        });
+        const range = creep.pos.getRangeTo(target);
+
         if (range === 1 && creep.getActiveBodyparts(ATTACK)) {
-          creep.attack(invader);
+          creep.attack(target);
         } else if (range <= 3 && creep.getActiveBodyparts(RANGED_ATTACK)) {
-          creep.rangedAttack(invader);
+          creep.rangedAttack(target);
         }
       } else {
         if (task) task.complete = true;

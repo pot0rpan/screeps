@@ -11,6 +11,7 @@ declare global {
     highway?: boolean;
     owner?: string;
     reserver?: string;
+    reservationTicks?: number;
     hostiles?: number;
     invaders?: number;
     controller?: {
@@ -127,6 +128,7 @@ export class ScoutCreep extends CreepBase {
         // Skip some non-changing scans
         roomMemory.owner = room.controller?.owner?.username;
         roomMemory.reserver = room.controller?.reservation?.username;
+        roomMemory.reservationTicks = room.controller?.reservation?.ticksToEnd;
         if (roomMemory.controller)
           roomMemory.controller.level = (
             room.controller as StructureController
@@ -141,6 +143,7 @@ export class ScoutCreep extends CreepBase {
           : undefined;
         roomMemory.owner = room.controller?.owner?.username;
         roomMemory.reserver = room.controller?.reservation?.username;
+        roomMemory.reservationTicks = room.controller?.reservation?.ticksToEnd;
         roomMemory.sources = room.findSources(false).map(({ id, pos }) => ({
           id,
           pos: [pos.x, pos.y],
