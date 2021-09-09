@@ -112,11 +112,9 @@ export class MinerCreep extends CreepBase {
     // Look for containers by task source
     // Save it to creep's task memory if available
     if (!task.data?.container) {
-      const container = source.pos.findInRange<StructureContainer>(
-        FIND_STRUCTURES,
-        1,
-        { filter: struct => struct.structureType === STRUCTURE_CONTAINER }
-      )[0];
+      const container = source.pos
+        .findInRange<StructureContainer>(FIND_STRUCTURES, 1)
+        .find(struct => struct.structureType === STRUCTURE_CONTAINER);
 
       if (container) {
         task.data = { container: container.id };
@@ -141,7 +139,6 @@ export class MinerCreep extends CreepBase {
         let worked = false;
 
         // Fix damaged container
-
         if (container && container.hits < container.hitsMax) {
           creep.repair(container);
           worked = true;
@@ -152,6 +149,9 @@ export class MinerCreep extends CreepBase {
           if (site) {
             creep.build(site);
             worked = true;
+          } else if (!container) {
+            // No container or construction site, place one
+            creep.pos.createConstructionSite(STRUCTURE_CONTAINER);
           }
         }
 
