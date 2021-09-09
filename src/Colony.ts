@@ -132,7 +132,10 @@ export class Colony {
 
     const needsHealing = room
       .find(FIND_MY_CREEPS, {
-        filter: crp => crp.hits < crp.hitsMax && !crp.getActiveBodyparts(HEAL),
+        filter: crp =>
+          crp.memory.recycle === undefined &&
+          crp.hits < crp.hitsMax &&
+          !crp.getActiveBodyparts(HEAL),
       })
       .sort((a, b) => a.hits - b.hits)[0];
 

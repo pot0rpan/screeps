@@ -125,7 +125,10 @@ export class ColonyDefense {
     } else {
       // Heal friendlies
       const injuredFriendly = mainRoom
-        .find(FIND_MY_CREEPS, { filter: crp => crp.hits < crp.hitsMax })
+        .find(FIND_MY_CREEPS, {
+          filter: crp =>
+            crp.memory.recycle === undefined && crp.hits < crp.hitsMax,
+        })
         .sort((a, b) => a.hits - b.hits)[0];
       if (injuredFriendly) {
         for (const tower of towers) {
