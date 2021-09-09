@@ -1,3 +1,4 @@
+import { excuse } from 'actions/excuse';
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
@@ -57,6 +58,8 @@ export class DefenderCreep extends CreepBase {
     if (closestRampart) {
       if (!closestRampart.pos.isEqualTo(creep.pos)) {
         creep.travelTo(closestRampart);
+      } else {
+        excuse(creep);
       }
     } else {
       creep.travelTo(closestHostile);
