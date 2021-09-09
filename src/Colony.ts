@@ -211,17 +211,6 @@ export class Colony {
       );
     }
 
-    // Rooms reserved by hostiles, 1+ source
-    if (!possibleRooms.length) {
-      possibleRooms = availableAdjRoomMems.filter(
-        ({ mem }) =>
-          !mem.owner &&
-          mem.reserver &&
-          !isFriendlyOwner(mem.reserver) &&
-          mem.sources?.length
-      );
-    }
-
     if (!possibleRooms.length) {
       console.log(this.roomName, 'no available rooms to expand to');
       return;

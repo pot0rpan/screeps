@@ -183,6 +183,11 @@ export class ScoutCreep extends CreepBase {
         };
       }
 
+      // Abandon room if taken by hostiles
+      if (roomMemory.colonize && roomMemory.reserver !== config.USERNAME) {
+        delete roomMemory.colonize;
+      }
+
       roomMemory.lastScan = Game.time;
 
       creep.memory.task.complete = true;

@@ -33,8 +33,6 @@ export class ExterminatorCreep extends CreepBase {
     // Make sure room has been scouted
     if (!mem) return 0;
 
-    if (!mem.colonize) return 0;
-
     // We only reserve adjacent rooms, so an owner must be hostile and likely too powerful
     if (mem.owner) return 0;
 
@@ -48,11 +46,7 @@ export class ExterminatorCreep extends CreepBase {
     // Abandon room for now if too expensive to defend
     if (numHostiles > this.ABANDON_LIMIT) return 0;
 
-    if (numHostiles > 0) {
-      return numHostiles + 1;
-    } else if (mem.reserver && !isFriendlyOwner(mem.reserver)) {
-      return 2;
-    }
+    if (numHostiles > 0) return numHostiles + 1;
 
     return 0;
   }

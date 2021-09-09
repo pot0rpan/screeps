@@ -1,6 +1,6 @@
 import config from 'config';
+import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
-import { isNthTick } from 'utils';
 import { BodySettings, CreepBase } from './CreepBase';
 
 interface MinerTask extends CreepTask {
@@ -84,8 +84,7 @@ export class MinerCreep extends CreepBase {
 
     const task = creep.memory.task as MinerTask | undefined;
     if (!task) {
-      creep.say('...');
-      creep.travelToRoom(creep.memory.homeRoom);
+      recycle(creep, config.ticks.PLAN_EXPANSION);
       return;
     }
 

@@ -21,20 +21,12 @@ export class ReserverCreep extends CreepBase {
     if (!mem) return 0;
     if (!mem.colonize) return 0;
     if (!mem.controller) return 0;
+    if (mem.reserver && mem.reserver !== config.USERNAME) return 0;
+    if (mem.hostiles) return 0;
 
-    // If no hostiles
-    // and not reserved
-    // or reserved by hostile and have Exterminator creeps
-    // or not visible or reserved by me and is close to downgrading
     if (
-      !mem.hostiles &&
-      (!mem.reserver ||
-        (!isFriendlyOwner(mem.reserver) &&
-          _.filter(Game.creeps, crp => crp.memory.role === 'exterminator')
-            .length) ||
-        (mem.reserver === config.USERNAME &&
-          (Game.rooms[roomName]?.controller?.reservation?.ticksToEnd ?? 0) <
-            config.ticks.RCL_DOWNGRADE))
+      (Game.rooms[roomName]?.controller?.reservation?.ticksToEnd ?? 0) <
+      config.ticks.RCL_DOWNGRADE
     ) {
       return 1;
     }
