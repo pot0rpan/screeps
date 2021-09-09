@@ -72,20 +72,13 @@ export class ColonizerCreep extends CreepBase {
 
     // Move to target room
     if (creep.room.name !== task.room) {
-      if (creep.room.findDangerousHostiles().length) {
-        creep.room.memory.avoid = 1;
-        delete creep.memory._trav;
-        creep.travelToRoom(creep.memory.homeRoom);
-        creep.say('nope');
-      } else {
-        creep.say(task.room);
-        creep.travelToRoom(task.room, { allowHostile: false });
-      }
+      creep.say(task.room);
+      creep.travelToRoom(task.room, { allowHostile: false });
       return;
     }
 
     if (creep.pos.isNearEdge(2)) {
-      creep.travelToRoom(creep.room.name, { range: 20 });
+      creep.travelToRoom(creep.room.name);
       return;
     }
 

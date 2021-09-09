@@ -320,6 +320,8 @@ export class Traveler {
       } else {
         delete room.memory.avoid;
       }
+    } else if (room.findHostiles().length) {
+      room.memory.avoid = 1;
     }
   }
 

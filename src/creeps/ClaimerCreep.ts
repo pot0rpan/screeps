@@ -66,15 +66,8 @@ export class ClaimerCreep extends CreepBase {
     }
 
     if (creep.room.name !== task.room) {
-      if (creep.room.findDangerousHostiles().length) {
-        creep.room.memory.avoid = 1;
-        delete creep.memory._trav;
-        creep.travelToRoom(creep.memory.homeRoom);
-        creep.say('nope');
-      } else {
-        creep.say(task.room);
-        creep.travelToRoom(task.room, { allowHostile: false });
-      }
+      creep.say(task.room);
+      creep.travelToRoom(task.room, { allowHostile: false });
       return;
     }
 
@@ -85,7 +78,7 @@ export class ClaimerCreep extends CreepBase {
     }
 
     if (creep.pos.getRangeTo(controller) > 1) {
-      creep.travelTo(controller);
+      creep.travelTo(controller, { range: 1 });
       return;
     }
 
