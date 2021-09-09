@@ -11,7 +11,7 @@ export interface HealerTask extends CreepTask {
 export class HealerCreep extends CreepBase {
   role: CreepRole = 'healer';
   bodyOpts: BodySettings = {
-    pattern: [MOVE, HEAL, HEAL],
+    pattern: [MOVE, HEAL],
     ordered: true,
     suffix: [MOVE],
   };

@@ -15,7 +15,7 @@ export interface AttackerTask extends CreepTask {
 export class AttackerCreep extends CreepBase {
   role: CreepRole = 'attacker';
   bodyOpts: BodySettings = {
-    pattern: [ATTACK, MOVE, ATTACK],
+    pattern: [ATTACK, MOVE, ATTACK, MOVE],
     ordered: true,
     suffix: [MOVE],
   };
@@ -125,7 +125,7 @@ export class AttackerCreep extends CreepBase {
       creep.hits === creep.hitsMax
     ) {
       // Travel to flag room
-      creep.travelToRoom(task.room);
+      creep.travelToRoom(task.room, { preferHighway: true });
       creep.say(task.room);
       return;
     }
