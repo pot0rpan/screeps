@@ -249,10 +249,10 @@ export default (() => {
       for (const plan of plans) {
         const ext = plan.pos
           .lookFor(LOOK_STRUCTURES)
-          .filter(
+          .find(
             struct =>
               struct.structureType === STRUCTURE_EXTENSION && struct.isActive()
-          )[0] as StructureExtension | undefined;
+          ) as StructureExtension | undefined;
 
         if (ext) {
           this.memory._extensions.push(ext.id);

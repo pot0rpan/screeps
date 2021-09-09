@@ -33,12 +33,12 @@ export class HealerCreep extends CreepBase {
 
     // Look for available attacker
     // One without a task, or a task assigned with this healer
-    const availableAttacker = colonyCreeps.filter(
+    const availableAttacker = colonyCreeps.find(
       crp =>
         crp.memory.role === 'attacker' &&
         (!crp.memory.task ||
           (crp.memory.task as AttackerTask).data.healer === creep.name)
-    )[0];
+    );
 
     if (!availableAttacker) return null;
 

@@ -95,7 +95,7 @@ export class ScoutCreep extends CreepBase {
     const roomToScout = findRoomsToScout(
       Game.rooms[creep.memory.homeRoom],
       true
-    ).filter(roomName => roomName !== creep.room.name)[0];
+    ).find(roomName => roomName !== creep.room.name);
     if (!roomToScout) return null;
 
     return taskManager.createTask<ScoutTask>(roomToScout, roomToScout, 'scout');
@@ -178,8 +178,7 @@ export class ScoutCreep extends CreepBase {
           amount: mineral.mineralAmount,
           extractor: mineral.pos
             .lookFor(LOOK_STRUCTURES)
-            .filter(struct => struct.structureType === STRUCTURE_EXTRACTOR)[0]
-            ?.id,
+            .find(struct => struct.structureType === STRUCTURE_EXTRACTOR)?.id,
         };
       }
 

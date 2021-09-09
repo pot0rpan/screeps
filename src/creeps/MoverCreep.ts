@@ -1,7 +1,7 @@
-import { recycle } from 'actions/recycle';
 import config from 'config';
+import { sortByRange } from 'utils/sort';
+import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
-import { isNthTick } from 'utils';
 import { BodySettings, CreepBase } from './CreepBase';
 
 interface MoverTask extends CreepTask {
@@ -50,7 +50,8 @@ export class MoverCreep extends CreepBase {
           .find(crp => crp.memory.role === 'filler' && !creep.spawning)
       ) {
         // Only fill controller container and storage, operator/filler do the rest
-        let target: StructureStorage | StructureContainer | null = null;
+        let target: StructureStorage | StructureContainer | undefined =
+          undefined;
         const type: MoverTask['type'] = 'transfer';
 
         const storage = creep.room.storage;
@@ -67,12 +68,12 @@ export class MoverCreep extends CreepBase {
         if (!target) {
           target = creep.room
             .findUpgradeContainers()
-            .filter(
+            .find(
               container =>
                 container.store.getFreeCapacity(RESOURCE_ENERGY) >
                   creep.store.getUsedCapacity(RESOURCE_ENERGY) &&
                 !taskManager.isTaskTaken(creep.room.name, container.id, type)
-            )[0];
+            );
         }
 
         // Center storage
@@ -106,7 +107,7 @@ export class MoverCreep extends CreepBase {
               ext.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
               !taskManager.isTaskTaken(ext.pos.roomName, ext.id, type)
           )
-          .sort((a, b) => a.pos.getRangeTo(creep) - b.pos.getRangeTo(creep))[0];
+          .sort(sortByRange(creep))[0];
 
         // Spawns
         if (!target) {
@@ -264,10 +265,7 @@ export class MoverCreep extends CreepBase {
       creep.memory.task.complete = true;
     }
 
-    if (creep.memory.task.complete) {
-      creep.say('...');
-      return;
-    }
+    if (creep.memory.task.complete) return;
 
     const task = creep.memory.task as MoverTask;
 

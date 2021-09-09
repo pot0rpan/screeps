@@ -192,9 +192,9 @@ export class OperatorCreep extends CreepBase {
     if (!storage || !baseCenter) return null;
 
     // Fill center spawn
-    const spawn = baseCenter.findInRange(FIND_MY_SPAWNS, 1, {
-      filter: spawn => spawn.store.getFreeCapacity(RESOURCE_ENERGY),
-    })[0];
+    const spawn = baseCenter
+      .findInRange(FIND_MY_SPAWNS, 1)
+      .find(spawn => spawn.store.getFreeCapacity(RESOURCE_ENERGY));
 
     if (spawn) {
       return taskManager.createTask<OperatorTask>(

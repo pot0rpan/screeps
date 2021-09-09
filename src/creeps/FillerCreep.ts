@@ -71,8 +71,12 @@ export class FillerCreep extends CreepBase {
   findTask(creep: Creep, taskManager: TaskManager): FillerTask | null {
     if (creep.memory.working) {
       // Fill extensions, spawn, towers - must not be adjacent to base center
-      let target: StructureExtension | StructureSpawn | StructureTower | null =
-        null;
+      let target:
+        | StructureExtension
+        | StructureSpawn
+        | StructureTower
+        | null
+        | undefined = undefined;
       const type: FillerTask['type'] = 'transfer';
 
       if (creep.room.energyAvailable < creep.room.energyCapacityAvailable) {
@@ -83,11 +87,11 @@ export class FillerCreep extends CreepBase {
         if (!target) {
           target = creep.room
             .findSpawns()
-            .filter(
+            .find(
               spawn =>
                 spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
                 !shouldIgnore(spawn)
-            )[0];
+            );
         }
       }
 
@@ -211,17 +215,17 @@ export class FillerCreep extends CreepBase {
 
     // Find dropped energy in range if creep has room
     if (isNthTick(3) && creep.store.getFreeCapacity(RESOURCE_ENERGY)) {
-      const dropped = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 1, {
-        filter: res => res.resourceType === RESOURCE_ENERGY,
-      })[0];
+      const dropped = creep.pos
+        .findInRange(FIND_DROPPED_RESOURCES, 1)
+        .find(res => res.resourceType === RESOURCE_ENERGY);
 
       if (dropped) {
         creep.pickup(dropped);
       } else {
         // Find tombstones with energy
-        const tombstone = creep.pos.findInRange(FIND_TOMBSTONES, 1, {
-          filter: ts => ts.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
-        })[0];
+        const tombstone = creep.pos
+          .findInRange(FIND_TOMBSTONES, 1)
+          .find(ts => ts.store.getUsedCapacity(RESOURCE_ENERGY) > 0);
         if (tombstone) {
           creep.withdraw(tombstone, RESOURCE_ENERGY);
         }
