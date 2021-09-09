@@ -846,15 +846,14 @@ Creep.prototype.travelTo = function (
   destination: RoomPosition | { pos: RoomPosition },
   options?: TravelToOptions
 ) {
-  if (this.room.name === this.memory.homeRoom) {
-    const baseCenter =
-      global.empire.colonies[this.memory.homeRoom].roomPlanner.baseCenter;
-    if (baseCenter) {
-      if (!options) options = {};
-      if (!options.obstacles) options.obstacles = [];
-      options.obstacles.push({ pos: baseCenter });
-    }
+  const baseCenter =
+    global.empire.colonies[this.memory.homeRoom].roomPlanner.baseCenter;
+  if (baseCenter) {
+    if (!options) options = {};
+    if (!options.obstacles) options.obstacles = [];
+    options.obstacles.push({ pos: baseCenter });
   }
+
   return Traveler.travelTo(this, destination, options);
 };
 
