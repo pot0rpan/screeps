@@ -58,7 +58,6 @@ export class HumanResources {
         'reserver',
         'miner',
         'hauler',
-        // 'accountant',
         'claimer',
         'colonizer',
       ];

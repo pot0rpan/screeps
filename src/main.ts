@@ -27,7 +27,6 @@ import { ReserverCreep } from 'creeps/ReserverCreep';
 import { MinerCreep } from 'creeps/MinerCreep';
 import { HaulerCreep } from 'creeps/HaulerCreep';
 import { ProspectorCreep } from 'creeps/ProspectorCreep';
-// import { AccountantCreep } from 'creeps/AccountantCreep';
 import { DrainerCreep } from 'creeps/DrainerCreep';
 import { AttackerCreep } from 'creeps/AttackerCreep';
 import { HealerCreep } from 'creeps/HealerCreep';
@@ -72,7 +71,6 @@ global.Creeps = {
   reserver: new ReserverCreep(),
   miner: new MinerCreep(),
   hauler: new HaulerCreep(),
-  // accountant: new AccountantCreep(),
   claimer: new ClaimerCreep(),
   colonizer: new ColonizerCreep(),
 };
