@@ -244,16 +244,23 @@ export class RoomPlanner {
         continue;
       }
 
-      // Add link construction site at last pos if controller
+      // Add link construction site adjacent to last pos
       if (sourcesNeedingLinks.includes(source)) {
-        const plan = {
-          pos: ret.path[ret.path.length - 1],
-        };
+        const lastRoadPos = ret.path[ret.path.length - 1];
 
         if (source instanceof StructureController) {
-          links.controller = plan;
+          links.controller = { pos: lastRoadPos };
         } else {
-          links.sources.push(plan);
+          const posNotOnRoad = source.pos
+            .getAdjacentPositions(1)
+            .find(
+              pos =>
+                pos.getRangeTo(lastRoadPos) === 1 &&
+                !pos.isEqualTo(ret.path[ret.path.length - 2])
+            );
+          if (posNotOnRoad) {
+            links.sources.push({ pos: posNotOnRoad });
+          }
         }
       }
 
