@@ -65,6 +65,7 @@ global.Creeps = {
   harvester: new HarvesterCreep(),
   mover: new MoverCreep(),
   upgrader: new UpgraderCreep(),
+  scout: new ScoutCreep(),
   assassin: new AssassinCreep(),
   reserver: new ReserverCreep(),
   prospector: new ProspectorCreep(),
@@ -74,7 +75,6 @@ global.Creeps = {
   operator: new OperatorCreep(),
   claimer: new ClaimerCreep(),
   colonizer: new ColonizerCreep(),
-  scout: new ScoutCreep(),
 };
 
 global.empire = new Empire();

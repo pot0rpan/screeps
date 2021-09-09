@@ -51,6 +51,7 @@ export class HumanResources {
         'harvester',
         'mover',
         'upgrader',
+        'scout',
         'assassin',
         'reserver',
         'prospector',
@@ -60,7 +61,6 @@ export class HumanResources {
         'operator',
         'claimer',
         'colonizer',
-        'scout',
       ];
 
       for (const role of roleOrder) {
