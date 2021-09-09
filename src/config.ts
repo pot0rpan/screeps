@@ -29,9 +29,11 @@ export default {
       case 5:
         return 25000;
       case 6:
-        return 200000;
+        return 100000;
+      case 7:
+        return 150000;
       default:
-        return 500000;
+        return 200000;
     }
   },
   MAX_MINERAL_STORAGE: 30000,

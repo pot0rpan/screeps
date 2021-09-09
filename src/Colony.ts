@@ -147,8 +147,8 @@ export class Colony {
       // Uses almost 0.1 CPU even with no repair intents, so space it out a bit
       isNthTick(5) &&
       fullTowers.length &&
-      // Don't block spawning!
-      room.energyAvailable === room.energyCapacityAvailable &&
+      // // Don't block spawning!
+      // room.energyAvailable === room.energyCapacityAvailable &&
       !room.find(FIND_MY_CREEPS, {
         filter: crp => crp.memory.role === 'builder',
       }).length
