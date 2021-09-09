@@ -14,7 +14,7 @@ export class UpgraderCreep extends CreepBase {
   bodyOpts: BodySettings = {
     pattern: [WORK, WORK, CARRY],
     ordered: true,
-    sizeLimit: 10,
+    sizeLimit: 8,
     suffix: [MOVE],
   };
 
