@@ -22,7 +22,7 @@ export class HarvesterCreep extends CreepBase {
   role: CreepRole = 'harvester';
   bodyOpts: BodySettings = {
     pattern: [WORK],
-    sizeLimit: 8,
+    sizeLimit: 7,
     suffix: [CARRY, MOVE, MOVE],
   };
 
