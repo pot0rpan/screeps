@@ -69,21 +69,23 @@ export class ColonyDefense {
       return;
     }
 
-    // Activate safe mode if creeps made it to base center
-    // Set timer to not activate too eagerly, towers may finish them off
+    // Activate safe mode if creeps are getting through bunker
+    // Or if they're adjacent to the controller
+    // Set timer to not activate too eagerly, towers/defenders may finish them off
     if (
-      this.colony.roomPlanner.baseCenter?.findInRange(FIND_HOSTILE_CREEPS, 4, {
-        filter: crp => crp.isHostile(),
-      }).length
+      this.colony.roomPlanner.baseCenter
+        ?.findInRange(FIND_HOSTILE_CREEPS, 4)
+        .find(crp => crp.isHostile()) ||
+      controller.pos
+        .findInRange(FIND_HOSTILE_CREEPS, 1)
+        .find(crp => crp.isHostile())
     ) {
       if (this.safeModeTimer === null) {
         this.safeModeTimer = config.ticks.SAFE_MODE_DELAY;
       } else if (this.safeModeTimer <= 0) {
         this.safeModeTimer = null;
         controller.activateSafeMode();
-        Game.notify(
-          `${mainRoom} Activated safe mode on tick ${Game.time}, hostiles too close to base center`
-        );
+        Game.notify(`${mainRoom} Activated safe mode on tick ${Game.time}`);
       } else {
         this.safeModeTimer--;
       }
