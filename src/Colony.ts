@@ -145,7 +145,7 @@ export class Colony {
       }
     } else if (
       // Uses almost 0.1 CPU even with no repair intents, so space it out a bit
-      isNthTick(5) &&
+      isNthTick(3) &&
       fullTowers.length &&
       // // Don't block spawning!
       // room.energyAvailable === room.energyCapacityAvailable &&
