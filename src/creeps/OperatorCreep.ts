@@ -51,7 +51,7 @@ export class OperatorCreep extends CreepBase {
   };
 
   // Creep carry capacity gets added to this to stop bouncing
-  private threshold = 5000;
+  private threshold = 2000;
 
   private getResourceCount(
     _room: Room,

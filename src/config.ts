@@ -36,7 +36,7 @@ export default {
         return 200000;
     }
   },
-  MAX_MINERAL_STORAGE: 30000,
+  MAX_MINERAL_STORAGE: 10000,
   MAX_REMOTES: (rcl: number): number => {
     switch (rcl) {
       case 0:
