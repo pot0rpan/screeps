@@ -188,6 +188,13 @@ export class FillerCreep extends CreepBase {
 
     if (creep.pos.getRangeTo(target) > 1) {
       creep.travelTo(target, { range: 1 });
+
+      // Also withdraw from storage if adjacent
+      const storage = creep.room.storage;
+      if (!creep.isFull() && storage && creep.pos.getRangeTo(storage) <= 1) {
+        creep.withdraw(storage, RESOURCE_ENERGY);
+      }
+
       return;
     }
 
@@ -197,12 +204,6 @@ export class FillerCreep extends CreepBase {
           target as StructureSpawn | StructureTower | StructureExtension,
           RESOURCE_ENERGY
         );
-
-        // Also withdraw from storage if adjacent
-        const storage = creep.room.storage;
-        if (!creep.isFull() && storage && creep.pos.getRangeTo(storage) <= 1) {
-          creep.withdraw(storage, RESOURCE_ENERGY);
-        }
 
         break;
       case 'withdraw':
