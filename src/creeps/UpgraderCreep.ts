@@ -25,24 +25,24 @@ export class UpgraderCreep extends CreepBase {
     if (rcl < 2) return 0;
     if (room.memory.defcon) return 0;
 
-    const controllerContainer = room.findUpgradeContainers()[0];
-
-    if (!controllerContainer) return 0;
-
-    const controllerLink = room.findUpgradeLinks()[0];
+    const controllerContainer = room.findUpgradeContainers()[0] as
+      | StructureContainer
+      | undefined;
+    const controllerLink = room.findUpgradeLinks()[0] as
+      | StructureLink
+      | undefined;
 
     // Check for energy levels
     let totalUpgradeEnergy =
-      controllerContainer.store.getUsedCapacity(RESOURCE_ENERGY);
-    if (controllerLink) {
-      totalUpgradeEnergy +=
-        controllerLink.store.getUsedCapacity(RESOURCE_ENERGY);
-    }
+      (controllerContainer?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0) +
+      (controllerLink?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0);
 
     if (totalUpgradeEnergy < 500) return 0;
 
-    // Get number of positions around container
-    const numPositions = controllerContainer.pos.getAdjacentPositions(1).length;
+    // Get number of positions around energy source
+    const numPositions = (
+      controllerLink || controllerContainer!
+    ).pos.getAdjacentPositions(1).length;
 
     // Number that seems decent for rcl, accounting for excess energy
     const idealNum = rcl < 4 ? 3 : 2;
