@@ -1,3 +1,4 @@
+import { minToStoreOfResource } from 'utils/room';
 import { Colony } from 'Colony';
 import { Empire } from 'Empire';
 import { CreepNums } from 'HumanResources';
@@ -260,11 +261,26 @@ export class Stats {
   }
 
   showEnergyStats(room: Room) {
-    printText(
-      room.name,
-      `Energy: [${room.energyAvailable}/${room.energyCapacityAvailable}]`,
-      8,
-      4
-    );
+    let energy = room.energyAvailable;
+    let totalEnergy = room.energyCapacityAvailable;
+
+    printText(room.name, 'Spawn Energy:', 12, 4.5, { align: 'right' });
+    printText(room.name, `[${energy}/${totalEnergy}]`, 12.5, 4.5, {
+      color: energy < totalEnergy ? '#ff4488' : undefined,
+    });
+
+    if (!room.storage) return;
+
+    energy = room.storage.store.getUsedCapacity(RESOURCE_ENERGY);
+    totalEnergy =
+      energy + (room.terminal?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0);
+
+    printText(room.name, 'Total Energy:', 12, 5.5, { align: 'right' });
+    printText(room.name, totalEnergy.toLocaleString('en-US'), 12.5, 5.5, {
+      color:
+        energy < minToStoreOfResource(room, RESOURCE_ENERGY)
+          ? '#ff4488'
+          : undefined,
+    });
   }
 }
