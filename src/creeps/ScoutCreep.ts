@@ -186,7 +186,11 @@ export class ScoutCreep extends CreepBase {
       }
 
       // Abandon room if taken by hostiles
-      if (roomMemory.colonize && roomMemory.reserver !== config.USERNAME) {
+      if (
+        roomMemory.colonize &&
+        roomMemory.reserver &&
+        roomMemory.reserver !== config.USERNAME
+      ) {
         delete roomMemory.colonize;
       }
 
