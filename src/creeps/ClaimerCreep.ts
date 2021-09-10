@@ -1,6 +1,7 @@
 import { recycle } from 'actions/recycle';
 import config from 'config';
 import { TaskManager } from 'TaskManager';
+import { isFriendlyOwner } from 'utils';
 import { isFlagOfType } from 'utils/flag';
 import { isInColonyHelpRange } from 'utils/room';
 import { BodySettings, CreepBase } from './CreepBase';
@@ -14,6 +15,7 @@ export class ClaimerCreep extends CreepBase {
   role: CreepRole = 'claimer';
   bodyOpts: BodySettings = {
     pattern: [MOVE, CLAIM],
+    sizeLimit: 1,
   };
 
   private findFlags(room: Room): Flag[] {
@@ -66,8 +68,19 @@ export class ClaimerCreep extends CreepBase {
     }
 
     if (creep.room.name !== task.room) {
-      creep.say(task.room);
-      creep.travelToRoom(task.room, { allowHostile: false });
+      if (
+        !creep.room.memory.avoid &&
+        (creep.room.findDangerousHostiles().length ||
+          (creep.room.controller?.owner &&
+            !isFriendlyOwner(creep.room.controller.owner.username)))
+      ) {
+        creep.room.memory.avoid = 1;
+        delete creep.memory._trav;
+        creep.say('nope');
+      } else {
+        creep.say(task.room);
+        creep.travelToRoom(task.room, { allowHostile: false });
+      }
       return;
     }
 
