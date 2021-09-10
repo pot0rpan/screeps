@@ -49,7 +49,7 @@ export class ColonizerCreep extends CreepBase {
     const flags = this.findFlags(Game.rooms[creep.memory.homeRoom]);
 
     for (const flag of flags) {
-      if (!taskManager.isTaskTaken(flag.pos.roomName, flag.name, 'claim')) {
+      if (!taskManager.isTaskTaken(flag.pos.roomName, flag.name, 'colonize')) {
         return taskManager.createTask<ColonizerTask>(
           flag.pos.roomName,
           flag.name,
