@@ -412,18 +412,10 @@ export class RoomPlanner {
       }
     }
 
-    // Add link adjacent to last road position, but not on a road
-    // This should keep it in a good spot in range of Prospector creep
-    // Should only have to check against second-to-last road plan
-    const roadToAvoid = ret.path[ret.path.length - 2];
-    for (const pos of ret.path[ret.path.length - 1].getAdjacentPositions(1)) {
-      if (!pos.isEqualTo(roadToAvoid)) {
-        this.plans[STRUCTURE_LINK]?.push({
-          pos,
-        });
-        break;
-      }
-    }
+    // Add container at last road position
+    this.plans[STRUCTURE_CONTAINER]?.push({
+      pos: ret.path[ret.path.length - 1],
+    });
   }
 
   // Place construction sites for all plans
