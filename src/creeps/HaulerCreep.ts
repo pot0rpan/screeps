@@ -181,7 +181,14 @@ export class HaulerCreep extends CreepBase {
     if (creep.memory.working && creep.isEmpty()) {
       creep.memory.working = false;
       task.complete = true;
-    } else if (!creep.memory.working && creep.isFull()) {
+    } else if (
+      // Switch to working if full,
+      // or almost full and task is in different room - probably going past storage anyway
+      !creep.memory.working &&
+      (creep.isFull() ||
+        (task.room !== creep.room.name &&
+          creep.store.getUsedCapacity() > 0.8 * creep.store.getCapacity()))
+    ) {
       creep.memory.working = true;
       task.complete = true;
     }
