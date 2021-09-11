@@ -69,6 +69,15 @@ export class ColonyDefense {
       return;
     }
 
+    // Activate safemode immediately if spawns are injured
+    // This is mostly for low rcl
+    if (mainRoom.findSpawns().find(spawn => spawn.hits < spawn.hitsMax)) {
+      this.safeModeTimer = null;
+      controller.activateSafeMode();
+      Game.notify(`${mainRoom} Activated safe mode on tick ${Game.time}`);
+      return;
+    }
+
     // Activate safe mode if creeps are getting through bunker
     // Or if they're adjacent to the controller
     // Set timer to not activate too eagerly, towers/defenders may finish them off
