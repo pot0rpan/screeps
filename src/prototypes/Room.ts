@@ -68,7 +68,10 @@ export default (() => {
 
     if (avoidHostiles) {
       return this._sources.filter(
-        source => !source.pos.findInRange(FIND_HOSTILE_CREEPS, 1).length
+        source =>
+          !source.pos
+            .findInRange(FIND_HOSTILE_CREEPS, 1)
+            .find(creep => creep.isDangerous())
       );
     }
 
