@@ -189,10 +189,19 @@ export class FillerCreep extends CreepBase {
     if (creep.pos.getRangeTo(target) > 1) {
       creep.travelTo(target, { range: 1 });
 
-      // Also withdraw from storage if adjacent
-      const storage = creep.room.storage;
-      if (!creep.isFull() && storage && creep.pos.getRangeTo(storage) <= 1) {
-        creep.withdraw(storage, RESOURCE_ENERGY);
+      // Also withdraw from storage/terminal if adjacent
+      if (!creep.isFull()) {
+        if (
+          creep.room.storage &&
+          creep.pos.getRangeTo(creep.room.storage) <= 1
+        ) {
+          creep.withdraw(creep.room.storage, RESOURCE_ENERGY);
+        } else if (
+          creep.room.terminal &&
+          creep.pos.getRangeTo(creep.room.terminal) <= 1
+        ) {
+          creep.withdraw(creep.room.terminal, RESOURCE_ENERGY);
+        }
       }
 
       return;
