@@ -1,4 +1,5 @@
 import { isFlagOfType } from 'utils/flag';
+import { isInColonyHelpRange } from 'utils/room';
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
@@ -20,14 +21,11 @@ export class DrainerCreep extends CreepBase {
   private RETREAT_HEALTH = 0.8;
 
   private findFlags(room: Room): Flag[] {
-    const adjacentRoomNames =
-      global.empire.colonies[room.name].adjacentRoomNames;
-
     return _.filter(
       Game.flags,
       flag =>
         isFlagOfType(flag, 'DRAIN') &&
-        adjacentRoomNames.includes(flag.pos.roomName)
+        isInColonyHelpRange(room.name, flag.pos.roomName)
     );
   }
 
