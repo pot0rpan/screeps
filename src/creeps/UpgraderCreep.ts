@@ -5,7 +5,8 @@ import { BodySettings, CreepBase } from './CreepBase';
 
 interface UpgraderTask extends CreepTask {
   type: 'upgrade' | 'withdraw';
-  data: { controller: string; link?: string };
+  target: Id<StructureContainer>;
+  data: { controller: Id<StructureController>; link?: Id<StructureLink> };
 }
 
 // Upgraders grab energy from controller container and upgrade controller
@@ -66,17 +67,15 @@ export class UpgraderCreep extends CreepBase {
   findTask(creep: Creep, taskManager: TaskManager) {
     const controller = creep.room.controller;
     if (!controller) return null;
-    const container = creep.room.findUpgradeContainers()[0];
-    if (!container) return null;
 
-    const link =
-      controller.level > 4
-        ? creep.room.findUpgradeLinks()[0]
-        : (undefined as StructureLink | undefined);
+    const container = creep.room.findUpgradeContainers()[0];
+    const link = controller.level > 4 ? creep.room.findUpgradeLinks()[0] : null;
+
+    if (!container && !link) return null;
 
     return taskManager.createTask<UpgraderTask>(
-      container.pos.roomName,
-      container.id,
+      (container || link).pos.roomName,
+      container?.id ?? '',
       'upgrade',
       -1,
       { controller: controller.id, link: link?.id }
@@ -85,7 +84,7 @@ export class UpgraderCreep extends CreepBase {
 
   isValidTask(creep: Creep, task: UpgraderTask): boolean {
     return (
-      !!Game.getObjectById(task.target as Id<StructureContainer>) &&
+      !!Game.getObjectById(task.target as Id<StructureContainer>) ||
       !!Game.getObjectById(task.data.controller as Id<StructureController>)
     );
   }
@@ -97,15 +96,11 @@ export class UpgraderCreep extends CreepBase {
     }
 
     const task = creep.memory.task as UpgraderTask;
-    const container = Game.getObjectById(task.target as Id<StructureContainer>);
-    const controller = Game.getObjectById(
-      task.data.controller as Id<StructureController>
-    );
-    const link = Game.getObjectById(
-      (task.data.link || '') as Id<StructureLink>
-    );
+    const controller = Game.getObjectById(task.data.controller);
+    const container = Game.getObjectById(task.target);
+    const link = task.data.link ? Game.getObjectById(task.data.link) : null;
 
-    if (!container || !controller) {
+    if ((!container && !link) || !controller) {
       creep.memory.task.complete = true;
       return;
     }
@@ -121,6 +116,8 @@ export class UpgraderCreep extends CreepBase {
       // Withdraw from link if available, otherwise container
       const target =
         link && link.store.getUsedCapacity(RESOURCE_ENERGY) ? link : container;
+
+      if (!target) return;
 
       if (creep.pos.getRangeTo(target) > 1) {
         creep.travelTo(target, { range: 1 });
