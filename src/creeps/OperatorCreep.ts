@@ -45,10 +45,9 @@ export class OperatorCreep extends CreepBase {
 
   // Reset every tick
   // this method is used for checking targetNum as well so needs caching
-  private _resourceToMoveCache: { tick: number; result: ResourceToMove } = {
-    tick: Game.time,
-    result: null,
-  };
+  private _resourceToMoveCache: {
+    [roomName: string]: { tick: number; result: ResourceToMove };
+  } = {};
 
   // Creep carry capacity gets added to this to stop bouncing
   private threshold = 2000;
@@ -82,9 +81,12 @@ export class OperatorCreep extends CreepBase {
     ) {
       return null;
     }
+    if (!this._resourceToMoveCache[room.name]) {
+      this._resourceToMoveCache[room.name] = { tick: Game.time, result: null };
+    }
 
-    if (this._resourceToMoveCache?.tick !== Game.time) {
-      this._resourceToMoveCache = { tick: Game.time, result: null };
+    if (this._resourceToMoveCache[room.name].tick !== Game.time) {
+      this._resourceToMoveCache[room.name] = { tick: Game.time, result: null };
 
       // Balance out storage between storage/terminal
       // use threshold so there are no more tasks when they're close enough
@@ -127,7 +129,7 @@ export class OperatorCreep extends CreepBase {
               creepCarryCapacity <
               room.storage.store.getFreeCapacity(resType as ResourceConstant)
           ) {
-            this._resourceToMoveCache.result = {
+            this._resourceToMoveCache[room.name].result = {
               from: room.terminal,
               to: room.storage,
               type: resType as ResourceConstant,
@@ -144,7 +146,7 @@ export class OperatorCreep extends CreepBase {
               resType !== RESOURCE_ENERGY ||
               excessTerminal < maxToStoreOfResource(room, RESOURCE_ENERGY, true)
             ) {
-              this._resourceToMoveCache.result = {
+              this._resourceToMoveCache[room.name].result = {
                 from: room.storage,
                 to: room.terminal,
                 type: resType as ResourceConstant,
@@ -156,7 +158,7 @@ export class OperatorCreep extends CreepBase {
       }
     }
 
-    return this._resourceToMoveCache.result;
+    return this._resourceToMoveCache[room.name].result;
   }
 
   // Only spawn from center spawn, otherwise can't access baseCenter
@@ -340,8 +342,10 @@ export class OperatorCreep extends CreepBase {
     ) as StructureStorage | StructureTerminal;
 
     if (creep.store.getFreeCapacity(task.data.resourceType)) {
-      creep.withdraw(from, task.data.resourceType);
+      console.log('WITHDRAW');
+      console.log(creep.withdraw(from, task.data.resourceType));
     } else {
+      console.log('TRANSFER');
       creep.transfer(to, task.data.resourceType);
       task.complete = true;
     }
