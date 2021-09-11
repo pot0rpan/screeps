@@ -66,7 +66,7 @@ export class ColonizerCreep extends CreepBase {
     const task = creep.memory.task as ColonizerTask | undefined;
 
     if (!task) {
-      creep.say('...');
+      recycle(creep, 50);
       return;
     }
 
