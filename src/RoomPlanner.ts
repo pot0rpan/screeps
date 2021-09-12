@@ -68,10 +68,12 @@ export class RoomPlanner {
     }
 
     // Construct same times + every N ticks
+    // Don't construct when under attack though
     if (
-      global.isFirstTick ||
-      newRcl ||
-      isNthTick(config.ticks.PLACE_CONSTRUCTION_SITES)
+      !Memory.rooms[this.roomName].defcon &&
+      (global.isFirstTick ||
+        newRcl ||
+        isNthTick(config.ticks.PLACE_CONSTRUCTION_SITES))
     ) {
       const constructionStart = Game.cpu.getUsed();
       this.construct();
@@ -91,11 +93,10 @@ export class RoomPlanner {
     // Nothing to build at lvl 1
     if (this.rcl < 2) return;
 
-    // Don't construct when under attack
-    if (Memory.rooms[this.roomName].defcon) return;
-
     // Only plan if bucket isn't empty (or no bucket like in sim)
     if (this.baseCenter && (this.roomName === 'sim' || Game.cpu.bucket > 200)) {
+      console.log(this.roomName, 'PLANNING ROOM');
+
       this.plans = {};
 
       this.planBunker(this.baseCenter);
