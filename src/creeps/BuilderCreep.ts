@@ -110,6 +110,14 @@ export class BuilderCreep extends CreepBase {
           .sort((a, b) => a.hits - b.hits)[0];
       }
 
+      // If nothing to repair, hostiles must not be too dangerous so build
+      if (!target && creep.room.memory.defcon) {
+        type = 'build';
+        target = creep.room
+          .findConstructionSites()
+          .sort((a, b) => b.progress - a.progress)[0];
+      }
+
       if (!target) return null;
 
       return taskManager.createTask(
