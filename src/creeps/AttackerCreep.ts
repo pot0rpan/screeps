@@ -130,8 +130,15 @@ export class AttackerCreep extends CreepBase {
       return;
     }
 
-    // Retreat if healer can't keep up
+    if (creep.room.controller?.safeMode) {
+      const flag = Game.flags[task.target];
+      if (flag) flag.remove();
+      task.complete = true;
+      return;
+    }
+
     if (creep.hits < creep.hitsMax * 0.8) {
+      // Retreat if healer can't keep up
       creep.travelToRoom(creep.memory.homeRoom);
       creep.say('nope');
       return;
