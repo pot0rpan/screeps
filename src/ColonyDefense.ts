@@ -1,5 +1,5 @@
 import config from 'config';
-import { isNthTick } from 'utils';
+import { isFriendlyOwner, isNthTick } from 'utils';
 import { getMaxHeal, getMaxTowerDamage } from 'utils/combat';
 import { Colony } from 'Colony';
 
@@ -112,9 +112,14 @@ export class ColonyDefense {
 
     if (!towers.length) return;
 
-    const hostiles = mainRoom.findHostiles();
+    let hostiles = mainRoom.findHostiles();
 
-    if (!hostiles.length) return;
+    if (!hostiles.length) {
+      // Finish off creeps who only have MOVE parts left
+      hostiles = mainRoom.find(FIND_HOSTILE_CREEPS, {
+        filter: hostile => !isFriendlyOwner(hostile.owner.username),
+      });
+    }
 
     const baseCenter =
       this.colony.roomPlanner.baseCenter ||
