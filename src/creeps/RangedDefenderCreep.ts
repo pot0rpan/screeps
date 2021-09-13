@@ -40,7 +40,7 @@ export class RangedDefenderCreep extends CreepBase {
     const task = creep.memory.task as RangedDefenderTask | undefined;
 
     if (!task || task.complete) {
-      recycle(creep, 500);
+      recycle(creep, 300);
       return;
     }
 
@@ -66,7 +66,7 @@ export class RangedDefenderCreep extends CreepBase {
         excuse(creep);
       }
     } else {
-      creep.travelTo(closestHostiles[0]);
+      creep.travelTo(closestHostiles[0], { maxRooms: 1 });
     }
 
     // Attack and heal

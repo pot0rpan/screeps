@@ -35,7 +35,7 @@ export class DefenderCreep extends CreepBase {
     const task = creep.memory.task as DefenderTask | undefined;
 
     if (!task || task.complete) {
-      recycle(creep, 100);
+      recycle(creep, 300);
       return;
     }
 
@@ -62,7 +62,7 @@ export class DefenderCreep extends CreepBase {
         excuse(creep);
       }
     } else {
-      creep.travelTo(closestHostile);
+      creep.travelTo(closestHostile, { maxRooms: 1 });
     }
 
     if (creep.pos.getRangeTo(closestHostile) === 1) {
