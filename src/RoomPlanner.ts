@@ -97,7 +97,24 @@ export class RoomPlanner {
     if (this.baseCenter && (this.roomName === 'sim' || Game.cpu.bucket > 200)) {
       console.log(this.roomName, 'PLANNING ROOM');
 
-      this.plans = {};
+      // Set order for priority structures, others will fall at the end
+      // Mostly used to delay rampart construction until others are done,
+      // so ramparts don't decay
+      this.plans = {
+        [STRUCTURE_SPAWN]: [],
+        [STRUCTURE_EXTENSION]: [],
+        [STRUCTURE_TOWER]: [],
+        [STRUCTURE_STORAGE]: [],
+        [STRUCTURE_TERMINAL]: [],
+        [STRUCTURE_LINK]: [],
+        [STRUCTURE_CONTAINER]: [],
+        [STRUCTURE_EXTRACTOR]: [],
+        [STRUCTURE_LAB]: [],
+        [STRUCTURE_NUKER]: [],
+        [STRUCTURE_OBSERVER]: [],
+        [STRUCTURE_ROAD]: [],
+        [STRUCTURE_RAMPART]: [],
+      };
 
       this.planBunker(this.baseCenter);
       this.planSourceRoutes(this.baseCenter);
@@ -110,7 +127,7 @@ export class RoomPlanner {
   }
 
   private planBunker(baseCenter: RoomPosition): void {
-    this.plans = generateBunkerPlans(baseCenter);
+    this.plans = Object.assign(this.plans, generateBunkerPlans(baseCenter));
   }
 
   private planControllerProtection(): void {
