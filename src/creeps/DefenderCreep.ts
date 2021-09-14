@@ -43,6 +43,7 @@ export class DefenderCreep extends CreepBase {
 
     const closestHostile = creep.room
       .findHostiles()
+      .filter(hostile => !hostile.pos.isNearEdge(3))
       .sort((a, b) => a.pos.getRangeTo(creep) - b.pos.getRangeTo(creep))[0];
 
     if (!closestHostile) {
