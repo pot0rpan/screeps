@@ -77,7 +77,7 @@ export class ColonizerCreep extends CreepBase {
       return;
     }
 
-    if (creep.pos.isNearEdge(2)) {
+    if (creep.pos.isNearEdge(1)) {
       creep.travelToRoom(creep.room.name);
       return;
     }
