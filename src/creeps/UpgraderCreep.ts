@@ -46,7 +46,8 @@ export class UpgraderCreep extends CreepBase {
     ).pos.getAdjacentPositions(1).length;
 
     // Number that seems decent for rcl, accounting for excess energy
-    const idealNum = rcl < 4 ? 3 : 2;
+    // Limit to 1 for rcl 8 since max of 15 e/t
+    const idealNum = rcl < 4 ? 3 : rcl < 8 ? 2 : 1;
 
     // Leave room for mover to fill container (num positions - 1)
     const targetNum = Math.min(idealNum, numPositions - 1);
