@@ -51,7 +51,7 @@ export class BuilderCreep extends CreepBase {
     }
 
     if (room.find(FIND_STRUCTURES).find(struct => isDamaged(struct))) {
-      return room.memory.defcon ? 2 : 1;
+      return room.memory.defcon && rcl >= 6 ? 2 : 1;
     }
 
     return 0;
