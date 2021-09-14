@@ -37,6 +37,8 @@ export class RangedDefenderCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
+    creep.notifyWhenAttacked(false);
+
     const task = creep.memory.task as RangedDefenderTask | undefined;
 
     if (!task || task.complete) {

@@ -32,6 +32,8 @@ export class DefenderCreep extends CreepBase {
   }
 
   run(creep: Creep): void {
+    creep.notifyWhenAttacked(false);
+
     const task = creep.memory.task as DefenderTask | undefined;
 
     if (!task || task.complete) {
