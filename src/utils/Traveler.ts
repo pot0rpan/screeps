@@ -95,6 +95,11 @@ export class Traveler {
     // uncomment if you would like to register hostile rooms entered
     this.updateRoomStatus(creep.room);
 
+    // Immediately avoid room if dangerous
+    if (creep.room.memory?.avoid) {
+      delete creep.memory._trav;
+    }
+
     if (!destination) {
       return ERR_INVALID_ARGS;
     }
@@ -320,8 +325,10 @@ export class Traveler {
       } else {
         delete room.memory.avoid;
       }
-    } else if (room.findHostiles().length) {
+    } else if (room.findDangerousHostiles().length) {
       room.memory.avoid = 1;
+    } else {
+      delete room.memory.avoid;
     }
   }
 
