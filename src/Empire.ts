@@ -54,6 +54,7 @@ export class Empire {
       if (!Game.rooms[roomName]) {
         delete this.colonies[roomName];
         delete Memory.colonies?.[roomName];
+        continue;
       }
       this.colonies[roomName].run();
     }
