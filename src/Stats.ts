@@ -1,4 +1,4 @@
-import { minToStoreOfResource } from 'utils/room';
+import { targetResourceAmount } from 'utils/room';
 import { Colony } from 'Colony';
 import { Empire } from 'Empire';
 import { CreepNums } from 'HumanResources';
@@ -278,7 +278,7 @@ export class Stats {
     printText(room.name, 'Total Energy:', 12, 5.5, { align: 'right' });
     printText(room.name, totalEnergy.toLocaleString('en-US'), 12.5, 5.5, {
       color:
-        energy < minToStoreOfResource(room, RESOURCE_ENERGY)
+        energy < targetResourceAmount(room, RESOURCE_ENERGY)
           ? '#ff4488'
           : undefined,
     });

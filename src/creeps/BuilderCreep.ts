@@ -1,5 +1,5 @@
 import { isDamaged } from 'utils/structure';
-import { minToStoreOfResource } from 'utils/room';
+import { targetResourceAmount } from 'utils/room';
 import { recycle } from 'actions/recycle';
 import { excuse } from 'actions/excuse';
 import { TaskManager } from 'TaskManager';
@@ -27,7 +27,7 @@ export class BuilderCreep extends CreepBase {
       room.storage &&
       room.storage.isActive() &&
       room.storage.store.getUsedCapacity(RESOURCE_ENERGY) <
-        minToStoreOfResource(room, RESOURCE_ENERGY)
+        targetResourceAmount(room, RESOURCE_ENERGY)
     ) {
       return 0;
     }

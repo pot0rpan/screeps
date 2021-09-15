@@ -17,7 +17,7 @@ export default {
   //       return 30000000;
   //   }
   // },
-  MIN_ENERGY_STORAGE: (rcl: number): number => {
+  TARGET_ENERGY_STORAGE: (rcl: number): number => {
     switch (rcl) {
       case 0:
       case 1:
@@ -28,15 +28,11 @@ export default {
         return 10000;
       case 5:
         return 25000;
-      case 6:
-        return 100000;
-      case 7:
-        return 150000;
       default:
-        return 200000;
+        return 100000;
     }
   },
-  MAX_MINERAL_STORAGE: 10000,
+  TARGET_MINERAL_STORAGE: 10000,
   MAX_REMOTES: (rcl: number): number => {
     switch (rcl) {
       case 0:

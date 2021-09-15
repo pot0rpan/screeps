@@ -1,5 +1,4 @@
 import { TaskManager } from 'TaskManager';
-import { maxToStoreOfResource } from 'utils/room';
 import { BodySettings, CreepBase } from './CreepBase';
 
 type TransferTarget = Id<
@@ -90,22 +89,22 @@ export class OperatorCreep extends CreepBase {
 
       // Balance out storage between storage/terminal
       // use threshold so there are no more tasks when they're close enough
-      const excessInTerminal = this.getResourceCount(room, room.terminal);
-      const excessInStorage = this.getResourceCount(room, room.storage);
+      const terminalResources = this.getResourceCount(room, room.terminal);
+      const storageResources = this.getResourceCount(room, room.storage);
 
-      // Gather excess amounts of each resource in both storage/terminal
-      const excessResources: {
+      // Gather amounts of each resource in both storage/terminal
+      const resourceCount: {
         [resourceType: string]: { terminal?: number; storage?: number };
       } = {};
 
-      for (const resType in excessInTerminal) {
-        if (!excessResources[resType]) excessResources[resType] = {};
-        excessResources[resType].terminal = excessInTerminal[resType];
+      for (const resType in terminalResources) {
+        if (!resourceCount[resType]) resourceCount[resType] = {};
+        resourceCount[resType].terminal = terminalResources[resType];
       }
 
-      for (const resType in excessInStorage) {
-        if (!excessResources[resType]) excessResources[resType] = {};
-        excessResources[resType].storage = excessInStorage[resType];
+      for (const resType in storageResources) {
+        if (!resourceCount[resType]) resourceCount[resType] = {};
+        resourceCount[resType].storage = storageResources[resType];
       }
 
       const creepCarryCapacity =
@@ -114,17 +113,17 @@ export class OperatorCreep extends CreepBase {
         ).length * 50;
 
       // Check if should move
-      for (const resType in excessResources) {
-        const excessTerminal = excessResources[resType].terminal ?? 0;
-        const excessStorage = excessResources[resType].storage ?? 0;
+      for (const resType in resourceCount) {
+        const terminalAmount = resourceCount[resType].terminal ?? 0;
+        const storageAmount = resourceCount[resType].storage ?? 0;
 
         // If not close enough, transfer from fullest
         if (
-          Math.abs(excessTerminal - excessStorage) >
+          Math.abs(terminalAmount - storageAmount) >
           this.threshold + creepCarryCapacity * 2
         ) {
           if (
-            excessTerminal > excessStorage &&
+            terminalAmount > storageAmount &&
             room.storage.store.getUsedCapacity(resType as ResourceConstant) +
               creepCarryCapacity <
               room.storage.store.getFreeCapacity(resType as ResourceConstant)
@@ -136,23 +135,17 @@ export class OperatorCreep extends CreepBase {
             };
             break;
           } else if (
-            excessStorage > excessTerminal &&
+            storageAmount > terminalAmount &&
             room.terminal.store.getUsedCapacity(resType as ResourceConstant) +
               creepCarryCapacity <
               room.terminal.store.getFreeCapacity(resType as ResourceConstant)
           ) {
-            // Keep energy lower in terminal
-            if (
-              resType !== RESOURCE_ENERGY ||
-              excessTerminal < maxToStoreOfResource(room, RESOURCE_ENERGY, true)
-            ) {
-              this._resourceToMoveCache[room.name].result = {
-                from: room.storage,
-                to: room.terminal,
-                type: resType as ResourceConstant,
-              };
-              break;
-            }
+            this._resourceToMoveCache[room.name].result = {
+              from: room.storage,
+              to: room.terminal,
+              type: resType as ResourceConstant,
+            };
+            break;
           }
         }
       }
