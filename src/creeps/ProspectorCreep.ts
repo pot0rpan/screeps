@@ -5,14 +5,14 @@ import { BodySettings, CreepBase } from './CreepBase';
 interface ProspectorTask extends CreepTask {
   type: 'harvest';
   target: Id<Mineral>;
-  data: { type: MineralConstant };
+  data: { type: MineralConstant; container?: Id<StructureContainer> };
 }
 
 // https://docs.screeps.com/resources.html
 export class ProspectorCreep extends CreepBase {
   role: CreepRole = 'prospector';
   bodyOpts: BodySettings = {
-    pattern: [WORK, WORK, CARRY, MOVE, MOVE],
+    pattern: [WORK, WORK, WORK, CARRY, MOVE, MOVE],
   };
 
   targetNum(room: Room): number {
@@ -52,12 +52,16 @@ export class ProspectorCreep extends CreepBase {
         mineral.mineralAmount &&
         !taskManager.isTaskTaken(homeRoom.name, mineral.id, 'harvest')
       ) {
+        const container = mineral.pos
+          .findInRange<StructureContainer>(FIND_STRUCTURES, 1)
+          .find(struct => struct.structureType === STRUCTURE_CONTAINER);
+
         return taskManager.createTask<ProspectorTask>(
           homeRoom.name,
           mineral.id,
           'harvest',
           1,
-          { type: mineral.mineralType }
+          { type: mineral.mineralType, container: container?.id }
         );
       }
     }
@@ -108,25 +112,16 @@ export class ProspectorCreep extends CreepBase {
         return;
       }
 
-      if (creep.pos.getRangeTo(mineral) > 1) {
+      const range = creep.pos.getRangeTo(mineral);
+
+      if (range > 1) {
         creep.travelTo(mineral, { range: 1 });
 
-        // Check for dropped resources when empty
-        if (!creep.store.getUsedCapacity(mineral.mineralType)) {
-          const dropped = creep.pos
-            .findInRange(FIND_DROPPED_RESOURCES, 1)
-            .find(
-              drop => drop.amount && drop.resourceType === mineral.mineralType
-            );
-          if (dropped) {
-            creep.pickup(dropped);
-          } else {
-            const tombstone = creep.pos
-              .findInRange(FIND_TOMBSTONES, 1)
-              .find(ts => ts.store.getUsedCapacity(mineral.mineralType));
-            if (tombstone) {
-              creep.withdraw(tombstone, mineral.mineralType);
-            }
+        // TODO: Have Movers withdraw from container, then more WORK less MOVE/CARRY for Prospector
+        if (task.data.container && range === 2) {
+          const container = Game.getObjectById(task.data.container);
+          if (container?.store.getUsedCapacity(mineral.mineralType)) {
+            creep.withdraw(container, mineral.mineralType);
           }
         }
       } else {
