@@ -38,7 +38,7 @@ export class UpgraderCreep extends CreepBase {
       (controllerContainer?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0) +
       (controllerLink?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0);
 
-    if (totalUpgradeEnergy < 500) return 0;
+    if (totalUpgradeEnergy < 100) return 0;
 
     // Get number of positions around energy source
     const numPositions = (
