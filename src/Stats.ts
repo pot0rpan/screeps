@@ -1,3 +1,4 @@
+import { formatNumber } from 'utils';
 import { targetResourceAmount } from 'utils/room';
 import { Colony } from 'Colony';
 import { Empire } from 'Empire';
@@ -149,6 +150,12 @@ export class Stats {
     for (const roomName in empire.colonies) {
       const room = Game.rooms[roomName];
       if (!room) continue;
+
+      printText(roomName, `Tick: ${Game.time}`, 48, 1, {
+        align: 'right',
+        color: '#44ff88',
+      });
+
       if (Game.cpu.bucket < 100) {
         printText(roomName, 'Low bucket, skipping stats visuals', 0, 0.5, {
           color: 'yellow',
@@ -281,12 +288,10 @@ export class Stats {
     printText(
       room.name,
       terminalEnergy
-        ? `${totalEnergy.toLocaleString(
-            'en-US'
-          )} (${terminalEnergy.toLocaleString(
-            'en-US'
-          )} | ${storageEnergy.toLocaleString('en-US')})`
-        : totalEnergy.toLocaleString('en-US'),
+        ? `${formatNumber(totalEnergy)} (${formatNumber(
+            terminalEnergy
+          )} + ${formatNumber(storageEnergy)})`
+        : formatNumber(totalEnergy),
       14.5,
       5.5,
       {
