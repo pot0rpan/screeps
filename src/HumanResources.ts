@@ -36,33 +36,9 @@ export class HumanResources {
       Game.time - this._creepNumsCacheTimestamp >= config.ticks.SPAWN_CREEPS
     ) {
       const room = Game.rooms[this.colony.roomName];
-      // Listed in order of priority
       const creepNums: CreepNums = {};
-      const roleOrder = [
-        'pioneer',
-        'filler',
-        'builder',
-        'ranged_defender',
-        'defender',
-        'attacker',
-        'healer',
-        'exterminator',
-        'drainer',
-        'harvester',
-        'mover',
-        'upgrader',
-        'scout',
-        'assassin',
-        'prospector',
-        'operator',
-        'reserver',
-        'miner',
-        'hauler',
-        'claimer',
-        'colonizer',
-      ];
 
-      for (const role of roleOrder) {
+      for (const role of config.SPAWN_ORDER) {
         const start = Game.cpu.getUsed();
         creepNums[role] = {
           target: global.Creeps[role].targetNum(room),
