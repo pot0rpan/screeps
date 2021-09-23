@@ -9,6 +9,8 @@ type TransferTarget = Id<
   | StructureLink
 >;
 
+type BalanceTarget = StructureStorage | StructureTerminal;
+
 // task.target is where to withdraw FROM
 // task.data.to is where to transfer TO
 // If transfer to center link, linkTarget will be defined
@@ -24,8 +26,8 @@ interface OperatorTask extends CreepTask {
 }
 
 type ResourceToMove = {
-  from: StructureStorage | StructureTerminal;
-  to: StructureStorage | StructureTerminal;
+  from: BalanceTarget;
+  to: BalanceTarget;
   type: ResourceConstant;
 } | null;
 
@@ -53,7 +55,7 @@ export class OperatorCreep extends CreepBase {
 
   private getResourceCount(
     _room: Room,
-    target: StructureStorage | StructureTerminal
+    target: BalanceTarget
   ): { [resourceType: string]: number } {
     const resources: { [resourceType: string]: number } = {};
 
@@ -327,22 +329,18 @@ export class OperatorCreep extends CreepBase {
     }
 
     // Balance task
-    const from = Game.getObjectById(
-      task.target as Id<StructureStorage | StructureTerminal>
-    ) as StructureStorage | StructureTerminal;
-    const to = Game.getObjectById(
-      task.data.to as Id<StructureStorage | StructureTerminal>
-    ) as StructureStorage | StructureTerminal;
+    const from = Game.getObjectById(task.target as Id<BalanceTarget>)!;
+    const to = Game.getObjectById(task.data.to as Id<BalanceTarget>)!;
 
     if (creep.store.getFreeCapacity(task.data.resourceType)) {
-      console.log('WITHDRAW');
-      console.log(creep.withdraw(from, task.data.resourceType));
+      creep.withdraw(from, task.data.resourceType);
     } else {
-      console.log('TRANSFER');
       creep.transfer(to, task.data.resourceType);
       task.complete = true;
     }
 
-    creep.say(`${task.data.resourceType} → ${to.structureType.substr(0, 4)}`);
+    creep.say(
+      `${task.data.resourceType} ${to instanceof StructureTerminal ? '🠔' : '🠖'}`
+    );
   }
 }
