@@ -6,7 +6,7 @@ import { CreepNums } from 'HumanResources';
 declare global {
   interface Memory {
     _showStats?: boolean;
-    _profile?: boolean;
+    _profile?: string[] | false;
     _showTasks?: boolean;
   }
 }
@@ -55,13 +55,16 @@ function printProgressBar(
 
 export class Stats {
   _show: boolean;
-  _profile: boolean;
-  _profileFilter: string[] = [];
+  _profile: string[] | false;
   _showTasks: boolean;
 
   constructor() {
+    if (!Memory._profile) {
+      Memory._profile = false;
+    }
+
     this._show = this.show;
-    this._profile = this.profile;
+    this._profile = Memory._profile;
     this._showTasks = this.tasks;
   }
 
@@ -78,17 +81,17 @@ export class Stats {
     this._show = bool;
   }
 
-  get profile() {
-    if (typeof Memory._profile === 'undefined') {
-      Memory._profile = false;
+  // To turn profiling off, `profile(false)`
+  // To turn profiling on, `profile()`
+  // To turn profiling on with filters, `profile('filter1', 'filter2')`
+  public profile(...filters: string[] | [false]): string {
+    if (filters.length === 1 && filters[0] === false) {
+      this._profile = false;
+      return '' + this._profile;
+    } else {
+      this._profile = filters as string[];
+      return this._profile.toString();
     }
-    this._profile = Memory._profile;
-    return this._profile;
-  }
-
-  set profile(bool: boolean) {
-    Memory._profile = bool;
-    this._profile = bool;
   }
 
   get tasks() {
@@ -104,17 +107,14 @@ export class Stats {
     this._showTasks = bool;
   }
 
-  public filter(...categories: string[]): string {
-    this._profileFilter = categories;
-    return categories.toString();
-  }
-
   private filterLog(categories: string[]): boolean {
-    if (!this._profileFilter.length || !categories.length) {
+    if (this._profile === false) return false;
+
+    if (!this._profile.length || !categories.length) {
       return true;
     }
 
-    for (const mustMatch of this._profileFilter) {
+    for (const mustMatch of this._profile) {
       if (!categories.includes(mustMatch)) return false;
     }
 
@@ -126,7 +126,7 @@ export class Stats {
     startCpu: number,
     categories: string[] = []
   ) {
-    if (this.profile && this.filterLog(categories)) {
+    if (this.filterLog(categories)) {
       const cpuUsed = Game.cpu.getUsed() - startCpu;
       if (cpuUsed <= 0) return; // Sim room
       console.log(
