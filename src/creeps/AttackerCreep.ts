@@ -17,7 +17,6 @@ export class AttackerCreep extends CreepBase {
   bodyOpts: BodySettings = {
     pattern: [ATTACK, MOVE, ATTACK, MOVE],
     ordered: true,
-    suffix: [MOVE],
   };
 
   public static findPairAttackFlags(roomName: string): Flag[] {
@@ -39,6 +38,7 @@ export class AttackerCreep extends CreepBase {
   isValidTask(creep: Creep, task: AttackerTask): boolean {
     if (!Game.flags[task.target]) return false;
     if (!task.data.healer || !Game.creeps[task.data.healer]) return false;
+    if (Game.flags[task.target].pos.roomName !== task.room) return false;
     return true;
   }
 
@@ -144,6 +144,8 @@ export class AttackerCreep extends CreepBase {
       return;
     }
 
+    creep.say('revenge', true);
+
     // If in range of hostiles on a rampart, move away
     const closeHostilesOnRamparts = creep.pos.findInRange(
       FIND_HOSTILE_CREEPS,
@@ -208,9 +210,7 @@ export class AttackerCreep extends CreepBase {
 
     // Nothing to attack?
     if (!target) {
-      if (!moved) {
-        recycle(creep, 500);
-      }
+      creep.say('...');
       return;
     }
 

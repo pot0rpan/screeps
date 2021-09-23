@@ -1,29 +1,14 @@
 import config from 'config';
 
-export function minToStoreOfResource(
+export function targetResourceAmount(
   room: Room,
-  resourceType: ResourceConstant,
-  terminal = false
+  resourceType: ResourceConstant
 ): number {
   if (resourceType === RESOURCE_ENERGY) {
-    return terminal
-      ? 0
-      : config.MIN_ENERGY_STORAGE(room.controller?.level ?? 0);
+    return config.TARGET_ENERGY_STORAGE(room.controller?.level ?? 0);
+  } else {
+    return config.TARGET_MINERAL_STORAGE;
   }
-  return 0;
-}
-
-export function maxToStoreOfResource(
-  room: Room,
-  resourceType: ResourceConstant,
-  terminal = false
-): number {
-  if (resourceType === RESOURCE_ENERGY) {
-    return terminal
-      ? 100000
-      : config.MIN_ENERGY_STORAGE(room.controller?.level ?? 0);
-  }
-  return config.MAX_MINERAL_STORAGE;
 }
 
 export function isHighway(room: Room): boolean {

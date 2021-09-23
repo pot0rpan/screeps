@@ -33,7 +33,7 @@ export class ColonyDefense {
     console.log(this.colony.roomName, 'ColonyDefense run()');
     const start = Game.cpu.getUsed();
 
-    if ((mainRoom.controller?.level ?? 0) < 3) {
+    if ((mainRoom.controller?.level ?? 0) < 2) {
       // No towers, not enough energy to spawn defenders ¯\_(ツ)_/¯
       return;
     }

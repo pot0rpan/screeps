@@ -1,7 +1,6 @@
-import { recycle } from 'actions/recycle';
 import config from 'config';
+import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
-import { isFriendlyOwner } from 'utils';
 import { BodySettings, CreepBase } from './CreepBase';
 
 interface ReserverTask extends CreepTask {
@@ -13,6 +12,7 @@ export class ReserverCreep extends CreepBase {
   bodyOpts: BodySettings = {
     pattern: [MOVE, CLAIM],
     ordered: true,
+    sizeLimit: 3,
   };
 
   private targetNumPerRoom(roomName: string): number {

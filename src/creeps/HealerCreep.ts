@@ -24,6 +24,7 @@ export class HealerCreep extends CreepBase {
   isValidTask(creep: Creep, task: HealerTask): boolean {
     if (!Game.flags[task.target]) return false;
     if (!task.data.attacker || !Game.creeps[task.data.attacker]) return false;
+    if (Game.flags[task.target].pos.roomName !== task.room) return false;
     return true;
   }
 

@@ -215,12 +215,20 @@ export class PioneerCreep extends CreepBase {
 
     if (task.type === 'upgrade') {
       if (creep.pos.getRangeTo(target) > 3) {
-        creep.travelTo(target, { range: 3, ignoreCreeps: false });
+        creep.travelTo(target, {
+          range: 3,
+          ignoreCreeps: false,
+          ignoreRoads: true,
+        });
         return;
       }
     } else {
       if (creep.pos.getRangeTo(target) > 1) {
-        creep.travelTo(target, { range: 1, ignoreCreeps: false });
+        creep.travelTo(target, {
+          range: 1,
+          ignoreCreeps: false,
+          ignoreRoads: true,
+        });
         return;
       }
     }

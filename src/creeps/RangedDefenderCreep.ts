@@ -11,7 +11,7 @@ export class RangedDefenderCreep extends CreepBase {
   role: CreepRole = 'ranged_defender';
   bodyOpts: BodySettings = {
     ordered: true,
-    pattern: [RANGED_ATTACK, RANGED_ATTACK, HEAL, MOVE],
+    pattern: [RANGED_ATTACK, RANGED_ATTACK, MOVE],
     suffix: [MOVE],
   };
 
@@ -72,12 +72,10 @@ export class RangedDefenderCreep extends CreepBase {
       creep.travelTo(closestHostiles[0], { maxRooms: 1 });
     }
 
-    // Attack and heal
+    // Attack
     const hostilesInRange = closestHostiles.filter(
       hostile => hostile.pos.getRangeTo(creep) <= 3
     );
-
-    let attacked = false;
 
     if (hostilesInRange.length) {
       const hostilesInRmaRange = hostilesInRange.filter(
@@ -86,27 +84,8 @@ export class RangedDefenderCreep extends CreepBase {
 
       if (hostilesInRmaRange.length > 1) {
         creep.rangedMassAttack();
-        attacked = true;
       } else {
         creep.rangedAttack(hostilesInRange[0]);
-        attacked = true;
-      }
-    }
-
-    if (creep.hits < creep.hitsMax) {
-      creep.heal(creep);
-    } else {
-      const injuredFriendly = creep.pos
-        .findInRange(FIND_MY_CREEPS, 3, {
-          filter: crp => crp.hits < crp.hitsMax,
-        })
-        .sort((a, b) => a.hits - b.hits)[0];
-      if (injuredFriendly) {
-        if (creep.pos.getRangeTo(injuredFriendly) === 1) {
-          creep.heal(injuredFriendly);
-        } else if (!attacked) {
-          creep.rangedHeal(injuredFriendly);
-        }
       }
     }
   }

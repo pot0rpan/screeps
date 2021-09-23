@@ -253,19 +253,19 @@ export class Stats {
   }
 
   showCpuStats(roomName: string) {
-    printText(roomName, 'Bucket:', 9.5, 1, { align: 'right' });
-    printProgressBar(roomName, Game.cpu.bucket / 10000, 10, 1);
+    printText(roomName, 'Bucket:', 11.5, 1, { align: 'right' });
+    printProgressBar(roomName, Game.cpu.bucket / 10000, 12, 1);
 
-    printText(roomName, 'CPU:', 9.5, 2.5, { align: 'right' });
-    printProgressBar(roomName, Game.cpu.getUsed() / Game.cpu.limit, 10, 2.5);
+    printText(roomName, 'CPU:', 11.5, 2.5, { align: 'right' });
+    printProgressBar(roomName, Game.cpu.getUsed() / Game.cpu.limit, 12, 2.5);
   }
 
   showEnergyStats(room: Room) {
     let energy = room.energyAvailable;
     let totalEnergy = room.energyCapacityAvailable;
 
-    printText(room.name, 'Spawn Energy:', 12, 4.5, { align: 'right' });
-    printText(room.name, `[${energy}/${totalEnergy}]`, 12.5, 4.5, {
+    printText(room.name, 'Spawn Energy:', 14, 4.5, { align: 'right' });
+    printText(room.name, `[${energy}/${totalEnergy}]`, 14.5, 4.5, {
       color: energy < totalEnergy ? '#ff4488' : undefined,
     });
 
@@ -275,8 +275,8 @@ export class Stats {
     totalEnergy =
       energy + (room.terminal?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0);
 
-    printText(room.name, 'Total Energy:', 12, 5.5, { align: 'right' });
-    printText(room.name, totalEnergy.toLocaleString('en-US'), 12.5, 5.5, {
+    printText(room.name, 'Total Energy:', 14, 5.5, { align: 'right' });
+    printText(room.name, totalEnergy.toLocaleString('en-US'), 14.5, 5.5, {
       color:
         energy < targetResourceAmount(room, RESOURCE_ENERGY)
           ? '#ff4488'
