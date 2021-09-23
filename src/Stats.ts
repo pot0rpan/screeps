@@ -261,7 +261,7 @@ export class Stats {
   }
 
   showEnergyStats(room: Room) {
-    let energy = room.energyAvailable;
+    const energy = room.energyAvailable;
     let totalEnergy = room.energyCapacityAvailable;
 
     printText(room.name, 'Spawn Energy:', 14, 4.5, { align: 'right' });
@@ -271,16 +271,32 @@ export class Stats {
 
     if (!room.storage) return;
 
-    energy = room.storage.store.getUsedCapacity(RESOURCE_ENERGY);
-    totalEnergy =
-      energy + (room.terminal?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0);
+    const storageEnergy = room.storage.store.getUsedCapacity(RESOURCE_ENERGY);
+    const terminalEnergy =
+      room.terminal?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0;
+    totalEnergy = storageEnergy + terminalEnergy;
+    const targetEnergy = targetResourceAmount(room, RESOURCE_ENERGY);
 
     printText(room.name, 'Total Energy:', 14, 5.5, { align: 'right' });
-    printText(room.name, totalEnergy.toLocaleString('en-US'), 14.5, 5.5, {
-      color:
-        energy < targetResourceAmount(room, RESOURCE_ENERGY)
-          ? '#ff4488'
-          : undefined,
-    });
+    printText(
+      room.name,
+      terminalEnergy
+        ? `${totalEnergy.toLocaleString(
+            'en-US'
+          )} (${terminalEnergy.toLocaleString(
+            'en-US'
+          )} | ${storageEnergy.toLocaleString('en-US')})`
+        : totalEnergy.toLocaleString('en-US'),
+      14.5,
+      5.5,
+      {
+        color:
+          storageEnergy < targetEnergy
+            ? storageEnergy < targetEnergy * 0.9
+              ? '#ff4488'
+              : '#ffff88'
+            : undefined,
+      }
+    );
   }
 }
