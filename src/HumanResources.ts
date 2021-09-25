@@ -151,17 +151,10 @@ export class HumanResources {
     // Can't spawn if not controlling
     if (!room.controller) return;
 
-    // Make sure there's a free spawn, grab fullest one
-    const spawns = room
-      .findSpawns()
-      .filter(spawn => !spawn.spawning)
-      .sort(
-        (a, b) =>
-          b.store.getFreeCapacity(RESOURCE_ENERGY) -
-          a.store.getFreeCapacity(RESOURCE_ENERGY)
-      );
+    const spawns = room.findSpawns();
 
-    const spawn = spawns[0];
+    // Get the first free spawn
+    const spawn = spawns.filter(spawn => !spawn.spawning)[0];
 
     if (!spawn) {
       console.log(this.colony.roomName, 'no spawns available for spawning');

@@ -340,7 +340,7 @@ export class OperatorCreep extends CreepBase {
     }
 
     creep.say(
-      `${task.data.resourceType} ${to instanceof StructureTerminal ? '🠔' : '🠖'}`
+      `${task.data.resourceType} ${to instanceof StructureTerminal ? '←' : '→'}`
     );
   }
 }

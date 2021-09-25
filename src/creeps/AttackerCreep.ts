@@ -144,8 +144,6 @@ export class AttackerCreep extends CreepBase {
       return;
     }
 
-    creep.say('revenge', true);
-
     // If in range of hostiles on a rampart, move away
     const closeHostilesOnRamparts = creep.pos.findInRange(
       FIND_HOSTILE_CREEPS,
@@ -205,7 +203,9 @@ export class AttackerCreep extends CreepBase {
 
     // Structures
     if (!target) {
-      target = creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES);
+      target = creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES, {
+        filter: struct => struct.hits !== undefined, // Controller, maybe others
+      });
     }
 
     // Nothing to attack?

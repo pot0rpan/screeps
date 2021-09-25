@@ -80,8 +80,8 @@ export default {
   },
   SPAWN_ORDER: [
     'pioneer',
-    'operator',
     'filler',
+    'operator',
     'builder',
     'ranged_defender',
     'defender',

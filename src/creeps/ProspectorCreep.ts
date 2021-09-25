@@ -13,6 +13,7 @@ export class ProspectorCreep extends CreepBase {
   role: CreepRole = 'prospector';
   bodyOpts: BodySettings = {
     pattern: [WORK, WORK, WORK, CARRY, MOVE, MOVE],
+    ordered: true,
   };
 
   targetNum(room: Room): number {

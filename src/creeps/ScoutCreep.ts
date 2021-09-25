@@ -55,6 +55,9 @@ function findRoomsToScout(colonyRoom: Room, ignoreLastScan = false): string[] {
   for (const roomName of adjacentRoomNames) {
     const adjMem = Memory.rooms[roomName];
 
+    // Skip highways after first scouting
+    if (adjMem?.highway) continue;
+
     // If adjacent room not saved in memory or if it's been a while since last scouting
     // or ignoreLastScan=true (for when scout is alive)
     if (

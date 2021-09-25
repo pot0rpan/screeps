@@ -22,18 +22,14 @@ export class HaulerCreep extends CreepBase {
 
     const rcl = room.controller?.level ?? 0;
 
-    const numMiners = _.filter(
-      Game.creeps,
-      creep =>
-        !creep.spawning &&
-        creep.memory.homeRoom === room.name &&
-        creep.memory.role === 'miner'
-    ).length;
+    const numMiners = global.empire.colonies[room.name]
+      .getColonyCreeps()
+      .filter(creep => creep.memory.role === 'miner').length;
 
     if (rcl < 6) return Math.min(4, numMiners + 1);
     if (rcl === 6) return Math.min(3, numMiners);
 
-    return Math.max(1, Math.ceil(numMiners / 2));
+    return Math.max(1, Math.round(numMiners / 1.2));
   }
 
   isValidTask(creep: Creep, task: HaulerTask): boolean {
