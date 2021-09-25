@@ -60,12 +60,19 @@ export class Market {
     const isSharingBetweenColonies = this.handleColonyNeeds(colonyNeeds);
 
     if (!isSharingBetweenColonies) {
+      const takenOrders: { [orderId: string]: true } = {};
+
       for (const roomName in empire.colonies) {
-        this.handleSellingExcessResources(roomName);
+        const orderId = this.handleSellingExcessResources(
+          roomName,
+          takenOrders
+        );
+
+        if (orderId) takenOrders[orderId] = true;
       }
     }
 
-    global.stats.profileLog('Empire Market', start);
+    global.stats.profileLog('Empire Market', start, ['market']);
   }
 
   private getColonyNeeds(empire: Empire): ColonyNeeds {
@@ -149,7 +156,11 @@ export class Market {
 
   // This only gets called if no inter-colony transfers are made
   // That means any excess is fine to sell on the market
-  private handleSellingExcessResources(roomName: string): void {
+  // Return order.id if selling so other rooms don't use same order
+  private handleSellingExcessResources(
+    roomName: string,
+    takenOrders: { [orderId: string]: true }
+  ): string | void {
     const cache = this.cache[roomName];
     const excessResources: { type: ResourceConstant; amount: number }[] = [];
     const terminal = Game.rooms[roomName].terminal;
@@ -181,11 +192,11 @@ export class Market {
     for (const toSell of excessResources.sort((a, b) => b.amount - a.amount)) {
       const transactionCostCache: Record<string, number> = {};
 
-      // Look for best sell order which can take the full amount
+      // Look for best sell order based on total profit
       const bestBuyOrder = this.getBuyOrders(toSell.type)
         .filter(order => {
           if (!order.roomName) return false;
-          if (order.remainingAmount < toSell.amount) return false;
+          if (takenOrders[order.id]) return false;
 
           // Make sure price isn't too far below average of last 3 days
           const avgPrice = average(
@@ -195,21 +206,20 @@ export class Market {
               .map(history => history.avgPrice)
           );
 
-          if (order.price < avgPrice * 0.9) return false;
+          if (order.price < avgPrice * 0.75) return false;
+
+          const maxCanSell = Math.min(toSell.amount, order.remainingAmount);
 
           // Make sure transaction won't cost too much to be worth it
           // Cache it for sorting in next step
           transactionCostCache[order.id] = Game.market.calcTransactionCost(
-            toSell.amount,
+            maxCanSell,
             roomName,
             order.roomName
           );
 
           // Filter out orders where transaction cost is too high
-          if (
-            transactionCostCache[order.id] >
-            (toSell.amount * order.price) / 3
-          ) {
+          if (transactionCostCache[order.id] > maxCanSell * order.price) {
             return false;
           }
           return true;
@@ -217,28 +227,31 @@ export class Market {
         // Sort by max sell profit by subtracting cost
         .sort(
           (a, b) =>
-            b.price * toSell.amount -
+            b.price * Math.min(toSell.amount, b.remainingAmount) -
             transactionCostCache[b.id] -
-            (a.price * toSell.amount - transactionCostCache[a.id])
+            (a.price * Math.min(toSell.amount, a.remainingAmount) -
+              transactionCostCache[a.id])
         )[0];
 
       if (!bestBuyOrder) {
         console.log(
-          `[Market] [${roomName}] No good buy orders found for ${toSell.type}`
+          `[Market] [${roomName}] No good buy orders found for ${toSell.amount} excess ${toSell.type}`
         );
         return;
       }
 
+      const sellAmount = Math.min(toSell.amount, bestBuyOrder.remainingAmount);
+
       console.log(
-        `[Market] [${roomName}] Found buy order to sell to, will make ${
-          bestBuyOrder.price * toSell.amount
-        } revenue selling ${toSell.amount} ${toSell.type} with ${
+        `<span style="color: yellow">[Market] [${roomName}] Initiating sale of ${sellAmount} ${
+          toSell.type
+        }: will make ${bestBuyOrder.price * sellAmount} credits with ${
           transactionCostCache[bestBuyOrder.id]
-        } energy cost`,
-        JSON.stringify(bestBuyOrder, null, 2)
+        } energy cost</span>`
       );
 
-      Game.market.deal(bestBuyOrder.id, toSell.amount, roomName);
+      Game.market.deal(bestBuyOrder.id, sellAmount, roomName);
+      return bestBuyOrder.id;
     }
   }
 
