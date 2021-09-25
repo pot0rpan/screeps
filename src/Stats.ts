@@ -35,21 +35,28 @@ function printText(
 
 function printProgressBar(
   roomName: string,
-  percent: number,
+  numerator: number,
+  denominator: number,
   x: number,
   y: number
 ): void {
-  const textPercent = Math.round(percent * 100);
   const room = Game.rooms[roomName];
-  const width = 5;
-  room.visual.text(`${textPercent}%`, x + width / 2, y - 0.1, {
-    font: 0.6,
-  });
+  const width = 6;
+  room.visual.text(
+    `${
+      Number.isInteger(numerator) ? numerator : numerator.toFixed(2)
+    } / ${denominator}`,
+    x + width / 2,
+    y - 0.1,
+    {
+      font: 0.6,
+    }
+  );
   room.visual.rect(x, y - 0.8, width, 1, {
     stroke: '#ffffff',
     fill: 'transparent',
   });
-  room.visual.rect(x, y - 0.8, percent * width, 1, {
+  room.visual.rect(x, y - 0.8, (numerator / denominator) * width, 1, {
     fill: '#ffffff88',
   });
 }
@@ -261,10 +268,10 @@ export class Stats {
 
   showCpuStats(roomName: string) {
     printText(roomName, 'Bucket:', 11.5, 1, { align: 'right' });
-    printProgressBar(roomName, Game.cpu.bucket / 10000, 12, 1);
+    printProgressBar(roomName, Game.cpu.bucket, 10000, 12, 1);
 
     printText(roomName, 'CPU:', 11.5, 2.5, { align: 'right' });
-    printProgressBar(roomName, Game.cpu.getUsed() / Game.cpu.limit, 12, 2.5);
+    printProgressBar(roomName, Game.cpu.getUsed(), Game.cpu.limit, 12, 2.5);
   }
 
   showEnergyStats(room: Room) {
