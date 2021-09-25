@@ -84,7 +84,13 @@ export class ColonyDefense {
     if (
       this.colony.roomPlanner.baseCenter
         ?.findInRange(FIND_HOSTILE_CREEPS, 4)
-        .find(crp => crp.isHostile()) ||
+        .find(
+          crp =>
+            crp.isHostile() &&
+            Math.floor(
+              this.colony.roomPlanner.baseCenter!.getLinearRangeTo(crp)
+            ) <= 4
+        ) ||
       controller.pos
         .findInRange(FIND_HOSTILE_CREEPS, 1)
         .find(crp => crp.isHostile())

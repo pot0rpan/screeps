@@ -1,4 +1,4 @@
-import { sortByRange } from 'utils/sort';
+import { Traveler } from 'utils/Traveler';
 
 declare global {
   interface RoomPosition {
@@ -18,6 +18,7 @@ declare global {
       ignoreCreeps?: string[]
     ): StructureRampart | null;
     isDiagonalTo(pos: RoomPosition): boolean;
+    getLinearRangeTo(pos: RoomPosition | _HasRoomPosition): number;
   }
 
   interface RoomMemory {
@@ -236,5 +237,13 @@ export default (() => {
       Math.abs(pos.x - this.x) === Math.abs(pos.y - this.y) &&
       (pos.x !== this.x || pos.y !== this.y)
     );
+  };
+
+  RoomPosition.prototype.getLinearRangeTo = function (
+    pos: RoomPosition | _HasRoomPosition
+  ) {
+    pos = Traveler.normalizePos(pos);
+
+    return Math.sqrt(Math.pow(pos.x - this.x, 2) + Math.pow(pos.y - this.y, 2));
   };
 })();
