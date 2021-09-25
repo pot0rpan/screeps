@@ -257,7 +257,7 @@ export class Colony {
     const from = Game.getObjectById(request.from);
 
     // Make sure `from` is valid
-    if (!from) {
+    if (!from || from.store.getUsedCapacity(RESOURCE_ENERGY) < 200) {
       this.linkTransferQueue.shift();
       return;
     }

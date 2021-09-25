@@ -31,6 +31,16 @@ type ResourceToMove = {
   type: ResourceConstant;
 } | null;
 
+function isUpgradeLinkEmpty(link: StructureLink): boolean {
+  return (
+    link.store.getUsedCapacity(RESOURCE_ENERGY) <
+    global.Creeps.upgrader
+      .generateBody(link.room.energyCapacityAvailable)
+      .filter(part => part === CARRY).length *
+      50
+  );
+}
+
 // Keep resources balanced between storage/terminal
 // also keep 2 closest towers full
 // also handle center link emptying to storage/filling to send to controller
@@ -229,7 +239,7 @@ export class OperatorCreep extends CreepBase {
       if (centerLink.store.getFreeCapacity(RESOURCE_ENERGY) < 100) {
         const emptyUpgradeLink = creep.room
           .findUpgradeLinks()
-          .find(link => link.store.getUsedCapacity(RESOURCE_ENERGY) < 200);
+          .find(isUpgradeLinkEmpty);
         if (emptyUpgradeLink) {
           // If empty upgrade link, queue transfer
           global.empire.colonies[creep.memory.homeRoom].queueLinkTransfer(
@@ -247,10 +257,11 @@ export class OperatorCreep extends CreepBase {
           );
         }
       } else {
-        // Center link is empty
+        // Center link is empty, check if should send to upgrade link
+        // Upgrade link considered empty if < upgrader carry capacity
         const emptyUpgradeLink = creep.room
           .findUpgradeLinks()
-          .find(link => link.store.getUsedCapacity(RESOURCE_ENERGY) < 200);
+          .find(isUpgradeLinkEmpty);
         if (emptyUpgradeLink) {
           // Fill center link then queue transfer to upgrade link
           return taskManager.createTask<OperatorTask>(
