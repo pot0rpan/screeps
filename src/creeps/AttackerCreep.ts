@@ -9,8 +9,11 @@ import { HealerTask } from './HealerCreep';
 
 export interface AttackerTask extends CreepTask {
   type: 'attack';
-  data: { healer: string };
+  data: SingleAttackData | PairAttackData;
 }
+
+type SingleAttackData = undefined;
+type PairAttackData = { healer: string };
 
 export class AttackerCreep extends CreepBase {
   role: CreepRole = 'attacker';
@@ -31,13 +34,29 @@ export class AttackerCreep extends CreepBase {
     );
   }
 
+  private findAttackFlags(roomName: string): Flag[] {
+    // Make sure colony is strong enough to help attack
+    if ((Game.rooms[roomName].controller?.level ?? 0) < 4) return [];
+
+    return _.filter(
+      Game.flags,
+      flag =>
+        isFlagOfType(flag, 'ATTACK') &&
+        isInColonyHelpRange(roomName, flag.pos.roomName)
+    );
+  }
+
   targetNum(room: Room): number {
-    return AttackerCreep.findPairAttackFlags(room.name).length;
+    return (
+      this.findAttackFlags(room.name).length +
+      AttackerCreep.findPairAttackFlags(room.name).length
+    );
   }
 
   isValidTask(creep: Creep, task: AttackerTask): boolean {
     if (!Game.flags[task.target]) return false;
-    if (!task.data.healer || !Game.creeps[task.data.healer]) return false;
+    if (task.data && (!task.data.healer || !Game.creeps[task.data.healer]))
+      return false;
     if (Game.flags[task.target].pos.roomName !== task.room) return false;
     return true;
   }
@@ -46,6 +65,19 @@ export class AttackerCreep extends CreepBase {
     const colonyCreeps =
       global.empire.colonies[creep.memory.homeRoom].getColonyCreeps();
 
+    // Single Attacker flag
+    for (const flag of this.findAttackFlags(creep.memory.homeRoom)) {
+      if (!taskManager.isTaskTaken(flag.pos.roomName, flag.name, 'attack')) {
+        return taskManager.createTask<AttackerTask>(
+          flag.pos.roomName,
+          flag.name,
+          'attack',
+          1
+        );
+      }
+    }
+
+    // Attacker/Healer pair flags
     // Look for available healer
     // One without a task, or a task assigned with this attacker
     const availableHealer = colonyCreeps.find(
@@ -87,36 +119,40 @@ export class AttackerCreep extends CreepBase {
       return;
     }
 
-    // If no healer, go to home room and wait
-    if (!Game.creeps[task.data.healer]) {
-      // Wait for healer
-      task.complete = true;
-      return;
-    }
-
-    const healer = Game.creeps[task.data.healer];
-    const rangeToHealer = creep.pos.getRangeTo(healer);
-
-    // If healer is spawning move to open rampart and wait
-    if (healer.spawning) {
-      const ramp = creep.pos.findClosestWalkableRampart([creep.name]);
-      if (ramp) creep.travelTo(ramp);
-      return;
-    }
-
-    // Handle priority movement
     let moved = false;
-    const fatigued = getFatiguedInSquad([creep, healer])[0];
 
-    // Wait/move to fatigued
-    if (fatigued && fatigued !== creep) {
-      if (creep.pos.getRangeTo(fatigued) > 1) {
-        creep.travelTo(fatigued);
+    // Only handle moving with healer if task.data is defined
+    if (task.data) {
+      // If no healer, go to home room and wait
+      if (!Game.creeps[task.data!.healer]) {
+        // Wait for healer
+        task.complete = true;
+        return;
       }
-      moved = true;
-    } else if (rangeToHealer > 1 && !creep.pos.isNearEdge(2)) {
-      creep.travelTo(healer);
-      moved = true;
+
+      const healer = Game.creeps[task.data.healer];
+      const rangeToHealer = creep.pos.getRangeTo(healer);
+
+      // If healer is spawning move to open rampart and wait
+      if (healer.spawning) {
+        const ramp = creep.pos.findClosestWalkableRampart([creep.name]);
+        if (ramp) creep.travelTo(ramp);
+        return;
+      }
+
+      // Handle priority movement
+      const fatigued = getFatiguedInSquad([creep, healer])[0];
+
+      // Wait/move to fatigued
+      if (fatigued && fatigued !== creep) {
+        if (creep.pos.getRangeTo(fatigued) > 1) {
+          creep.travelTo(fatigued);
+        }
+        moved = true;
+      } else if (rangeToHealer > 1 && !creep.pos.isNearEdge(2)) {
+        creep.travelTo(healer);
+        moved = true;
+      }
     }
 
     if (
@@ -137,7 +173,7 @@ export class AttackerCreep extends CreepBase {
       return;
     }
 
-    if (creep.hits < creep.hitsMax * 0.8) {
+    if (task.data && creep.hits < creep.hitsMax * 0.8) {
       // Retreat if healer can't keep up
       creep.travelToRoom(creep.memory.homeRoom);
       creep.say('nope');
@@ -208,15 +244,17 @@ export class AttackerCreep extends CreepBase {
       });
     }
 
-    // Nothing to attack?
+    // Remove flag if nothing left to attack
     if (!target) {
-      creep.say('...');
+      const flag = Game.flags[task.target];
+      if (flag) flag.remove();
+      task.complete = true;
       return;
     }
 
     if (!moved) {
       if (target instanceof Creep) {
-        creep.travelTo(target);
+        creep.travelTo(target, { movingTarget: true, repath: 0.5 });
       } else {
         creep.travelTo(target, { range: 1 });
       }

@@ -72,6 +72,7 @@ export default {
   flags: {
     COLONIZE: [COLOR_PURPLE, COLOR_PURPLE], // For claiming a new colony
     DRAIN: [COLOR_CYAN, COLOR_CYAN], // For draining an enemy's towers/energy
+    ATTACK: [COLOR_RED, COLOR_RED], // For single Attacker
     PAIR_ATTACK: [COLOR_RED, COLOR_GREEN], // For Attacker/Healer pair
   },
   signs: {
