@@ -12,7 +12,7 @@ export class Empire {
       '<span style="color:red">----------------------- GLOBAL RESET ----------------------</span>'
     );
 
-    this.market = new Market();
+    this.market = new Market(this);
 
     // Read colony room names from Memory
     if (Array.isArray(Memory.colonies)) delete Memory.colonies;
@@ -60,7 +60,7 @@ export class Empire {
     }
 
     if (isNthTick(100) && Game.cpu.bucket > 200) {
-      this.market.run(this);
+      this.market.run();
     }
   }
 }

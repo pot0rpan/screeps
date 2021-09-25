@@ -27,13 +27,18 @@ const RESOURCES_TO_SHARE: ResourceConstant[] = [
 ];
 
 export class Market {
+  private empire: Empire;
   private cache: ResourceCache = {};
   private MIN_TO_SEND = 1000;
 
+  constructor(empire: Empire) {
+    this.empire = empire;
+  }
+
   // Counts all resources in each room's terminal - NOT storage
   // Operator creep should keep both roughly even so no need to check both
-  private populateResourceCache(empire: Empire): void {
-    for (const roomName in empire.colonies) {
+  private populateResourceCache(): void {
+    for (const roomName in this.empire.colonies) {
       const room = Game.rooms[roomName];
       if (!room.terminal || !room.terminal.isActive()) continue;
 
@@ -48,12 +53,12 @@ export class Market {
     }
   }
 
-  public run(empire: Empire) {
+  public run() {
     const start = Game.cpu.getUsed();
 
-    this.populateResourceCache(empire);
+    this.populateResourceCache();
 
-    const colonyNeeds = this.getColonyNeeds(empire);
+    const colonyNeeds = this.getColonyNeeds();
 
     console.log(JSON.stringify(colonyNeeds, null, 2));
 
@@ -62,7 +67,7 @@ export class Market {
     if (!isSharingBetweenColonies) {
       const takenOrders: { [orderId: string]: true } = {};
 
-      for (const roomName in empire.colonies) {
+      for (const roomName in this.empire.colonies) {
         const orderId = this.handleSellingExcessResources(
           roomName,
           takenOrders
@@ -75,10 +80,10 @@ export class Market {
     global.stats.profileLog('Empire Market', start, ['market']);
   }
 
-  private getColonyNeeds(empire: Empire): ColonyNeeds {
+  private getColonyNeeds(): ColonyNeeds {
     const count: ColonyNeeds = {};
 
-    for (const roomName in empire.colonies) {
+    for (const roomName in this.empire.colonies) {
       const cache = this.cache[roomName];
       if (!cache) continue; // Room must not have terminal yet
 
