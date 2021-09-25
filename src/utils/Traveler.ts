@@ -96,7 +96,7 @@ export class Traveler {
     this.updateRoomStatus(creep.room);
 
     // Immediately avoid room if dangerous
-    if (creep.room.memory?.avoid) {
+    if (!options.allowHostile && creep.room.memory?.avoid) {
       delete creep.memory._trav;
     }
 
