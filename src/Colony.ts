@@ -202,12 +202,13 @@ export class Colony {
     );
 
     // Rooms not owned or reserved by hostiles, 1 source
+    // Explicitly check for 1 source to avoid center 4 source rooms for now
     if (!possibleRooms.length) {
       possibleRooms = availableAdjRoomMems.filter(
         ({ mem }) =>
           !mem.owner &&
           (!mem.reserver || mem.reserver === config.USERNAME) &&
-          mem.sources?.length
+          (mem.sources?.length ?? 0) === 1
       );
     }
 
