@@ -38,7 +38,7 @@ export class HealerCreep extends CreepBase {
       crp =>
         crp.memory.role === 'attacker' &&
         (!crp.memory.task ||
-          (crp.memory.task as AttackerTask).data.healer === creep.name)
+          (crp.memory.task as AttackerTask).data?.healer === creep.name)
     );
 
     if (!availableAttacker) return null;
