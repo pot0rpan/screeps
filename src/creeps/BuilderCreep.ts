@@ -22,14 +22,17 @@ export class BuilderCreep extends CreepBase {
   // Only if construction sites exist
   // Or no towers and repairs needed
   targetNum(room: Room): number {
-    // If we're high rcl and low storage, building can wait
-    if (
-      room.storage &&
-      room.storage.isActive() &&
-      room.storage.store.getUsedCapacity(RESOURCE_ENERGY) <
+    // If we're high rcl and low storage, building can wait (unless defcon)
+    if (room.storage && room.storage.isActive()) {
+      if (room.memory.defcon) {
+        return 2;
+      }
+      if (
+        room.storage.store.getUsedCapacity(RESOURCE_ENERGY) <
         targetResourceAmount(room, RESOURCE_ENERGY)
-    ) {
-      return 0;
+      ) {
+        return 0;
+      }
     }
 
     const rcl = room.controller?.level ?? 0;
