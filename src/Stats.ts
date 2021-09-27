@@ -95,11 +95,11 @@ export class Stats {
   public profile(...filters: string[] | [false]): string {
     if (filters.length === 1 && filters[0] === false) {
       this._profile = false;
-      return '' + this._profile;
     } else {
       this._profile = filters as string[];
-      return this._profile.toString();
     }
+    Memory._profile = this._profile;
+    return '' + this._profile;
   }
 
   get tasks() {

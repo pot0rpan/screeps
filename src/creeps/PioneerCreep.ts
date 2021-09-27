@@ -5,8 +5,18 @@ interface PioneerTask extends CreepTask {
   type: 'harvest' | 'withdraw' | 'transfer' | 'upgrade';
 }
 
-// Pioneers are unspecialized, used only for level 1
-// They mine from source and transfer to spawn or upgrade controller
+function getNumSourcePositions(room: Room): number {
+  return room
+    .findSources(true)
+    .reduce(
+      (spaces, source) =>
+        spaces + source.pos.getAdjacentPositions(1, true).length,
+      0
+    );
+}
+
+// Pioneers are unspecialized, used only for low RCL or emergencies
+// They mine from source and transfer to spawn/extensions or upgrade controller
 export class PioneerCreep extends CreepBase {
   role: CreepRole = 'pioneer';
   bodyOpts: BodySettings = {
@@ -21,22 +31,26 @@ export class PioneerCreep extends CreepBase {
     if (controller.level <= 2) {
       return Math.min(
         6,
-        room.findSources(true).reduce(
-          (spaces, source) =>
-            spaces + source.pos.getAdjacentPositions(1, true).length,
-          1 // Extra since they won't all always be harvesting at the same time
-        )
+        getNumSourcePositions(room) + 1 // Extra since they won't all always be harvesting at the same time
       );
     }
 
-    // If no upgraders or movers, spawn some depending on rcl, min 2
+    // If no movers and fillers, spawn some depending on rcl, min 2
     if (
       !room.find(FIND_MY_CREEPS, {
         filter: creep =>
           creep.memory.role === 'mover' || creep.memory.role === 'filler',
       }).length
     ) {
-      return Math.max(7 - controller.level, 2);
+      // RCL 3-8 target: 6, 4, 3, 2, 2, 2
+      // Don't go over source pos+1 though
+      return Math.max(
+        Math.min(
+          Math.floor(10 - controller.level * 1.3),
+          getNumSourcePositions(room) + 1
+        ),
+        2
+      );
     }
 
     return 0;

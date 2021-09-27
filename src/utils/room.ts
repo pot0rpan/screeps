@@ -19,12 +19,24 @@ export function isHighway(room: Room): boolean {
   return parseInt(x) % 10 === 0 || parseInt(y) % 10 === 0;
 }
 
+// Cached in heap
+const colonyHelpRooms: { [key: string]: boolean } = {};
 export function isInColonyHelpRange(
   colonyRoom: string,
   targetRoom: string
 ): boolean {
-  return (
-    Game.map.getRoomLinearDistance(colonyRoom, targetRoom) <=
-    config.COLONY_HELP_DISTANCE
-  );
+  const key = colonyRoom + targetRoom;
+
+  if (colonyHelpRooms[key] === undefined) {
+    colonyHelpRooms[key] =
+      // In range
+      Game.map.getRoomLinearDistance(colonyRoom, targetRoom) <=
+        config.COLONY_HELP_DISTANCE &&
+      // Valid path to it
+      Game.map.findRoute(colonyRoom, targetRoom, {
+        routeCallback: roomName =>
+          Memory.rooms[roomName]?.avoid ? Infinity : 1,
+      }) !== -2;
+  }
+  return colonyHelpRooms[key];
 }

@@ -193,6 +193,7 @@ export class HumanResources {
           if (buildData.cost <= room.energyAvailable) {
             // Current energy is enough for biggest creep we can spawn with current energy capacity
             console.log(
+              this.colony.roomName,
               spawn.name,
               'spawning',
               role,
@@ -200,7 +201,7 @@ export class HumanResources {
               `${buildData.cost}/${room.energyAvailable}`
             );
 
-            spawn.spawnCreep(buildData.body, buildData.name, {
+            const res = spawn.spawnCreep(buildData.body, buildData.name, {
               memory: {
                 role: role as CreepRole,
                 working: false,
@@ -213,6 +214,12 @@ export class HumanResources {
                 [] as (StructureSpawn | StructureExtension)[]
               ).concat(spawns, spawn.room.findExtensions()),
             });
+
+            if (res !== OK) {
+              console.log(
+                `<span style="color: red">Spawning error: ${res}</span>`
+              );
+            }
 
             return;
           } else {
