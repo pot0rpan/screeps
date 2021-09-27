@@ -4,6 +4,7 @@ import { recycle } from 'actions/recycle';
 import { excuse } from 'actions/excuse';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
+import config from 'config';
 
 interface BuilderTask extends CreepTask {
   type: 'build' | 'repair' | 'withdraw' | 'harvest';
@@ -96,7 +97,8 @@ export class BuilderCreep extends CreepBase {
 
               if (
                 struct.structureType === STRUCTURE_ROAD &&
-                (creep.room.memory.defcon || struct.hits > struct.hitsMax / 2)
+                (creep.room.memory.defcon ||
+                  struct.hits > config.MIN_REPAIR_HITS)
               ) {
                 return false;
               }

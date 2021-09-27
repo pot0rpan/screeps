@@ -157,7 +157,10 @@ export class Colony {
       // So don't waste too much energy on repairs, just make sure nothing fully decays
       const damagedStructure = room
         .find(FIND_STRUCTURES)
-        .filter(struct => struct.hits < struct.hitsMax && struct.hits < 5000)
+        .filter(
+          struct =>
+            struct.hits < struct.hitsMax && struct.hits < config.MIN_REPAIR_HITS
+        )
         .sort((a, b) => a.hits - b.hits)[0];
 
       if (damagedStructure) {
