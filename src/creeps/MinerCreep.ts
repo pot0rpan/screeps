@@ -13,7 +13,7 @@ export class MinerCreep extends CreepBase {
   role: CreepRole = 'miner';
   bodyOpts: BodySettings = {
     prefix: [CARRY],
-    pattern: [MOVE, WORK, WORK],
+    pattern: [WORK, WORK, MOVE],
     suffix: [MOVE],
     sizeLimit: 4,
     ordered: true,
