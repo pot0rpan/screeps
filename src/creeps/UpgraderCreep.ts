@@ -1,3 +1,4 @@
+import { excuse } from 'actions/excuse';
 import { recycle } from 'actions/recycle';
 import { TaskManager } from 'TaskManager';
 import { targetResourceAmount } from 'utils/room';
@@ -110,6 +111,7 @@ export class UpgraderCreep extends CreepBase {
     if (creep.store[RESOURCE_ENERGY] > 0) {
       if (creep.pos.getRangeTo(controller) <= 3) {
         creep.upgradeController(controller);
+        excuse(creep);
       } else {
         creep.travelTo(controller, { range: 3 });
       }
@@ -127,6 +129,7 @@ export class UpgraderCreep extends CreepBase {
         creep.withdraw(target, RESOURCE_ENERGY) !== OK
       ) {
         creep.say('...');
+        excuse(creep);
       }
     }
   }
