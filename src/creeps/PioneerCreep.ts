@@ -68,21 +68,23 @@ export class PioneerCreep extends CreepBase {
         | undefined;
       let type: PioneerTask['type'] = 'transfer';
 
-      target = creep.pos.findClosestByRange<StructureExtension>(
-        FIND_STRUCTURES,
-        {
-          filter: struct =>
-            struct.structureType === STRUCTURE_EXTENSION &&
-            struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-            struct.isActive() &&
-            !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
-        }
-      );
+      if (creep.room.energyAvailable !== creep.room.energyCapacityAvailable) {
+        target = creep.pos.findClosestByRange<StructureExtension>(
+          FIND_STRUCTURES,
+          {
+            filter: struct =>
+              struct.structureType === STRUCTURE_EXTENSION &&
+              struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+              struct.isActive() &&
+              !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
+          }
+        );
 
-      if (!target) {
-        target = creep.room
-          .findSpawns()
-          .find(spawn => spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
+        if (!target) {
+          target = creep.room
+            .findSpawns()
+            .find(spawn => spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
+        }
       }
 
       if (!target) {
