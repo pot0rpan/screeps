@@ -3,6 +3,8 @@
  * Example: var Traveler = require('Traveler.js');
  */
 
+import { reverseDirection } from './position';
+
 declare global {
   interface Creep {
     travelTo(destination: HasPos | RoomPosition, ops?: TravelToOptions): number;
@@ -142,6 +144,27 @@ export class Traveler {
     if (this.isStuck(creep, state)) {
       state.stuckCount++;
       Traveler.circle(creep.pos, 'magenta', state.stuckCount * 0.2);
+
+      // If we're stuck because of another creep, ask them to move
+      // Creeps don't always check this, so repathing is still sometimes necessary
+      if (travelData.path?.length) {
+        const nextPos = Traveler.positionAtDirection(
+          creep.pos,
+          +travelData.path[0]
+        );
+        if (nextPos) {
+          const blockingCreep = nextPos
+            .lookFor(LOOK_CREEPS)
+            .find(crp => crp.my);
+          if (blockingCreep) {
+            creep.say('excuse me');
+            blockingCreep.memory.excuseTs = Game.time;
+            blockingCreep.memory.excuse = reverseDirection(
+              +travelData.path[0] as DirectionConstant
+            );
+          }
+        }
+      }
     } else {
       state.stuckCount = 0;
     }

@@ -1,25 +1,51 @@
-import { isNthTick } from 'utils';
+declare global {
+  interface CreepMemory {
+    excuse?: DirectionConstant;
+    excuseTs?: number;
+
+    // This is used to not move twice, which can happen depending on creep run order
+    // If this creep moves and clears memory, but other creep sets it after in same tick,
+    // This creep would move 2 ticks in a row
+    excusing?: number;
+  }
+}
 
 // Returns true if moving for a stuck creep
 export function excuse(creep: Creep): boolean {
-  // Lazy reactive implementation for now
-  if (!creep.fatigue && isNthTick(2)) {
-    const stuckCreep = _.sample(
-      creep.pos.findInRange(FIND_MY_CREEPS, 1, {
-        filter: crp =>
-          // is traveling
-          crp.memory._trav &&
-          // is stuck
-          (crp.memory._trav.state?.[2] ?? 0) > 0 &&
-          // is trying to move where this creep is
-          '' + crp.pos.getDirectionTo(creep) ===
-            crp.memory._trav.path?.substr(0, 1),
-      })
-    );
-    if (stuckCreep) {
-      return creep.move(creep.pos.getDirectionTo(stuckCreep)) === OK;
+  const start = Game.cpu.getUsed();
+  if (!creep.fatigue && creep.memory.excuse && creep.memory.excuseTs) {
+    const dir = creep.memory.excuse;
+    const time = creep.memory.excuseTs;
+
+    delete creep.memory.excuse;
+    delete creep.memory.excuseTs;
+
+    // Ignore if not this tick or previous tick
+    if (time < Game.time - 1 || creep.memory.excusing === Game.time - 1) {
+      // Stale excuse, creep probably repathed already
+      global.stats.profileLog(`${creep} ignore excuse()`, start, [
+        creep.name,
+        creep.room.name,
+        'excuse',
+      ]);
+      return false;
     }
+
+    creep.say('sorry!');
+    creep.memory.excusing = Game.time;
+    const ret = creep.move(dir) === OK;
+    global.stats.profileLog(`${creep} handled excuse()`, start, [
+      creep.name,
+      creep.room.name,
+      'excuse',
+    ]);
+    return ret;
   }
 
+  global.stats.profileLog(`${creep} noop excuse()`, start, [
+    creep.name,
+    creep.room.name,
+    'excuse',
+  ]);
   return false;
 }
