@@ -240,7 +240,12 @@ export class AttackerCreep extends CreepBase {
     // Structures
     if (!target) {
       target = creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES, {
-        filter: struct => struct.hits !== undefined, // Controller, maybe others
+        filter: struct =>
+          struct.hits !== undefined && // Controller (and other indestructible structures?)
+          struct.structureType !== STRUCTURE_STORAGE &&
+          struct.structureType !== STRUCTURE_TERMINAL &&
+          struct.structureType !== STRUCTURE_LAB &&
+          struct.structureType !== STRUCTURE_FACTORY,
       });
     }
 
