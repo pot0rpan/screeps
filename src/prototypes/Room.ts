@@ -241,7 +241,7 @@ export default (() => {
       Game.time - this.memory._extensionsTs > 50
     ) {
       const plans =
-        global.empire.colonies[this.name].roomPlanner.plans.extension ?? [];
+        global.empire.colonies[this.name]?.roomPlanner.plans.extension ?? [];
 
       // Wait for room planner to plan them (probably was global reset this tick)
       if (!plans.length) return [];
