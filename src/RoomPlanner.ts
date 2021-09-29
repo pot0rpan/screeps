@@ -474,6 +474,7 @@ export class RoomPlanner {
 
         if (
           planType !== STRUCTURE_EXTRACTOR &&
+          planType !== STRUCTURE_ROAD && // Routes already avoid walls, but bunker roads should not
           terrain.get(plan.pos.x, plan.pos.y) === TERRAIN_MASK_WALL
         ) {
           continue;
