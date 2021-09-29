@@ -1,5 +1,6 @@
 import { Empire } from 'Empire';
-import { average } from 'utils';
+import { average, formatNumber } from 'utils';
+import { printTable } from 'utils/console';
 import { targetResourceAmount } from 'utils/room';
 
 type ResourceCache = {
@@ -76,6 +77,8 @@ export class Market {
         if (orderId) takenOrders[orderId] = true;
       }
     }
+
+    this.printColonyBudgets();
 
     global.stats.profileLog('Empire Market', start, ['market']);
   }
@@ -240,7 +243,9 @@ export class Market {
 
       if (!bestBuyOrder) {
         console.log(
-          `[Market] [${roomName}] No good buy orders found for ${toSell.amount} excess ${toSell.type}`
+          `[Market] [${roomName}] No good buy orders found for ${formatNumber(
+            toSell.amount
+          )} excess ${toSell.type}`
         );
         return;
       }
@@ -248,19 +253,43 @@ export class Market {
       const sellAmount = Math.min(toSell.amount, bestBuyOrder.remainingAmount);
 
       console.log(
-        `<span style="color: yellow">[Market] [${roomName}] Initiating sale of ${sellAmount} ${
-          toSell.type
-        }: will make ${bestBuyOrder.price * sellAmount} credits with ${
+        `<span style="color: yellow">[Market] [${roomName}] Initiating sale of ${formatNumber(
+          sellAmount
+        )} ${toSell.type}: will make ${formatNumber(
+          bestBuyOrder.price * sellAmount
+        )} credits with ${
           transactionCostCache[bestBuyOrder.id]
         } energy cost</span>`
       );
 
-      Game.market.deal(bestBuyOrder.id, sellAmount, roomName);
+      if (Game.market.deal(bestBuyOrder.id, sellAmount, roomName) === OK) {
+        this.updateColonyBudget(roomName, bestBuyOrder.price * sellAmount);
+      }
+
       return bestBuyOrder.id;
     }
   }
 
   private getBuyOrders(resourceType: ResourceConstant): Order[] {
     return Game.market.getAllOrders({ type: ORDER_BUY, resourceType });
+  }
+
+  private updateColonyBudget(roomName: string, transactionValue: number): void {
+    if (Memory.colonies![roomName].budget === undefined) {
+      Memory.colonies![roomName].budget = 0;
+    }
+    Memory.colonies![roomName].budget! += Math.round(transactionValue);
+  }
+
+  private printColonyBudgets(): void {
+    printTable(
+      ['Room', 'Budget'],
+      Object.keys(this.empire.colonies)
+        .filter(roomName => Memory.colonies?.[roomName]?.budget)
+        .map(roomName => [
+          roomName,
+          formatNumber(Memory.colonies![roomName].budget!),
+        ])
+    );
   }
 }
