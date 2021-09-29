@@ -36,7 +36,7 @@ export default {
   FRIENDLY_NAMES: ['iiF', 'Xephael'],
   // USERNAME: 'iiF',
   // FRIENDLY_NAMES: ['poot', 'Xephael'],
-  MIN_REPAIR_HITS: 3500, // For both towers and Builders
+  MIN_REPAIR_HITS: 0.5, // For both towers and Builders
   MAX_CONSTRUCTION_SITES: 10,
   MAX_TOWER_REFILL: 600,
   COLONY_HELP_DISTANCE: 5,

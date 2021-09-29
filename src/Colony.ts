@@ -1,5 +1,5 @@
 import config from 'config';
-import { average, isFriendlyOwner, isNthTick } from 'utils';
+import { average, isNthTick } from 'utils';
 import { ColonyDefense } from 'ColonyDefense';
 import { HumanResources } from 'HumanResources';
 import { RoomPlanner } from 'RoomPlanner';
@@ -8,7 +8,9 @@ import { TaskManager } from 'TaskManager';
 declare global {
   interface Memory {
     colonies?: {
-      [roomName: string]: {};
+      [roomName: string]: {
+        budget?: number; // colony budget, undefined if no market transactions yet
+      };
     };
   }
 }
@@ -159,7 +161,8 @@ export class Colony {
         .find(FIND_STRUCTURES)
         .filter(
           struct =>
-            struct.hits < struct.hitsMax && struct.hits < config.MIN_REPAIR_HITS
+            struct.hits < struct.hitsMax &&
+            struct.hits < config.MIN_REPAIR_HITS * struct.hitsMax
         )
         .sort((a, b) => a.hits - b.hits)[0];
 

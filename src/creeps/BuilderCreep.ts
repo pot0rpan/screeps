@@ -98,7 +98,7 @@ export class BuilderCreep extends CreepBase {
               if (
                 struct.structureType === STRUCTURE_ROAD &&
                 (creep.room.memory.defcon ||
-                  struct.hits > config.MIN_REPAIR_HITS)
+                  struct.hits > config.MIN_REPAIR_HITS * struct.hitsMax)
               ) {
                 return false;
               }
