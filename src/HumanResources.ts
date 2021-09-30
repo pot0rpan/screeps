@@ -201,7 +201,7 @@ export class HumanResources {
               `${buildData.cost}/${room.energyAvailable}`
             );
 
-            const res = spawn.spawnCreep(buildData.body, buildData.name, {
+            let res = spawn.spawnCreep(buildData.body, buildData.name, {
               memory: {
                 role: role as CreepRole,
                 working: false,
@@ -219,6 +219,30 @@ export class HumanResources {
               console.log(
                 `<span style="color: red">Spawning error: ${res}</span>`
               );
+
+              // Sometimes energyStructures is wrong so we get ERR_NOT_ENOUGH_ENERGY
+              // TODO: Fix broken cache so we don't have to do this, not sure why it breaks though
+              if (res === ERR_NOT_ENOUGH_ENERGY) {
+                console.log(
+                  'trying to spawn without supplying energy structures'
+                );
+
+                res = spawn.spawnCreep(buildData.body, buildData.name, {
+                  memory: {
+                    role: role as CreepRole,
+                    working: false,
+                    homeRoom: spawn.room.name,
+                    birth: Game.time,
+                  },
+                  directions: this.getSpawnDirections(role as CreepRole, spawn),
+                });
+
+                if (res === OK) {
+                  Game.notify(
+                    `${this.colony.roomName} funky stuff happening with spawning`
+                  );
+                }
+              }
             }
 
             return;
