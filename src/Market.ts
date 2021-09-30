@@ -63,20 +63,13 @@ export class Market {
 
     console.log(JSON.stringify(colonyNeeds, null, 2));
 
-    const isSharingBetweenColonies = this.handleColonyNeeds(colonyNeeds);
+    const terminalsUsedThisTick: { [roomName: string]: true } = {};
 
-    if (!isSharingBetweenColonies) {
-      const takenOrders: { [orderId: string]: true } = {};
+    this.handleColonyNeeds(colonyNeeds, terminalsUsedThisTick);
 
-      for (const roomName in this.empire.colonies) {
-        const orderId = this.handleSellingExcessResources(
-          roomName,
-          takenOrders
-        );
+    this.handleBuyingLowResources(colonyNeeds, terminalsUsedThisTick);
 
-        if (orderId) takenOrders[orderId] = true;
-      }
-    }
+    this.handleSellingExcessResources(terminalsUsedThisTick);
 
     this.printColonyBudgets();
 
@@ -121,19 +114,20 @@ export class Market {
     return count;
   }
 
-  // Returns true if any colony transfers are performed
+  // Edits provided map of used terminals if any colony transfers are performed
   // It may take a few runs to fully balance all colonies,
   // since Operators will move some from terminal to storage after receiving.
   // So this way we know if we're free to sell excess on market or wait for more balancing
-  private handleColonyNeeds(colonyNeeds: ColonyNeeds): boolean {
-    const willSendThisTick: string[] = [];
-
+  private handleColonyNeeds(
+    colonyNeeds: ColonyNeeds,
+    terminalsUsedThisTick: { [roomName: string]: true }
+  ): void {
     for (const resourceType in colonyNeeds) {
       const resource = colonyNeeds[resourceType];
       if (resource.has.length && resource.needs.length) {
         // Get colony which has the most to spare and isn't already sending this tick
         const has = resource.has
-          .filter(({ roomName }) => !willSendThisTick.includes(roomName))
+          .filter(({ roomName }) => !terminalsUsedThisTick[roomName])
           .sort((a, b) => b.amount - a.amount)[0];
 
         if (!has) continue;
@@ -155,123 +149,242 @@ export class Market {
           needs.roomName
         );
 
-        willSendThisTick.push(has.roomName);
+        terminalsUsedThisTick[has.roomName] = true;
       }
     }
-
-    return !!willSendThisTick.length;
   }
 
   // This only gets called if no inter-colony transfers are made
-  // That means any excess is fine to sell on the market
-  // Return order.id if selling so other rooms don't use same order
-  private handleSellingExcessResources(
-    roomName: string,
-    takenOrders: { [orderId: string]: true }
-  ): string | void {
-    const cache = this.cache[roomName];
-    const excessResources: { type: ResourceConstant; amount: number }[] = [];
-    const terminal = Game.rooms[roomName].terminal;
-    if (!terminal || terminal.cooldown) return;
+  private handleBuyingLowResources(
+    colonyNeeds: ColonyNeeds,
+    terminalsUsedThisTick: {
+      [roomName: string]: true;
+    }
+  ): void {
+    const takenOrders: { [orderId: string]: true } = {};
 
-    for (const resourceType in cache) {
-      // Save energy for controller or other colonies in need
-      if (resourceType === RESOURCE_ENERGY) continue;
+    for (const roomName in this.empire.colonies) {
+      if (terminalsUsedThisTick[roomName]) continue;
+      if ((Memory.colonies![roomName]!.budget ?? -1) < 0) continue;
+      const terminal = Game.rooms[roomName].terminal;
+      if (!terminal || terminal.cooldown) return;
 
-      const amount = cache[resourceType];
-      const excess =
-        amount -
-        targetResourceAmount(
-          Game.rooms[roomName],
+      for (const resourceType in colonyNeeds) {
+        const { has, needs } = colonyNeeds[resourceType];
+
+        // Make sure colony isn't possibly receiving from other colony this tick
+        if (has.length) continue;
+
+        // Make sure colony needs this resource
+        const needsAmount = needs.find(
+          colony => colony.roomName === roomName
+        )?.amount;
+        if (!needsAmount || needsAmount < this.MIN_TO_SEND) continue;
+
+        const transactionCostCache: { [orderId: string]: number } = {};
+
+        // Colony needs this resource, and no other colonies have it to share: buy it
+        const bestSellOrder = this.getSellOrders(
           resourceType as ResourceConstant
+        )
+          .filter(order => {
+            // Make sure we can use this order
+            if (!order.roomName) return false;
+            if (takenOrders[order.id]) return false;
+
+            // Make sure price isn't too far above average of last 3 days
+            const avgPrice = average(
+              ...Game.market
+                .getHistory(resourceType as ResourceConstant)
+                .slice(11) // Last 3 of 14 days: 11, 12, 13
+                .map(history => history.avgPrice)
+            );
+
+            if (order.price > avgPrice * 1.25) return false;
+
+            const maxCanBuy = Math.min(needsAmount, order.remainingAmount);
+
+            // Make sure transaction won't cost too much to be worth it
+            // Cache it for sorting in next step
+            transactionCostCache[order.id] = Game.market.calcTransactionCost(
+              maxCanBuy,
+              roomName,
+              order.roomName
+            );
+
+            // Filter out orders where transaction cost is too high
+            if (
+              transactionCostCache[order.id] > maxCanBuy * order.price ||
+              (resourceType === RESOURCE_ENERGY &&
+                transactionCostCache[order.id] > maxCanBuy) // Don't spend more energy than we buy
+            ) {
+              return false;
+            }
+            return true;
+          })
+          // Sort by lowest credit + transaction cost
+          .sort(
+            (a, b) =>
+              a.price * Math.min(needsAmount, a.remainingAmount) +
+              transactionCostCache[a.id] -
+              (b.price * Math.min(needsAmount, b.remainingAmount) +
+                transactionCostCache[b.id])
+          )[0];
+
+        if (!bestSellOrder) {
+          console.log(
+            `[Market] [${roomName}] No good sell orders found for ${formatNumber(
+              needsAmount
+            )} needed ${resourceType}`
+          );
+          continue;
+        }
+
+        const buyAmount = Math.min(needsAmount, bestSellOrder.remainingAmount);
+
+        console.log(
+          `<span style="color: yellow">[Market] [${roomName}] Initiating purchase of ${formatNumber(
+            buyAmount
+          )} ${resourceType}: will cost ${formatNumber(
+            bestSellOrder.price * buyAmount
+          )} credits plus ${
+            transactionCostCache[bestSellOrder.id]
+          } energy cost</span>`
         );
 
-      if (excess > this.MIN_TO_SEND) {
-        excessResources.push({
-          type: resourceType as ResourceConstant,
-          amount: excess,
-        });
+        if (Game.market.deal(bestSellOrder.id, buyAmount, roomName) === OK) {
+          this.updateColonyBudget(
+            roomName,
+            bestSellOrder.price * buyAmount * -1
+          );
+          takenOrders[bestSellOrder.id] = true;
+          terminalsUsedThisTick[roomName] = true;
+          break;
+        }
       }
     }
+  }
 
-    if (!excessResources.length) return;
+  private handleSellingExcessResources(terminalsUsedThisTick: {
+    [roomName: string]: true;
+  }): void {
+    const takenOrders: { [orderId: string]: true } = {};
 
-    // Try to sell resource with most excess first
-    for (const toSell of excessResources.sort((a, b) => b.amount - a.amount)) {
-      const transactionCostCache: Record<string, number> = {};
+    for (const roomName in this.empire.colonies) {
+      if (terminalsUsedThisTick[roomName]) continue;
+      const cache = this.cache[roomName];
+      const excessResources: { type: ResourceConstant; amount: number }[] = [];
+      const terminal = Game.rooms[roomName].terminal;
+      if (!terminal || terminal.cooldown) return;
 
-      // Look for best sell order based on total profit
-      const bestBuyOrder = this.getBuyOrders(toSell.type)
-        .filter(order => {
-          if (!order.roomName) return false;
-          if (takenOrders[order.id]) return false;
+      for (const resourceType in cache) {
+        // Save energy for controller or other colonies in need
+        if (resourceType === RESOURCE_ENERGY) continue;
 
-          // Make sure price isn't too far below average of last 3 days
-          const avgPrice = average(
-            ...Game.market
-              .getHistory(toSell.type)
-              .slice(11) // Last 3 of 14 days: 11, 12, 13
-              .map(history => history.avgPrice)
+        const amount = cache[resourceType];
+        const excess =
+          amount -
+          targetResourceAmount(
+            Game.rooms[roomName],
+            resourceType as ResourceConstant
           );
 
-          if (order.price < avgPrice * 0.75) return false;
+        if (excess > this.MIN_TO_SEND) {
+          excessResources.push({
+            type: resourceType as ResourceConstant,
+            amount: excess,
+          });
+        }
+      }
 
-          const maxCanSell = Math.min(toSell.amount, order.remainingAmount);
+      if (!excessResources.length) continue;
 
-          // Make sure transaction won't cost too much to be worth it
-          // Cache it for sorting in next step
-          transactionCostCache[order.id] = Game.market.calcTransactionCost(
-            maxCanSell,
-            roomName,
-            order.roomName
+      // Try to sell resource with most excess first
+      for (const toSell of excessResources.sort(
+        (a, b) => b.amount - a.amount
+      )) {
+        const transactionCostCache: Record<string, number> = {};
+
+        // Look for best sell order based on total profit
+        const bestBuyOrder = this.getBuyOrders(toSell.type)
+          .filter(order => {
+            if (!order.roomName) return false;
+            if (takenOrders[order.id]) return false;
+
+            // Make sure price isn't too far below average of last 3 days
+            const avgPrice = average(
+              ...Game.market
+                .getHistory(toSell.type)
+                .slice(11) // Last 3 of 14 days: 11, 12, 13
+                .map(history => history.avgPrice)
+            );
+
+            if (order.price < avgPrice * 0.75) return false;
+
+            const maxCanSell = Math.min(toSell.amount, order.remainingAmount);
+
+            // Make sure transaction won't cost too much to be worth it
+            // Cache it for sorting in next step
+            transactionCostCache[order.id] = Game.market.calcTransactionCost(
+              maxCanSell,
+              roomName,
+              order.roomName
+            );
+
+            // Filter out orders where transaction cost is too high
+            if (transactionCostCache[order.id] > maxCanSell * order.price) {
+              return false;
+            }
+            return true;
+          })
+          // Sort by max sell profit by subtracting cost
+          .sort(
+            (a, b) =>
+              b.price * Math.min(toSell.amount, b.remainingAmount) -
+              transactionCostCache[b.id] -
+              (a.price * Math.min(toSell.amount, a.remainingAmount) -
+                transactionCostCache[a.id])
+          )[0];
+
+        if (!bestBuyOrder) {
+          console.log(
+            `[Market] [${roomName}] No good buy orders found for ${formatNumber(
+              toSell.amount
+            )} excess ${toSell.type}`
           );
+          continue;
+        }
 
-          // Filter out orders where transaction cost is too high
-          if (transactionCostCache[order.id] > maxCanSell * order.price) {
-            return false;
-          }
-          return true;
-        })
-        // Sort by max sell profit by subtracting cost
-        .sort(
-          (a, b) =>
-            b.price * Math.min(toSell.amount, b.remainingAmount) -
-            transactionCostCache[b.id] -
-            (a.price * Math.min(toSell.amount, a.remainingAmount) -
-              transactionCostCache[a.id])
-        )[0];
-
-      if (!bestBuyOrder) {
-        console.log(
-          `[Market] [${roomName}] No good buy orders found for ${formatNumber(
-            toSell.amount
-          )} excess ${toSell.type}`
+        const sellAmount = Math.min(
+          toSell.amount,
+          bestBuyOrder.remainingAmount
         );
-        return;
+
+        console.log(
+          `<span style="color: yellow">[Market] [${roomName}] Initiating sale of ${formatNumber(
+            sellAmount
+          )} ${toSell.type}: will make ${formatNumber(
+            bestBuyOrder.price * sellAmount
+          )} credits with ${
+            transactionCostCache[bestBuyOrder.id]
+          } energy cost</span>`
+        );
+
+        if (Game.market.deal(bestBuyOrder.id, sellAmount, roomName) === OK) {
+          this.updateColonyBudget(roomName, bestBuyOrder.price * sellAmount);
+          takenOrders[bestBuyOrder.id] = true;
+          terminalsUsedThisTick[roomName] = true;
+        }
       }
-
-      const sellAmount = Math.min(toSell.amount, bestBuyOrder.remainingAmount);
-
-      console.log(
-        `<span style="color: yellow">[Market] [${roomName}] Initiating sale of ${formatNumber(
-          sellAmount
-        )} ${toSell.type}: will make ${formatNumber(
-          bestBuyOrder.price * sellAmount
-        )} credits with ${
-          transactionCostCache[bestBuyOrder.id]
-        } energy cost</span>`
-      );
-
-      if (Game.market.deal(bestBuyOrder.id, sellAmount, roomName) === OK) {
-        this.updateColonyBudget(roomName, bestBuyOrder.price * sellAmount);
-      }
-
-      return bestBuyOrder.id;
     }
   }
 
   private getBuyOrders(resourceType: ResourceConstant): Order[] {
     return Game.market.getAllOrders({ type: ORDER_BUY, resourceType });
+  }
+
+  private getSellOrders(resourceType: ResourceConstant): Order[] {
+    return Game.market.getAllOrders({ type: ORDER_SELL, resourceType });
   }
 
   private updateColonyBudget(roomName: string, transactionValue: number): void {
