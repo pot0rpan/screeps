@@ -121,6 +121,7 @@ export class Colony {
   private runTowers() {
     const room = Game.rooms[this.roomName];
     if (room.memory.defcon) return; // Attacking handled by ColonyDefense
+    if ((room.controller?.level ?? 0) < 3) return;
 
     // Only repair or heal with towers that are more than half full
     // Need to be prepared for attacks
@@ -147,13 +148,12 @@ export class Colony {
       }
     } else if (
       // Uses almost 0.1 CPU even with no repair intents, so space it out a bit
-      isNthTick(3) &&
+      // The below math results in RCL 3-8 = 3, 4, 4, 5, 6, 7
+      isNthTick(Math.ceil(room.controller!.level * 0.8)) &&
       fullTowers.length &&
       // // Don't block spawning!
       // room.energyAvailable === room.energyCapacityAvailable &&
-      !room.find(FIND_MY_CREEPS, {
-        filter: crp => crp.memory.role === 'builder',
-      }).length
+      !this.getColonyCreeps().find(crp => crp.memory.role === 'builder')
     ) {
       // If we don't have builders, it's probably because we're very low on energy
       // So don't waste too much energy on repairs, just make sure nothing fully decays
