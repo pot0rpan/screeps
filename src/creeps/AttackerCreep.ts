@@ -245,7 +245,10 @@ export class AttackerCreep extends CreepBase {
           struct.structureType !== STRUCTURE_STORAGE &&
           struct.structureType !== STRUCTURE_TERMINAL &&
           struct.structureType !== STRUCTURE_LAB &&
-          struct.structureType !== STRUCTURE_FACTORY,
+          struct.structureType !== STRUCTURE_FACTORY &&
+          (struct.structureType !== STRUCTURE_RAMPART ||
+            !creep.room.controller ||
+            struct.pos.getRangeTo(creep.room.controller) > 1),
       });
     }
 
