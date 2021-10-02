@@ -1,6 +1,6 @@
 import { Empire } from 'Empire';
 import { average, formatNumber } from 'utils';
-import { printTable } from 'utils/console';
+import { printTable, roomLink } from 'utils/console';
 import { targetResourceAmount } from 'utils/room';
 
 type ResourceCache = {
@@ -415,7 +415,7 @@ export class Market {
       Object.keys(this.empire.colonies)
         .filter(roomName => Memory.colonies?.[roomName]?.budget)
         .map(roomName => [
-          roomName,
+          roomLink(roomName),
           formatNumber(Memory.colonies![roomName].budget!),
         ])
     );

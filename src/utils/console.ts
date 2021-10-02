@@ -28,3 +28,7 @@ function td(inner: string): string {
     '<td style="padding-right: 0.5em; padding-left: 0.5em">' + inner + '</td>'
   );
 }
+
+export function roomLink(roomName: string): string {
+  return `<a href="https://screeps.com/a/#!/room/${Game.shard.name}/${roomName}">${roomName}</a>`;
+}
