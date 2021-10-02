@@ -162,14 +162,22 @@ export class Market {
     }
   ): void {
     const takenOrders: { [orderId: string]: true } = {};
+    let creditsRemaining = Game.market.credits;
+    if (creditsRemaining < 1000) return;
 
     for (const roomName in this.empire.colonies) {
+      if (creditsRemaining < 1000) return; // Don't overspend
+
       if (terminalsUsedThisTick[roomName]) continue;
       if ((Memory.colonies![roomName]!.budget ?? -1) < 0) continue;
       const terminal = Game.rooms[roomName].terminal;
       if (!terminal || terminal.cooldown) return;
 
       for (const resourceType in colonyNeeds) {
+        // TODO: Implement creating our own orders for buying energy
+        // Otherwise the transaction cost is too high to be worth it
+        if (resourceType === RESOURCE_ENERGY) continue;
+
         const { has, needs } = colonyNeeds[resourceType];
 
         // Make sure colony isn't possibly receiving from other colony this tick
@@ -202,7 +210,13 @@ export class Market {
 
             if (order.price > avgPrice * 1.25) return false;
 
-            const maxCanBuy = Math.min(needsAmount, order.remainingAmount);
+            const maxCanBuy = Math.min(
+              needsAmount,
+              order.remainingAmount,
+              Math.floor(creditsRemaining / order.price)
+            );
+
+            if (maxCanBuy < 500) return false;
 
             // Make sure transaction won't cost too much to be worth it
             // Cache it for sorting in next step
@@ -374,6 +388,7 @@ export class Market {
           this.updateColonyBudget(roomName, bestBuyOrder.price * sellAmount);
           takenOrders[bestBuyOrder.id] = true;
           terminalsUsedThisTick[roomName] = true;
+          break;
         }
       }
     }

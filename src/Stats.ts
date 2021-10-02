@@ -220,6 +220,8 @@ export class Stats {
 
       this.showEnergyStats(room);
 
+      this.showMarketBudget(roomName);
+
       if (this.tasks) {
         this.showTasks(room);
       }
@@ -310,5 +312,19 @@ export class Stats {
             : undefined,
       }
     );
+  }
+
+  showMarketBudget(roomName: string): void {
+    const budget = Memory.colonies?.[roomName].budget;
+    if (budget) {
+      printText(roomName, 'Market Budget:', 14, 6.5, { align: 'right' });
+      printText(
+        roomName,
+        formatNumber(budget),
+        14.5,
+        6.5,
+        budget < 0 ? { color: '#ff4488' } : undefined
+      );
+    }
   }
 }

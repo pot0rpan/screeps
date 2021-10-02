@@ -1,6 +1,7 @@
 import { isNthTick } from 'utils';
 import { Colony } from 'Colony';
 import { Market } from 'Market';
+import config from 'config';
 
 // This is the top-level class, everything stems from here
 export class Empire {
@@ -59,7 +60,10 @@ export class Empire {
       this.colonies[roomName].run();
     }
 
-    if (isNthTick(100) && Game.cpu.bucket > 200) {
+    if (
+      isNthTick(config.ticks.RUN_MARKET) &&
+      Game.cpu.bucket > Object.keys(this.colonies).length * 5 // Each colony uses 1-2, extra to be safe
+    ) {
       this.market.run();
     }
   }
