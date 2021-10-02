@@ -25,7 +25,13 @@ export class ProspectorCreep extends CreepBase {
       filter: struct => {
         if (struct.structureType !== STRUCTURE_EXTRACTOR) return false;
         const mineral = struct.pos.lookFor(LOOK_MINERALS)[0];
-        if (!mineral || !mineral.mineralAmount) return false;
+        if (
+          !mineral ||
+          (!mineral.mineralAmount &&
+            mineral.ticksToRegeneration >
+              this.generateBody(room.energyCapacityAvailable).length * 3)
+        )
+          return false;
         return true;
       },
     }).length;
