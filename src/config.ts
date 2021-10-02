@@ -14,7 +14,7 @@ export default {
         return 100000;
     }
   },
-  TARGET_MINERAL_STORAGE: 10000,
+  TARGET_MINERAL_STORAGE: 5000,
   MAX_REMOTES: (rcl: number): number => {
     switch (rcl) {
       case 0:
@@ -51,12 +51,14 @@ export default {
     RECYCLE_CREEP_DELAY: 20,
     SCOUT_ADJACENT_ROOMS: 100,
     RCL_DOWNGRADE: 3000,
+    RUN_MARKET: 200,
   },
   flags: {
     COLONIZE: [COLOR_PURPLE, COLOR_PURPLE], // For claiming a new colony
     DRAIN: [COLOR_CYAN, COLOR_CYAN], // For draining an enemy's towers/energy
     ATTACK: [COLOR_RED, COLOR_RED], // For single Attacker
     PAIR_ATTACK: [COLOR_RED, COLOR_GREEN], // For Attacker/Healer pair
+    LOOT: [COLOR_YELLOW, COLOR_YELLOW], // For Looters to loot storages
   },
   signs: {
     RESERVE: 'mining my own business',
@@ -84,5 +86,6 @@ export default {
     'hauler',
     'claimer',
     'colonizer',
+    'looter',
   ],
 };
