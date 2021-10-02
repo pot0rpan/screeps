@@ -31,7 +31,7 @@ export class PioneerCreep extends CreepBase {
     if (controller.level <= 2) {
       return Math.min(
         6,
-        getNumSourcePositions(room) + 1 // Extra since they won't all always be harvesting at the same time
+        getNumSourcePositions(room) * 2 // Extra since they won't all always be harvesting at the same time
       );
     }
 
