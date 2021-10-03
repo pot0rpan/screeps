@@ -2,6 +2,7 @@ import { isDamaged } from 'utils/structure';
 import { targetResourceAmount } from 'utils/room';
 import { recycle } from 'actions/recycle';
 import { excuse } from 'actions/excuse';
+import { toggleWorking } from 'actions/toggleWorking';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 import config from 'config';
@@ -228,16 +229,7 @@ export class BuilderCreep extends CreepBase {
       return;
     }
 
-    // Toggle `working` boolean if working and out of energy
-    // or not working and full of energy
-    // Also mark task as complete so TaskManager assigns a new one
-    if (creep.memory.working && creep.isEmpty()) {
-      creep.memory.working = false;
-      creep.memory.task.complete = true;
-    } else if (!creep.memory.working && creep.isFull()) {
-      creep.memory.working = true;
-      creep.memory.task.complete = true;
-    }
+    toggleWorking(creep);
 
     if (creep.memory.task.complete) return;
 

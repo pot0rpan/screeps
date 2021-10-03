@@ -1,4 +1,5 @@
 import { recycle } from 'actions/recycle';
+import { toggleWorking } from 'actions/toggleWorking';
 import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { isFlagOfType } from 'utils/flag';
@@ -127,11 +128,7 @@ export class ColonizerCreep extends CreepBase {
         }
       }
 
-      if (creep.memory.working && creep.isEmpty()) {
-        creep.memory.working = false;
-      } else if (!creep.memory.working && creep.isFull()) {
-        creep.memory.working = true;
-      }
+      toggleWorking(creep, false);
       return;
     }
 

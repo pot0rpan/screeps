@@ -1,4 +1,5 @@
 import { recycle } from 'actions/recycle';
+import { toggleWorking } from 'actions/toggleWorking';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -89,11 +90,7 @@ export class ProspectorCreep extends CreepBase {
       return;
     }
 
-    if (creep.memory.working && creep.store.getUsedCapacity() === 0) {
-      creep.memory.working = false;
-    } else if (!creep.memory.working && creep.store.getFreeCapacity() === 0) {
-      creep.memory.working = true;
-    }
+    toggleWorking(creep, false);
 
     if (creep.memory.working) {
       // Take to storage

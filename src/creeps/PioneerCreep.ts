@@ -1,3 +1,4 @@
+import { toggleWorking } from 'actions/toggleWorking';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -278,14 +279,6 @@ export class PioneerCreep extends CreepBase {
       task.complete = true;
     }
 
-    // Toggle `working` boolean if working and out of energy
-    // or not working and full of energy
-    if (creep.memory.working && creep.isEmpty()) {
-      creep.memory.working = false;
-      task.complete = true;
-    } else if (!creep.memory.working && creep.isFull()) {
-      creep.memory.working = true;
-      task.complete = true;
-    }
+    toggleWorking(creep);
   }
 }
