@@ -1,3 +1,4 @@
+import { isActive } from 'utils/structure';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -86,9 +87,9 @@ export class OperatorCreep extends CreepBase {
   private findResourceToBalance(room: Room): ResourceToMove {
     if (
       !room.storage ||
-      !room.storage.isActive() ||
+      !isActive(room.storage) ||
       !room.terminal ||
-      !room.terminal.isActive()
+      !isActive(room.terminal)
     ) {
       return null;
     }
@@ -181,7 +182,7 @@ export class OperatorCreep extends CreepBase {
   }
 
   targetNum(room: Room): number {
-    if (room.storage?.isActive()) {
+    if (room.storage && isActive(room.storage)) {
       return 1;
     }
     return 0;

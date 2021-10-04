@@ -1,5 +1,6 @@
 import config from 'config';
 import { sortByRange } from 'utils/sort';
+import { isActive } from 'utils/structure';
 import { recycle } from 'actions/recycle';
 import { toggleWorking } from 'actions/toggleWorking';
 import { TaskManager } from 'TaskManager';
@@ -169,7 +170,8 @@ export class MoverCreep extends CreepBase {
       const dropped = creep.room
         .find(
           FIND_DROPPED_RESOURCES,
-          creep.room.storage?.isActive() &&
+          creep.room.storage &&
+            isActive(creep.room.storage) &&
             creep.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 10000
             ? undefined
             : { filter: res => res.resourceType === RESOURCE_ENERGY }

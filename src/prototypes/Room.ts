@@ -1,4 +1,5 @@
 import cacheInTick from 'utils/cacheInTick';
+import { isActive } from 'utils/structure';
 
 declare global {
   interface Room {
@@ -78,7 +79,7 @@ export default (() => {
         1,
         {
           filter: struct =>
-            struct.structureType === STRUCTURE_LINK && struct.isActive(),
+            struct.structureType === STRUCTURE_LINK && isActive(struct),
         }
       );
     });
@@ -94,7 +95,7 @@ export default (() => {
         this.name
       ).findInRange<StructureLink>(FIND_MY_STRUCTURES, 1, {
         filter: struct =>
-          struct.structureType === STRUCTURE_LINK && struct.isActive(),
+          struct.structureType === STRUCTURE_LINK && isActive(struct),
       });
     });
   };
@@ -123,7 +124,7 @@ export default (() => {
     return cacheInTick(`${this.name}_findTowers`, () =>
       this.find<StructureTower>(FIND_STRUCTURES, {
         filter: struct =>
-          struct.structureType === STRUCTURE_TOWER && struct.isActive(),
+          struct.structureType === STRUCTURE_TOWER && isActive(struct),
       })
     );
   };
@@ -164,8 +165,7 @@ export default (() => {
             .lookFor(LOOK_STRUCTURES)
             .find(
               struct =>
-                struct.structureType === STRUCTURE_EXTENSION &&
-                struct.isActive()
+                struct.structureType === STRUCTURE_EXTENSION && isActive(struct)
             ) as StructureExtension | undefined;
 
           if (ext) {

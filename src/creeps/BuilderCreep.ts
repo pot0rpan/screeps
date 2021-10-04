@@ -1,4 +1,4 @@
-import { isDamaged } from 'utils/structure';
+import { isActive, isDamaged } from 'utils/structure';
 import { targetResourceAmount } from 'utils/room';
 import { recycle } from 'actions/recycle';
 import { excuse } from 'actions/excuse';
@@ -25,7 +25,7 @@ export class BuilderCreep extends CreepBase {
   // Or no towers and repairs needed
   targetNum(room: Room): number {
     // If we're high rcl and low storage, building can wait (unless defcon)
-    if (room.storage && room.storage.isActive()) {
+    if (room.storage && isActive(room.storage)) {
       if (room.memory.defcon) {
         return 2;
       }

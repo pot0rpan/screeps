@@ -3,6 +3,7 @@ import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 import { recycle } from 'actions/recycle';
 import { toggleWorking } from 'actions/toggleWorking';
+import { isActive } from 'utils/structure';
 
 declare global {
   interface CreepMemory {
@@ -51,7 +52,7 @@ export class FillerCreep extends CreepBase {
       const extension = extensions[ix];
       if (
         extension &&
-        extension.isActive() &&
+        isActive(extension) &&
         extension.store.getFreeCapacity(RESOURCE_ENERGY)
       ) {
         creep.memory._extensionIx = ix;
@@ -149,7 +150,7 @@ export class FillerCreep extends CreepBase {
       >
     );
 
-    if (!target || !target.isActive()) return false;
+    if (!target || !isActive(target)) return false;
 
     if (task.type === 'withdraw') {
       if (

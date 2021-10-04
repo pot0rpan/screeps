@@ -1,4 +1,5 @@
 import { toggleWorking } from 'actions/toggleWorking';
+import { isActive } from 'utils/structure';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -76,7 +77,7 @@ export class PioneerCreep extends CreepBase {
             filter: struct =>
               struct.structureType === STRUCTURE_EXTENSION &&
               struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-              struct.isActive() &&
+              isActive(struct) &&
               !taskManager.isTaskTaken(struct.pos.roomName, struct.id, type),
           }
         );
