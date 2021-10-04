@@ -1,3 +1,4 @@
+import cacheInTick from 'utils/cacheInTick';
 import { Traveler } from 'utils/Traveler';
 
 declare global {
@@ -6,13 +7,9 @@ declare global {
       length?: number,
       ignoreCreeps?: boolean
     ): RoomPosition[];
-    _adjacentPositions: { [key: string]: RoomPosition[] };
     getAdjacentOrthogonalPositions(length?: number): RoomPosition[];
-    _adjacentOrthogonalPositions: { [length: number]: RoomPosition[] };
     getDiagonalPositions(length?: number): RoomPosition[];
-    _diagonalPositions: { [length: number]: RoomPosition[] };
     findClosestOpenSources(creep: Creep): Source[];
-    _sources: { instance: Source; positions: number }[];
     isNearEdge(distance?: number): boolean;
     findClosestWalkableRampart(
       ignoreCreeps?: string[]
@@ -38,98 +35,72 @@ export default (() => {
     length = 1,
     ignoreCreeps = true
   ) {
-    if (!this._adjacentPositions) {
-      this._adjacentPositions = {};
-    }
+    return cacheInTick(
+      `${this}_getAdjacentPositions_${length}_${ignoreCreeps}`,
+      () => {
+        const adjacentPositions: RoomPosition[] = [];
 
-    const key = length + String(ignoreCreeps);
+        const startX = Math.max(this.x - length, 1);
+        const startY = Math.max(this.y - length, 1);
 
-    if (!this._adjacentPositions[key]) {
-      this._adjacentPositions[key] = [];
+        for (let x = startX; x <= this.x + length && x < 49; x++) {
+          for (let y = startY; y <= this.y + length && y < 49; y++) {
+            if (x === this.x && y === this.y) continue;
 
-      const startX = Math.max(this.x - length, 1);
-      const startY = Math.max(this.y - length, 1);
+            if (
+              new Room.Terrain(this.roomName).get(x, y) !== TERRAIN_MASK_WALL
+            ) {
+              const pos = new RoomPosition(x, y, this.roomName);
 
-      for (let x = startX; x <= this.x + length && x < 49; x++) {
-        for (let y = startY; y <= this.y + length && y < 49; y++) {
-          if (x === this.x && y === this.y) continue;
+              if (!ignoreCreeps && pos.lookFor(LOOK_CREEPS).length) {
+                continue;
+              }
 
-          if (new Room.Terrain(this.roomName).get(x, y) !== TERRAIN_MASK_WALL) {
-            const pos = new RoomPosition(x, y, this.roomName);
-
-            if (!ignoreCreeps && pos.lookFor(LOOK_CREEPS).length) {
-              continue;
+              adjacentPositions.push(pos);
             }
-
-            this._adjacentPositions[key].push(pos);
           }
         }
-      }
-    }
 
-    return this._adjacentPositions[key];
+        return adjacentPositions;
+      }
+    );
   };
 
   RoomPosition.prototype.getAdjacentOrthogonalPositions = function (
     length = 1
   ) {
-    if (!this._adjacentOrthogonalPositions) {
-      this._adjacentOrthogonalPositions = [];
-    }
+    return cacheInTick(
+      `${this}_getAdjacentOrthogonalPositions_${length}`,
+      () => {
+        const adjacentPositions = this.getAdjacentPositions(length);
+        const positions: RoomPosition[] = [];
 
-    if (!this._adjacentOrthogonalPositions[length]) {
-      this._adjacentOrthogonalPositions[length] = [];
-      const adjacentPositions = this.getAdjacentPositions(length);
-
-      for (const pos of adjacentPositions) {
-        if (pos.x === this.x || pos.y === this.y) {
-          this._adjacentOrthogonalPositions[length].push(
-            new RoomPosition(pos.x, pos.y, this.roomName)
-          );
+        for (const pos of adjacentPositions) {
+          if (pos.x === this.x || pos.y === this.y) {
+            positions.push(new RoomPosition(pos.x, pos.y, this.roomName));
+          }
         }
+
+        return positions;
       }
-    }
-    return this._adjacentOrthogonalPositions[length];
+    );
   };
 
   RoomPosition.prototype.getDiagonalPositions = function (length = 1) {
-    if (!this._diagonalPositions) {
-      this._diagonalPositions = [];
-    }
-
-    if (!this._diagonalPositions[length]) {
-      this._diagonalPositions[length] = [];
-      const adjacentPositions = this.getAdjacentPositions(length);
-
-      for (const pos of adjacentPositions) {
-        if (this.isDiagonalTo(pos)) {
-          this._diagonalPositions[length].push(
-            new RoomPosition(pos.x, pos.y, this.roomName)
-          );
-        }
-      }
-    }
-
-    return this._diagonalPositions[length];
+    return cacheInTick(`${this}_getDiagonalPositions_${length}`, () =>
+      this.getAdjacentPositions(length).filter(pos => this.isDiagonalTo(pos))
+    );
   };
 
-  // Cached for tick
   RoomPosition.prototype.findClosestOpenSources = function (creep) {
-    if (!this._sources) {
-      this._sources = Game.rooms[this.roomName].findSources(true).map(src => ({
-        instance: src,
-        positions: src.pos.getAdjacentPositions(1, true).length,
-      }));
-    }
-
-    return this._sources
+    return Game.rooms[this.roomName]
+      .findSources(true)
       .filter(
         source =>
-          source.instance.energy > 0 &&
-          (creep.pos.getRangeTo(source.instance) === 1 ||
-            source.instance.pos.getAdjacentPositions(1, false).length > 0)
+          source.energy > 0 &&
+          (creep.pos.getRangeTo(source) === 1 ||
+            source.pos.getAdjacentPositions(1, false).length > 0)
       )
-      .map(src => src.instance)
       .sort((a, b) => a.pos.getRangeTo(this) - b.pos.getRangeTo(this));
   };
 

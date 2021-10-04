@@ -39,6 +39,8 @@ export class Market {
   // Counts all resources in each room's terminal - NOT storage
   // Operator creep should keep both roughly even so no need to check both
   private populateResourceCache(): void {
+    this.cache = {};
+
     for (const roomName in this.empire.colonies) {
       const room = Game.rooms[roomName];
       if (!room.terminal || !room.terminal.isActive()) continue;

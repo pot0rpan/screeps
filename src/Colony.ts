@@ -4,6 +4,7 @@ import { ColonyDefense } from 'ColonyDefense';
 import { HumanResources } from 'HumanResources';
 import { RoomPlanner } from 'RoomPlanner';
 import { TaskManager } from 'TaskManager';
+import cacheInTick from 'utils/cacheInTick';
 
 declare global {
   interface Memory {
@@ -32,9 +33,6 @@ export class Colony {
   readonly taskManager: TaskManager;
   readonly colonyDefense: ColonyDefense;
 
-  private _colonyCreeps: Creep[] | null = null;
-  private _colonyCreepsTimestamp = 0;
-
   private linkTransferQueue: LinkTransferRequest[] = [];
 
   constructor(roomName: string) {
@@ -52,18 +50,9 @@ export class Colony {
   }
 
   getColonyCreeps(): Creep[] {
-    if (
-      !this._colonyCreeps ||
-      !this._colonyCreepsTimestamp ||
-      Game.time !== this._colonyCreepsTimestamp
-    ) {
-      this._colonyCreeps = _.filter(
-        Game.creeps,
-        creep => creep.memory.homeRoom === this.roomName
-      );
-      this._colonyCreepsTimestamp = Game.time;
-    }
-    return this._colonyCreeps;
+    return cacheInTick(`${this.roomName}_getColonyCreeps`, () =>
+      _.filter(Game.creeps, creep => creep.memory.homeRoom === this.roomName)
+    );
   }
 
   run() {

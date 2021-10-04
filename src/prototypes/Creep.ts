@@ -1,11 +1,11 @@
 import { isFriendlyOwner } from 'utils';
+import cacheInTick from 'utils/cacheInTick';
 import { spawnTime } from 'utils/creep';
 import { reverseDirection } from 'utils/position';
 
 declare global {
   interface Creep {
     isDying(): boolean;
-    _isDying: boolean;
     isFull(): boolean;
     isEmpty(): boolean;
     isHostile(): boolean;
@@ -17,14 +17,11 @@ declare global {
 }
 
 export default (() => {
-  // Cache for current tick
   Creep.prototype.isDying = function () {
-    if (typeof this._isDying !== 'boolean') {
-      this._isDying = this.spawning
-        ? false
-        : (this.ticksToLive as number) < spawnTime(this.body.length);
-    }
-    return this._isDying;
+    return cacheInTick(
+      `${this.name}_dying`,
+      () => (this.ticksToLive ?? Infinity) < spawnTime(this.body.length)
+    );
   };
 
   Creep.prototype.isFull = function () {
@@ -37,13 +34,15 @@ export default (() => {
 
   Creep.prototype.isHostile = function () {
     // Check owner and any potentially threatening body parts
-    return (
-      !isFriendlyOwner(this.owner.username) &&
-      (!!this.getActiveBodyparts(ATTACK) ||
-        !!this.getActiveBodyparts(RANGED_ATTACK) ||
-        !!this.getActiveBodyparts(HEAL) ||
-        !!this.getActiveBodyparts(WORK) ||
-        !!this.getActiveBodyparts(CLAIM))
+    return cacheInTick(
+      `${this.name}_isHostile`,
+      () =>
+        !isFriendlyOwner(this.owner.username) &&
+        (!!this.getActiveBodyparts(ATTACK) ||
+          !!this.getActiveBodyparts(RANGED_ATTACK) ||
+          !!this.getActiveBodyparts(HEAL) ||
+          !!this.getActiveBodyparts(WORK) ||
+          !!this.getActiveBodyparts(CLAIM))
     );
   };
 
