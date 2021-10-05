@@ -462,7 +462,7 @@ export class RoomPlanner {
       if (planType === STRUCTURE_LINK && this.rcl < 5) continue;
       if (planType === STRUCTURE_EXTRACTOR && this.rcl < 6) continue;
       if (planType === STRUCTURE_TERMINAL && this.rcl < 6) continue;
-      if (planType === STRUCTURE_LAB && this.rcl < 6) continue;
+      if (planType === STRUCTURE_LAB /* && this.rcl < 6 */) continue; // Skip until implemented
       if (planType === STRUCTURE_RAMPART && this.rcl < 6) continue;
       if (planType === STRUCTURE_OBSERVER && this.rcl < 8) continue;
 
