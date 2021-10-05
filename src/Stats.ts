@@ -44,7 +44,7 @@ function printProgressBar(
   const width = 6;
   room.visual.text(
     `${
-      Number.isInteger(numerator) ? numerator : numerator.toFixed(2)
+      Number.isInteger(numerator) ? numerator : numerator.toFixed(1)
     } / ${denominator}`,
     x + width / 2,
     y - 0.1,
