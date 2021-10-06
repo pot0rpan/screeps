@@ -221,7 +221,7 @@ export class Stats {
   showTasks(visuals: RoomVisuals): void {
     const start = Game.cpu.getUsed();
     const { tasks } = global.empire.colonies[visuals.roomName].taskManager;
-    let y = 1;
+    let y = 2;
 
     visuals.printText('Colony Tasks', 40, y++);
 
