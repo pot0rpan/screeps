@@ -14,6 +14,10 @@ declare global {
       };
     };
   }
+
+  interface RoomMemory {
+    _maxRcl?: number;
+  }
 }
 
 type LinkTransferRequest = {
@@ -62,6 +66,14 @@ export class Colony {
     const rcl = Game.rooms[this.roomName].controller?.level ?? 0;
     const newRcl = rcl !== this.rcl;
     this.rcl = rcl;
+
+    // Update memory which is used for cheap isActive()
+    if (
+      !Memory.rooms[this.roomName]._maxRcl ||
+      (newRcl && rcl > Memory.rooms[this.roomName]._maxRcl!)
+    ) {
+      Memory.rooms[this.roomName]._maxRcl = rcl;
+    }
 
     const colonyCreeps = this.getColonyCreeps();
 

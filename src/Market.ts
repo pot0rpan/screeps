@@ -2,7 +2,6 @@ import { Empire } from 'Empire';
 import { average, formatNumber } from 'utils';
 import { printTable, roomLink } from 'utils/console';
 import { targetResourceAmount } from 'utils/room';
-import { isActive } from 'utils/structure';
 
 type ResourceCache = {
   [roomName: string]: { [resourceType: string]: number };
@@ -44,7 +43,7 @@ export class Market {
 
     for (const roomName in this.empire.colonies) {
       const room = Game.rooms[roomName];
-      if (!room.terminal || !isActive(room.terminal)) continue;
+      if (!room.terminal || !room.terminal.isActive()) continue;
 
       if (!this.cache[roomName]) this.cache[roomName] = {};
 

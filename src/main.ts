@@ -1,4 +1,5 @@
 import 'prototypes/Creep';
+import 'prototypes/Structure';
 import 'prototypes/Room';
 import 'prototypes/RoomPosition';
 import 'prototypes/StructureTerminal';
