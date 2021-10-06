@@ -3,12 +3,14 @@ import { targetResourceAmount } from 'utils/room';
 import { Colony } from 'Colony';
 import { Empire } from 'Empire';
 import { CreepNums } from 'HumanResources';
+import { RoomVisuals } from 'utils/RoomVisuals';
 
 declare global {
   interface Memory {
     _showStats?: boolean;
     _profile?: string[] | false;
     _showTasks?: boolean;
+    _cpu?: number[];
   }
 }
 
@@ -17,49 +19,6 @@ type SpawnStats = {
   ticksTotal: number;
   ticksComplete: number;
 };
-
-function printText(
-  roomName: string,
-  text: string,
-  x: number,
-  y: number,
-  style: TextStyle = {}
-) {
-  const defaultStyle = {
-    align: 'left',
-    opacity: 0.8,
-  };
-  const opts = Object.assign(defaultStyle, style);
-  new RoomVisual(roomName).text(text, x, y, opts);
-}
-
-function printProgressBar(
-  roomName: string,
-  numerator: number,
-  denominator: number,
-  x: number,
-  y: number
-): void {
-  const room = Game.rooms[roomName];
-  const width = 6;
-  room.visual.text(
-    `${
-      Number.isInteger(numerator) ? numerator : numerator.toFixed(1)
-    } / ${denominator}`,
-    x + width / 2,
-    y - 0.1,
-    {
-      font: 0.6,
-    }
-  );
-  room.visual.rect(x, y - 0.8, width, 1, {
-    stroke: '#ffffff',
-    fill: 'transparent',
-  });
-  room.visual.rect(x, y - 0.8, (numerator / denominator) * width, 1, {
-    fill: '#ffffff88',
-  });
-}
 
 export class Stats {
   _show: boolean;
@@ -154,17 +113,24 @@ export class Stats {
   run(empire: Empire): void {
     if (!this.show) return;
 
+    const cpuBeforeStats = Game.cpu.getUsed();
+    const bucketBeforeStats = Game.cpu.bucket;
+    const statsCpu = Game.cpu.getUsed();
+
+    this.updateCpuHistory(cpuBeforeStats);
+
     for (const roomName in empire.colonies) {
       const room = Game.rooms[roomName];
       if (!room) continue;
+      const visuals = new RoomVisuals(roomName);
 
-      printText(roomName, `Tick: ${Game.time}`, 48, 1, {
+      visuals.printText(`Tick: ${Game.time}`, 48, 1, {
         align: 'right',
         color: '#44ff88',
       });
 
       if (Game.cpu.bucket < 100) {
-        printText(roomName, 'Low bucket, skipping stats visuals', 0, 0.5, {
+        visuals.printText('Low bucket, skipping stats visuals', 0, 0.5, {
           color: 'yellow',
         });
         continue;
@@ -188,8 +154,7 @@ export class Stats {
             : stats.dying > 0
             ? '#ff8844'
             : undefined;
-        printText(
-          roomName,
+        visuals.printText(
           `${role}: [${stats.actual}/${stats.target}]`,
           1,
           y++,
@@ -200,8 +165,7 @@ export class Stats {
       y += 0.5;
 
       for (const stats of spawnStats) {
-        printText(
-          roomName,
+        visuals.printText(
           `Spawning ${stats.name.split('-')[0]}: [${stats.ticksComplete}/${
             stats.ticksTotal
           }]`,
@@ -211,23 +175,29 @@ export class Stats {
       }
 
       if (room.memory.defcon) {
-        printText(roomName, 'DEFCON', 24.5, 4, {
+        visuals.printText('DEFCON', 24.5, 4, {
           align: 'center',
           color: 'red',
           font: 2.5,
         });
       }
 
-      this.showEnergyStats(room);
+      this.showEnergyStats(visuals);
 
-      this.showMarketBudget(roomName);
+      this.showMarketBudget(visuals);
 
       if (this.tasks) {
-        this.showTasks(room);
+        this.showTasks(visuals);
       }
 
-      this.showCpuStats(roomName);
+      this.showCpuStats(visuals, cpuBeforeStats, bucketBeforeStats);
     }
+
+    this.profileLog(
+      `Stats visuals (${Object.keys(empire.colonies).length} colonies)`,
+      statsCpu,
+      ['stats']
+    );
   }
 
   getCreepStats(colony: Colony): CreepNums {
@@ -248,40 +218,48 @@ export class Stats {
     return stats;
   }
 
-  showTasks(room: Room): void {
+  showTasks(visuals: RoomVisuals): void {
     const start = Game.cpu.getUsed();
-    const { tasks } = global.empire.colonies[room.name].taskManager;
+    const { tasks } = global.empire.colonies[visuals.roomName].taskManager;
     let y = 1;
 
-    printText(room.name, 'Colony Tasks', 40, y++);
+    visuals.printText('Colony Tasks', 40, y++);
 
     for (const id in tasks) {
       const { task, creeps } = tasks[id];
-      printText(
-        room.name,
+      visuals.printText(
         `${task.room} ${task.type} [${creeps.length}/${task.limit}]`,
         46,
         y++,
         { color: '#ccc', align: 'right' }
       );
     }
-    console.log(room, 'Task Stats CPU:', Game.cpu.getUsed() - start);
+    console.log(
+      visuals.roomName,
+      'Task Stats CPU:',
+      Game.cpu.getUsed() - start
+    );
   }
 
-  showCpuStats(roomName: string) {
-    printText(roomName, 'Bucket:', 11.5, 1, { align: 'right' });
-    printProgressBar(roomName, Game.cpu.bucket, 10000, 12, 1);
+  showCpuStats(visuals: RoomVisuals, cpu: number, bucket: number) {
+    visuals.printText('Bucket:', 11.5, 1, { align: 'right' });
+    visuals.printProgressBar(bucket, 10000, 12, 1);
 
-    printText(roomName, 'CPU:', 11.5, 2.5, { align: 'right' });
-    printProgressBar(roomName, Game.cpu.getUsed(), Game.cpu.limit, 12, 2.5);
+    visuals.printText('CPU:', 11.5, 2.5, { align: 'right' });
+    visuals.printProgressBar(cpu, Game.cpu.limit, 12, 2.5);
+
+    this.printCpuGraph(visuals);
   }
 
-  showEnergyStats(room: Room) {
+  showEnergyStats(visuals: RoomVisuals) {
+    const room = Game.rooms[visuals.roomName];
     const energy = room.energyAvailable;
     let totalEnergy = room.energyCapacityAvailable;
 
-    printText(room.name, 'Spawn Energy:', 14, 4.5, { align: 'right' });
-    printText(room.name, `[${energy}/${totalEnergy}]`, 14.5, 4.5, {
+    visuals.printText('Spawn Energy:', 14, 4.5, {
+      align: 'right',
+    });
+    visuals.printText(`[${energy}/${totalEnergy}]`, 14.5, 4.5, {
       color: energy < totalEnergy ? '#ff4488' : undefined,
     });
 
@@ -293,9 +271,10 @@ export class Stats {
     totalEnergy = storageEnergy + terminalEnergy;
     const targetEnergy = targetResourceAmount(room, RESOURCE_ENERGY);
 
-    printText(room.name, 'Total Energy:', 14, 5.5, { align: 'right' });
-    printText(
-      room.name,
+    visuals.printText('Total Energy:', 14, 5.5, {
+      align: 'right',
+    });
+    visuals.printText(
       terminalEnergy
         ? `${formatNumber(totalEnergy)} (${formatNumber(
             terminalEnergy
@@ -314,17 +293,34 @@ export class Stats {
     );
   }
 
-  showMarketBudget(roomName: string): void {
-    const budget = Memory.colonies?.[roomName].budget;
+  showMarketBudget(visuals: RoomVisuals): void {
+    const budget = Memory.colonies?.[visuals.roomName].budget;
     if (budget) {
-      printText(roomName, 'Market Budget:', 14, 6.5, { align: 'right' });
-      printText(
-        roomName,
+      visuals.printText('Market Budget:', 14, 6.5, {
+        align: 'right',
+      });
+      visuals.printText(
         formatNumber(budget),
         14.5,
         6.5,
         budget < 0 ? { color: '#ff4488' } : undefined
       );
     }
+  }
+
+  // Prepare memory for printCpuGraph() to read from
+  private updateCpuHistory(cpu: number): void {
+    const LENGTH = 20;
+
+    if (!Memory._cpu) Memory._cpu = [];
+    Memory._cpu.push(Math.round(cpu));
+    if (Memory._cpu.length > LENGTH) Memory._cpu.shift();
+  }
+
+  printCpuGraph(visuals: RoomVisuals): void {
+    const WIDTH = 10;
+    const HEIGHT = 6;
+
+    visuals.printGraph(25, 1, WIDTH, HEIGHT, Memory._cpu!, 0, Game.cpu.limit);
   }
 }
