@@ -36,6 +36,7 @@ import { OperatorCreep } from 'creeps/OperatorCreep';
 import { ClaimerCreep } from 'creeps/ClaimerCreep';
 import { ColonizerCreep } from 'creeps/ColonizerCreep';
 import { LooterCreep } from 'creeps/LooterCreep';
+import { ExplorerCreep } from 'creeps/ExplorerCreep';
 
 declare global {
   /*
@@ -76,6 +77,7 @@ global.Creeps = {
   claimer: new ClaimerCreep(),
   colonizer: new ColonizerCreep(),
   looter: new LooterCreep(),
+  explorer: new ExplorerCreep(),
 };
 
 global.empire = new Empire();

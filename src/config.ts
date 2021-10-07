@@ -87,5 +87,6 @@ export default {
     'claimer',
     'colonizer',
     'looter',
+    'explorer',
   ],
 };

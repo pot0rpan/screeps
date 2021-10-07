@@ -227,8 +227,8 @@ export class Colony {
 
     // Sort rooms by average distance to sources
     const sortedRooms = possibleRooms.sort((a, b) => {
-      const distancesA = a.mem.sources!.map(src => src.distance);
-      const distancesB = b.mem.sources!.map(src => src.distance);
+      const distancesA = a.mem.sources!.map(src => src.distance!);
+      const distancesB = b.mem.sources!.map(src => src.distance!);
 
       return average(...distancesA) - average(...distancesB);
     });

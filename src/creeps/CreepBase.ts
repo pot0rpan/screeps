@@ -42,7 +42,8 @@ declare global {
     | 'heal'
     | 'claim'
     | 'colonize'
-    | 'loot';
+    | 'loot'
+    | 'explore';
 
   type CreepRole =
     | 'pioneer'
@@ -68,7 +69,8 @@ declare global {
     | 'operator'
     | 'claimer'
     | 'colonizer'
-    | 'looter';
+    | 'looter'
+    | 'explorer';
 }
 
 export interface BodySettings {

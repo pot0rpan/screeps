@@ -1,44 +1,7 @@
 import config from 'config';
+import { saveScoutData } from 'utils/scouting';
 import { TaskManager } from 'TaskManager';
-import { isHighway } from 'utils/room';
-import { getAllResourceAmounts } from 'utils/store';
 import { BodySettings, CreepBase } from './CreepBase';
-
-declare global {
-  interface RoomMemory {
-    colonize?: boolean;
-
-    highway?: boolean;
-    owner?: string;
-    reserver?: string;
-    reservationTicks?: number;
-    hostiles?: number;
-    invaders?: number;
-    controller?: {
-      id: string;
-      pos: [number, number];
-      level: number;
-    };
-    sources?: {
-      id: string;
-      pos: [number, number];
-      distance: number;
-    }[];
-    mineral?: {
-      id: string;
-      type: MineralConstant;
-      pos: [number, number];
-      amount: number;
-      extractor?: string;
-    };
-    tombstones?: {
-      id: string;
-      pos: [number, number];
-      store: Partial<Record<ResourceConstant, number>>;
-    }[];
-    lastScan?: number;
-  }
-}
 
 interface ScoutTask extends CreepTask {
   type: 'scout';
@@ -117,90 +80,8 @@ export class ScoutCreep extends CreepBase {
 
     if (creep.room.name === targetRoomName) {
       // Reached target room, scan and save to memory
-      if (!Memory.colonies?.[creep.memory.homeRoom]) return; // Should never happen
-
-      // Initialize memory if first visit to this room
-      if (!Memory.rooms[targetRoomName]) {
-        Memory.rooms[targetRoomName] = {};
-      }
-
-      const room = creep.room;
-      const roomMemory = Memory.rooms[targetRoomName];
-
-      if (roomMemory.lastScan) {
-        // Skip some non-changing scans
-        roomMemory.owner = room.controller?.owner?.username;
-        roomMemory.reserver = room.controller?.reservation?.username;
-        roomMemory.reservationTicks = room.controller?.reservation?.ticksToEnd;
-        if (roomMemory.controller)
-          roomMemory.controller.level = (
-            room.controller as StructureController
-          ).level;
-      } else {
-        roomMemory.controller = room.controller
-          ? {
-              id: room.controller.id,
-              pos: [room.controller.pos.x, room.controller.pos.y],
-              level: room.controller.level,
-            }
-          : undefined;
-        roomMemory.owner = room.controller?.owner?.username;
-        roomMemory.reserver = room.controller?.reservation?.username;
-        roomMemory.reservationTicks = room.controller?.reservation?.ticksToEnd;
-        roomMemory.sources = room.findSources(false).map(({ id, pos }) => ({
-          id,
-          pos: [pos.x, pos.y],
-          distance: creep.pos.findPathTo(pos.x, pos.y).length,
-        }));
-        roomMemory.highway = isHighway(creep.room);
-      }
-
-      const hostiles = room.findDangerousHostiles();
-
-      roomMemory.hostiles = hostiles.length;
-      roomMemory.invaders = hostiles.filter(
-        hostile => hostile.owner.username === 'Invader'
-      ).length;
-
-      const tombstonesWithResources = room.find(FIND_TOMBSTONES, {
-        filter: ts => ts.store.getUsedCapacity(),
-      });
-      roomMemory.tombstones = [];
-      for (const ts of tombstonesWithResources) {
-        roomMemory.tombstones.push({
-          id: ts.id,
-          pos: [ts.pos.x, ts.pos.y],
-          store: getAllResourceAmounts(ts.store),
-        });
-      }
-
-      const mineral = room.find(FIND_MINERALS)[0];
-
-      if (mineral) {
-        roomMemory.mineral = {
-          id: mineral.id,
-          type: mineral.mineralType,
-          pos: [mineral.pos.x, mineral.pos.y],
-          amount: mineral.mineralAmount,
-          extractor: mineral.pos
-            .lookFor(LOOK_STRUCTURES)
-            .find(struct => struct.structureType === STRUCTURE_EXTRACTOR)?.id,
-        };
-      }
-
-      // Abandon room if taken by hostiles
-      if (
-        roomMemory.colonize &&
-        roomMemory.reserver &&
-        roomMemory.reserver !== config.USERNAME
-      ) {
-        delete roomMemory.colonize;
-      }
-
-      roomMemory.lastScan = Game.time;
-
+      saveScoutData(creep.room, creep);
       creep.memory.task.complete = true;
-      console.log(creep, 'scouted room:', creep.memory.task.room);
     } else {
       creep.travelToRoom(targetRoomName, { offRoad: true });
       creep.say(targetRoomName);
