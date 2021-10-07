@@ -124,3 +124,22 @@ export function saveScoutData(room: Room, creep?: Creep): void {
 
   mem.lastScan = Game.time;
 }
+
+/** Deletes room memory of old rooms that haven't been seen for a long time */
+function cleanScoutingMemory(): void {
+  for (const roomName in Memory.rooms) {
+    // If we have visibility, keep
+    if (Game.rooms[roomName]) continue;
+
+    // If not scouted, keep
+    if (!Memory.rooms[roomName].lastScan) continue;
+
+    // If relatively fresh scout data, keep
+    if (Game.time - Memory.rooms[roomName].lastScan! < 10000) continue;
+
+    delete Memory.rooms[roomName];
+  }
+}
+
+// Clean scouting memory on global reset
+cleanScoutingMemory();

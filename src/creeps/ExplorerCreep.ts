@@ -1,20 +1,28 @@
 import { saveScoutData } from 'utils/scouting';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
+import { isInColonyHelpRange } from 'utils/room';
 
 interface ExplorerTask extends CreepTask {
   type: 'explore';
 }
 
-function findRoomToScout(currentRoom: Room): string {
-  // Get all exits that don't lead back to main colony rooms
-  const exits = (
-    Object.values(Game.map.describeExits(currentRoom.name)) as string[]
-  ).filter(roomName => !(roomName in (Memory.colonies ?? {})));
+function findRoomToScout(creep: Creep): string | null {
+  const exitRoomNames = Object.values(
+    Game.map.describeExits(creep.room.name)
+  ) as string[];
+
+  // Get all exits that don't lead back to main colony rooms,
+  // and aren't too far from home colony (otherwise wasted scouting)
+  const nextRooms = exitRoomNames.filter(
+    roomName =>
+      !(roomName in (Memory.colonies ?? {})) &&
+      isInColonyHelpRange(creep.memory.homeRoom, roomName)
+  );
 
   const rescoutRooms: string[] = [];
 
-  for (const roomName of _.shuffle(exits)) {
+  for (const roomName of _.shuffle(nextRooms)) {
     // Scout unscouted rooms first
     if (!Memory.rooms[roomName]?.lastScan) {
       return roomName;
@@ -23,8 +31,13 @@ function findRoomToScout(currentRoom: Room): string {
   }
 
   // If no unscouted rooms, go to least recently seen
-  // rescoutRooms should never be empty, worst case we go back where we came from
-  return _.min(rescoutRooms, roomName => Memory.rooms[roomName].lastScan);
+  const roomName = _.min(
+    rescoutRooms,
+    roomName => Memory.rooms[roomName].lastScan
+  );
+
+  if (typeof roomName !== 'string') return null;
+  return roomName;
 }
 
 export class ExplorerCreep extends CreepBase {
@@ -46,8 +59,15 @@ export class ExplorerCreep extends CreepBase {
 
   // Currently will have at most 1 explorer, no need to check if task is taken
   findTask(creep: Creep, taskManager: TaskManager): ExplorerTask | null {
-    const nextRoom = findRoomToScout(creep.room);
-    return taskManager.createTask<ExplorerTask>(nextRoom, nextRoom, 'explore');
+    const nextRoom = findRoomToScout(creep);
+    if (nextRoom) {
+      return taskManager.createTask<ExplorerTask>(
+        nextRoom,
+        nextRoom,
+        'explore'
+      );
+    }
+    return null;
   }
 
   run(creep: Creep): void {
