@@ -11,6 +11,7 @@ declare global {
     _profile?: string[] | false;
     _showTasks?: boolean;
     _cpu?: number[];
+    _showMap?: boolean;
   }
 }
 
@@ -24,6 +25,7 @@ export class Stats {
   _show: boolean;
   _profile: string[] | false;
   _showTasks: boolean;
+  _showMap: boolean;
 
   constructor() {
     if (!Memory._profile) {
@@ -33,6 +35,7 @@ export class Stats {
     this._show = this.show;
     this._profile = Memory._profile;
     this._showTasks = this.tasks;
+    this._showMap = this.map;
   }
 
   get show() {
@@ -46,6 +49,19 @@ export class Stats {
   set show(bool: boolean) {
     Memory._showStats = bool;
     this._show = bool;
+  }
+
+  get map() {
+    if (typeof Memory._showMap === 'undefined') {
+      Memory._showMap = true;
+    }
+    this._showMap = Memory._showMap;
+    return this._showMap;
+  }
+
+  set map(bool: boolean) {
+    Memory._showMap = bool;
+    this._showMap = bool;
   }
 
   // To turn profiling off, `profile(false)`
@@ -193,7 +209,9 @@ export class Stats {
       this.showCpuStats(visuals, cpuBeforeStats, bucketBeforeStats);
     }
 
-    this.displayMapVisuals();
+    if (this.map) {
+      this.displayMapVisuals();
+    }
 
     this.profileLog(
       `Stats visuals (${Object.keys(empire.colonies).length} colonies)`,
@@ -335,6 +353,7 @@ export class Stats {
       visual.circle(new RoomPosition(25, 25, roomName), {
         radius: 25,
         fill: '#4488ff',
+        opacity: 0.2,
       });
 
       visual.text(
