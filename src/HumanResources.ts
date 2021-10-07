@@ -196,8 +196,9 @@ export class HumanResources {
               this.colony.roomName,
               spawn.name,
               'spawning',
+              buildData.body.length,
+              'part',
               role,
-              JSON.stringify(buildData.body),
               `${buildData.cost}/${room.energyAvailable}`
             );
 
@@ -239,7 +240,7 @@ export class HumanResources {
 
                 if (res === OK) {
                   Game.notify(
-                    `${this.colony.roomName} funky stuff happening with spawning`
+                    `${this.colony.roomName} funky stuff happening with spawning at tick ${Game.time}`
                   );
                 }
               }
