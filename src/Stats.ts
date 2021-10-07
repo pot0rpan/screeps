@@ -193,6 +193,8 @@ export class Stats {
       this.showCpuStats(visuals, cpuBeforeStats, bucketBeforeStats);
     }
 
+    this.displayMapVisuals();
+
     this.profileLog(
       `Stats visuals (${Object.keys(empire.colonies).length} colonies)`,
       statsCpu,
@@ -322,5 +324,24 @@ export class Stats {
     const HEIGHT = 6;
 
     visuals.printGraph(25, 1, WIDTH, HEIGHT, Memory._cpu!, 0, Game.cpu.limit);
+  }
+
+  displayMapVisuals(): void {
+    for (const roomName in Memory.rooms) {
+      const mem = Memory.rooms[roomName];
+      if (!mem.lastScan) continue;
+      const visual = Game.map.visual;
+
+      visual.circle(new RoomPosition(25, 25, roomName), {
+        radius: 25,
+        fill: '#4488ff',
+      });
+
+      visual.text(
+        '' + (mem.lastScan - Game.time),
+        new RoomPosition(25, 25, roomName),
+        { align: 'center' }
+      );
+    }
   }
 }
