@@ -11,12 +11,11 @@ export function targetResourceAmount(
   }
 }
 
-export function isHighway(room: Room): boolean {
+export function isHighway(roomName: string): boolean {
   const pattern = /\w(\d+)\w(\d+)/;
-  const match = room.name.match(pattern);
+  const match = roomName.match(pattern);
   if (!match) return false;
-  const [, y, x] = match;
-  return parseInt(x) % 10 === 0 || parseInt(y) % 10 === 0;
+  return parseInt(match[1]) % 10 === 0 || parseInt(match[2]) % 10 === 0;
 }
 
 // Cached in heap

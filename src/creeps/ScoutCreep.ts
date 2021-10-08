@@ -1,5 +1,6 @@
 import config from 'config';
 import { saveScoutData } from 'utils/scouting';
+import { isHighway } from 'utils/room';
 import { TaskManager } from 'TaskManager';
 import { BodySettings, CreepBase } from './CreepBase';
 
@@ -19,7 +20,7 @@ function findRoomsToScout(colonyRoom: Room, ignoreLastScan = false): string[] {
     const adjMem = Memory.rooms[roomName];
 
     // Skip highways after first scouting
-    if (adjMem?.highway) continue;
+    if (adjMem && isHighway(roomName)) continue;
 
     // If adjacent room not saved in memory or if it's been a while since last scouting
     // or ignoreLastScan=true (for when scout is alive)

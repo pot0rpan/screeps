@@ -1,5 +1,6 @@
 import config from 'config';
 import { average, isNthTick } from 'utils';
+import { isHighway } from 'utils/room';
 import { ColonyDefense } from 'ColonyDefense';
 import { HumanResources } from 'HumanResources';
 import { RoomPlanner } from 'RoomPlanner';
@@ -198,7 +199,7 @@ export class Colony {
 
     // Rooms we aren't colonizing and no hostiles (Source Keepers most likely)
     const availableAdjRoomMems = adjRoomMems.filter(
-      ({ mem }) => !mem.colonize && !mem.hostiles && !mem.highway
+      ({ name, mem }) => !mem.colonize && !mem.hostiles && !isHighway(name)
     );
 
     // Rooms not owned or reserved by hostiles, 2 sources

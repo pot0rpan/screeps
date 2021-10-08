@@ -1,14 +1,12 @@
 import config from 'config';
 import { isFriendlyOwner } from 'utils';
 import { packCoord } from './packrat';
-import { isHighway } from './room';
 import { getAllResourceAmounts } from './store';
 
 declare global {
   interface RoomMemory {
     colonize?: boolean;
 
-    highway?: boolean;
     owner?: string;
     reserver?: string;
     reservationTicks?: number;
@@ -74,7 +72,6 @@ export function saveScoutData(room: Room, creep?: Creep): void {
       pos: packCoord(pos),
       distance: creep?.pos.findPathTo(pos.x, pos.y).length,
     }));
-    mem.highway = isHighway(room);
     mem.exits = Object.values(Game.map.describeExits(room.name)) as string[];
 
     if (mem.owner && !isFriendlyOwner(mem.owner)) {
