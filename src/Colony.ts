@@ -12,6 +12,7 @@ declare global {
     colonies?: {
       [roomName: string]: {
         budget?: number; // colony budget, undefined if no market transactions yet
+        rcls?: (number | null)[]; // tick when each rcl is achieved, element 0 will be RCL 1's first tick
       };
     };
   }
@@ -68,12 +69,19 @@ export class Colony {
     const newRcl = rcl !== this.rcl;
     this.rcl = rcl;
 
-    // Update memory which is used for cheap isActive()
+    // Handle if new max RCL
     if (
       !Memory.rooms[this.roomName]._maxRcl ||
       (newRcl && rcl > Memory.rooms[this.roomName]._maxRcl!)
     ) {
+      // Update memory which is used for cheap isActive()
       Memory.rooms[this.roomName]._maxRcl = rcl;
+
+      // Update RCL tick
+      if (!Memory.colonies![this.roomName].rcls) {
+        Memory.colonies![this.roomName].rcls = [];
+      }
+      Memory.colonies![this.roomName].rcls![rcl] = Game.time;
     }
 
     const colonyCreeps = this.getColonyCreeps();
