@@ -1,5 +1,12 @@
 // https://github.com/bencbartlett/Overmind/blob/master/src/creepSetups/CreepSetup.ts
 
+declare global {
+  interface Memory {
+    _stealth?: boolean;
+  }
+}
+
+import config from 'config';
 import { TaskManager } from 'TaskManager';
 import { bodyCost } from 'utils/creep';
 
@@ -167,9 +174,9 @@ export abstract class CreepBase {
     const body = this.generateBody(energyAvailable);
 
     return {
-      name: `${this.role}-${Game.time.toString().slice(-4)}-${Math.random()
+      name: `${Memory._stealth ? config.STEALTH_NAME : this.role}-${Game.time
         .toString()
-        .slice(-2)}`,
+        .slice(-4)}-${Math.random().toString().slice(-2)}`,
       body,
       cost: bodyCost(body),
     };

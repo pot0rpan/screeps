@@ -232,7 +232,11 @@ export class Stats {
       const spawning = spawn.spawning as Spawning;
       const ticksTotal = spawning.needTime;
       const ticksComplete = ticksTotal - spawning.remainingTime + 1;
-      stats.push({ name: spawning.name, ticksTotal, ticksComplete });
+      stats.push({
+        name: Memory.creeps[spawning.name]?.role ?? spawning.name,
+        ticksTotal,
+        ticksComplete,
+      });
     }
 
     return stats;

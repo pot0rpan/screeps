@@ -36,6 +36,7 @@ export default {
   FRIENDLY_NAMES: ['iiF', 'Xephael'],
   // USERNAME: 'iiF',
   // FRIENDLY_NAMES: ['poot', 'Xephael'],
+  STEALTH_NAME: 'agent', // Name for all creeps when Memory._stealth = true
   MIN_REPAIR_HITS: 0.5, // For both towers and Builders
   MAX_CONSTRUCTION_SITES: 10,
   MAX_TOWER_REFILL: 600,
