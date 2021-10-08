@@ -48,15 +48,31 @@ export function saveScoutData(room: Room, creep?: Creep): void {
 
   const mem = Memory.rooms[room.name];
 
-  if (mem.lastScan) {
-    // Skip some non-changing scans
-    mem.owner = room.controller?.owner?.username;
-    mem.reserver = room.controller?.reservation?.username;
-    mem.reservationTicks = room.controller?.reservation?.ticksToEnd;
-    if (mem.controller) {
-      mem.controller.level = (room.controller as StructureController).level;
+  // One-time-only stuff
+  if (!mem.lastScan) {
+    mem.sources = room.findSources(false).map(({ id, pos }) => ({
+      id,
+      pos: packCoord(pos),
+      distance: creep?.pos.findPathTo(pos.x, pos.y).length,
+    }));
+
+    const mineral = room.find(FIND_MINERALS)[0];
+
+    if (mineral) {
+      mem.mineral = {
+        id: mineral.id,
+        type: mineral.mineralType,
+        pos: packCoord(mineral.pos),
+      };
     }
-  } else {
+  }
+
+  // If scouted and has controller, only update level
+  // If not scouted, save controller data if available
+  // If scouted and no controller, there won't be a new one so skip
+  if (mem.controller) {
+    mem.controller.level = room.controller!.level;
+  } else if (!mem.lastScan) {
     mem.controller = room.controller
       ? {
           id: room.controller.id,
@@ -64,21 +80,19 @@ export function saveScoutData(room: Room, creep?: Creep): void {
           level: room.controller.level,
         }
       : undefined;
-    mem.owner = room.controller?.owner?.username;
-    mem.reserver = room.controller?.reservation?.username;
-    mem.reservationTicks = room.controller?.reservation?.ticksToEnd;
-    mem.sources = room.findSources(false).map(({ id, pos }) => ({
-      id,
-      pos: packCoord(pos),
-      distance: creep?.pos.findPathTo(pos.x, pos.y).length,
-    }));
-    mem.exits = Object.values(Game.map.describeExits(room.name)) as string[];
+  }
 
-    if (mem.owner && !isFriendlyOwner(mem.owner)) {
-      mem.avoid = 1;
-    } else {
-      delete mem.avoid;
-    }
+  mem.owner = room.controller?.owner?.username;
+  mem.reserver = room.controller?.reservation?.username;
+  mem.reservationTicks = room.controller?.reservation?.ticksToEnd;
+
+  mem.exits = Object.values(Game.map.describeExits(room.name)) as string[];
+
+  // Update avoid for Traveler
+  if (mem.owner && !isFriendlyOwner(mem.owner)) {
+    mem.avoid = 1;
+  } else {
+    delete mem.avoid;
   }
 
   const hostiles = room.findDangerousHostiles();
@@ -104,16 +118,6 @@ export function saveScoutData(room: Room, creep?: Creep): void {
     delete mem.tombstones;
   }
 
-  const mineral = room.find(FIND_MINERALS)[0];
-
-  if (mineral) {
-    mem.mineral = {
-      id: mineral.id,
-      type: mineral.mineralType,
-      pos: packCoord(mineral.pos),
-    };
-  }
-
   // Abandon room if taken by hostiles
   if (mem.colonize && mem.reserver && mem.reserver !== config.USERNAME) {
     delete mem.colonize;
@@ -132,7 +136,7 @@ function cleanScoutingMemory(): void {
     if (!Memory.rooms[roomName].lastScan) continue;
 
     // If relatively fresh scout data, keep
-    if (Game.time - Memory.rooms[roomName].lastScan! < 10000) continue;
+    if (Game.time - Memory.rooms[roomName].lastScan! < 20000) continue;
 
     delete Memory.rooms[roomName];
   }
