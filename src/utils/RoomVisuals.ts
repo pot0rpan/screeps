@@ -150,5 +150,23 @@ export class RoomVisuals {
     this.printText('' + avg, x - TICK_LENGTH - 0.25, avgScaled + 0.25, {
       align: 'right',
     });
+
+    // Max line
+    const maxVal = _.max(data);
+    const maxScaled = scaleY(maxVal);
+    visual.line(x - TICK_LENGTH, maxScaled, x + width, maxScaled, {
+      width: 0.05,
+      opacity: 0.6,
+    });
+    this.printText('' + maxVal, x + width + 0.25, maxScaled);
+
+    // Min line
+    const minVal = _.min(data);
+    const minScaled = scaleY(minVal);
+    visual.line(x - TICK_LENGTH, minScaled, x + width, minScaled, {
+      width: 0.05,
+      opacity: 0.6,
+    });
+    this.printText('' + minVal, x + width + 0.25, minScaled + 0.5);
   }
 }
